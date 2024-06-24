@@ -1,0 +1,46 @@
+﻿<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
+    xmlns:sye="clr-namespace:Sentez.Common.Extension;assembly=LiveCore.Desktop"
+    xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
+    xmlns:UtilCore="clr-namespace:Sentez.Common.Utilities;assembly=LiveCore" 
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    x:Name="InventoryUnitItemSizeSetDetails"
+    Tag="{lange:TranslateExtension Lojman Detayı}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <live:LiveGridControl  MaxHeight="2000"  x:Name="gridEmployeeLodging" TableName="Erp_EmployeeLodging" BusinessObject="{Binding ActiveBO}" ForeignKey="FK_Erp_EmployeeLodging_Erp_Employee" Lookups="{sye:SBinding Lists}">
+            <live:LiveGridControl.ColumnDefinitions>
+                <UtilCore:ReceiptColumn ColumnName="ResourceCode" Caption="Lojman Kodu" EditorType="ListSelector" Width="100" LookUpTable="Erp_Resource" LookUpField="ResourceCode" NewRowCheckColumn="True"/>
+                <UtilCore:ReceiptColumn ColumnName="ResourceExplanation" Caption="Lojman Adı" EditorType="ReadOnlyTextEditor" Width="150" LookUpTable="Erp_Resource" LookUpField="Explanation"/>
+                <UtilCore:ReceiptColumn ColumnName="ArrivalDate" Caption="Giriş Tarihi" EditorType="DateEditor" Width="90" IsFixedColumn="False"  DataType="{x:Type system:DateTime}" />
+                <UtilCore:ReceiptColumn ColumnName="DepartureDate" Caption="Ayrılış Tarihi" EditorType="DateEditor" Width="90" IsFixedColumn="False"  DataType="{x:Type system:DateTime}"/>
+                <UtilCore:ReceiptColumn ColumnName="IsCheckedIn" Caption="Checked-In" EditorType="CheckBox" Width="90" IsFixedColumn="False"  DataType="{x:Type system:Boolean}"/>
+                <UtilCore:ReceiptColumn ColumnName="IsCheckedOut" Caption="Checked-Out" EditorType="CheckBox" Width="90" IsFixedColumn="False"  DataType="{x:Type system:Boolean}"/>
+                <!--<UtilCore:ReceiptColumn ColumnName="BookingType" Caption="Konaklama Şekli" EditorType="ComboBox" UdtType="None" Width="70" UsageType="Integer" ComboLookup="LodgingBookingTypeList" DataType="{x:Type system:Int16}" ComboDisplayMember="Display" ComboValueMember="Value"/>-->
+                <!--<UtilCore:ReceiptColumn ColumnName="AciType" Caption="Konaklayan Türü" EditorType="ComboBox" UdtType="None" Width="70" UsageType="Integer" ComboLookup="LodgingAciTypeList" DataType="{x:Type system:Int16}" ComboDisplayMember="Display" ComboValueMember="Value"/>-->
+                <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" EditorType="TextEditor" Width="200"/>
+                <UtilCore:ReceiptColumn ColumnName="LocationBuilding" Caption="Bina" EditorType="ReadOnlyTextEditor" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="LocationFloor" Caption="Kat" EditorType="ReadOnlyTextEditor" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="LocationAisle" Caption="Koridor" EditorType="ReadOnlyTextEditor" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="BedTypeName" Caption="Yatak Tipi" EditorType="ReadOnlyTextEditor" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="PaxType1" Caption="Ranza x 2" EditorType="ReadOnlyTextEditor" UsageType="VariantQuantity" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="PaxType2" Caption="Tek Kişilik" EditorType="ReadOnlyTextEditor" UsageType="VariantQuantity" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="PaxType3" Caption="Çift Kişilik" EditorType="ReadOnlyTextEditor" UsageType="VariantQuantity" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="Capacity" Caption="Toplam Kapasite" EditorType="ReadOnlyTextEditor" UsageType="VariantQuantity" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="AccommodationCapacity" Caption="Konaklayan" EditorType="ReadOnlyTextEditor" UsageType="VariantQuantity" Width="150"/>
+                <UtilCore:ReceiptColumn ColumnName="RemainingCapacity" Caption="Müsait" EditorType="ReadOnlyTextEditor" Width="150" UsageType="VariantQuantity"/>
+                <UtilCore:ReceiptColumn ColumnName="AccommodationNames" Caption="Konaklayanlar" EditorType="ReadOnlyTextEditor" Width="150"/>
+                
+                <UtilCore:ReceiptColumn ColumnName="InUse" Caption="Kullanımda" EditorType="CheckBox" Width="80"/>
+            </live:LiveGridControl.ColumnDefinitions>
+            <live:LiveGridControl.View>
+                <live:ReceiptView></live:ReceiptView>
+            </live:LiveGridControl.View>
+        </live:LiveGridControl>
+    </Grid>
+</UserControl>

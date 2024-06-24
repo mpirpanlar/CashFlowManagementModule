@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DbScripts xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Application="3014">
+	<Updates>
+		<Version>
+			<Build>1</Build>
+			<Major>1</Major>
+			<Minor>0</Minor>
+			<Revision>-1</Revision>
+		</Version>
+		<Script>
+			/****** Object:  Table [dbo].[Erp_EmployeeLodging]    Script Date: 02/10/2011 12:25:43 ******/
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.objects
+			WHERE object_id = OBJECT_ID(N'[Erp_EmployeeLodging]')
+			AND type IN (N'U'))
+			BEGIN
+			CREATE TABLE [Erp_EmployeeLodging] (
+			[RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+			,[EmployeeId] [dbo].[UdtInt64] NULL
+			,[ResourceId] [dbo].[UdtInt64] NULL
+			,[BookingType] [dbo].UdtInt8 NULL
+			,[ArrivalDate] [dbo].[UdtDateTime] NULL
+			,[DepartureDate] [dbo].[UdtDateTime] NULL
+			,[IsCheckedIn] [dbo].[UdtBool] NULL
+			,[IsCheckedOut] [dbo].[UdtBool] NULL
+			,[Explanation] [dbo].UdtTextMax NULL
+			,[OptionExplanation] [dbo].UdtTextMax NULL
+			,[CancellationExplanation] [dbo].UdtTextMax NULL
+			,[CheckedInExplanation] [dbo].UdtTextMax NULL
+			,[CheckedOutExplanation] [dbo].UdtTextMax NULL
+			,[RoomExplanation] [dbo].UdtTextMax NULL
+			,[InUse] [dbo].[UdtBool] NULL
+			,[InsertedAt] [dbo].[UdtDateTime] NULL
+			,[InsertedBy] [dbo].[UdtInt32] NULL
+			,[UpdatedAt] [dbo].[UdtDateTime] NULL
+			,[UpdatedBy] [dbo].[UdtInt32] NULL
+			,[IsDeleted] [dbo].[UdtBool] NULL
+			,[DeletedAt] [dbo].[UdtDateTime] NULL
+			,[DeletedBy] [dbo].[UdtInt32] NULL
+			,CONSTRAINT [PK_Erp_EmployeeLodging] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+
+			SET ANSI_PADDING OFF
+			GO
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.indexes
+			WHERE object_id = OBJECT_ID(N'[Erp_EmployeeLodging]')
+			AND name = N'Erp_EmployeeLodging_IX0')
+			CREATE NONCLUSTERED INDEX [Erp_EmployeeLodging_IX0] ON [Erp_EmployeeLodging]
+			(
+			[EmployeeId] ASC
+			) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			GO
+
+			/****** Object:  ForeignKey [FK_Erp_EmployeeLodging_Erp_Inventory]    Script Date: 02/10/2011 12:25:43 ******/
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Employee]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] WITH CHECK ADD CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Employee] FOREIGN KEY ([EmployeeId])
+			REFERENCES [Erp_Employee] ([RecId])
+			GO
+
+			IF EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Employee]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] CHECK CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Employee]
+			GO
+
+			/****** Object:  ForeignKey [FK_Erp_EmployeeLodging_Meta_UnitSetItem]    Script Date: 02/10/2011 12:25:43 ******/
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Resource]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] WITH CHECK ADD CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Resource] FOREIGN KEY ([ResourceId])
+			REFERENCES [Erp_Resource] ([RecId])
+			GO
+
+			IF EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Resource]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] CHECK CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Resource]
+			GO
+		</Script>
+	</Updates>
+	<Updates>
+		<Version>
+			<Build>2</Build>
+			<Major>1</Major>
+			<Minor>0</Minor>
+			<Revision>-1</Revision>
+		</Version>
+		<Script>
+			/****** Object:  Table [dbo].[Meta_BedType]    Script Date: 08/21/2013 15:10:08 ******/
+			IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Meta_BedType]') AND type in (N'U'))
+			BEGIN
+			CREATE TABLE [dbo].[Meta_BedType](
+			[RecId] [dbo].[UdtRecId] IDENTITY(1,1) NOT NULL,
+			[BedTypeCode] [dbo].[UdtCode] NULL,
+			[BedTypeName] [dbo].[UdtName] NULL,
+			[InUse] [dbo].[UdtBool] NULL,
+			[InsertedAt] [dbo].[UdtDateTime] NULL,
+			[InsertedBy] [dbo].[UdtInt32] NULL,
+			[UpdatedAt] [dbo].[UdtDateTime] NULL,
+			[UpdatedBy] [dbo].[UdtInt32] NULL,
+			[IsDeleted] [dbo].[UdtBool] NULL,
+			[DeletedAt] [dbo].[UdtDateTime] NULL,
+			[DeletedBy] [dbo].[UdtInt32] NULL,
+			CONSTRAINT [PK_Meta_BedType] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_BedType]') AND name = N'Meta_BedType_IX0')
+			CREATE UNIQUE NONCLUSTERED INDEX [Meta_BedType_IX0] ON [Meta_BedType]
+			(
+			[BedTypeCode] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+
+			/****** Object:  Column [Erp_Resource - BedTypeId] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='BedTypeId')
+			begin
+			alter table Erp_Resource add BedTypeId UdtInt64
+			end
+			GO
+
+			IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource]  WITH CHECK ADD  CONSTRAINT [FK_Erp_Resource_Meta_BedType] FOREIGN KEY([BedTypeId])
+			REFERENCES [dbo].[Meta_BedType] ([RecId])
+			GO
+
+			IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource] CHECK CONSTRAINT [FK_Erp_Resource_Meta_BedType]
+			GO
+
+
+			/****** Object:  Table [dbo].[Meta_Layout]    Script Date: 08/21/2013 15:10:08 ******/
+			IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Meta_Layout]') AND type in (N'U'))
+			BEGIN
+			CREATE TABLE [dbo].[Meta_Layout](
+			[RecId] [dbo].[UdtRecId] IDENTITY(1,1) NOT NULL,
+			[LayoutCode] [dbo].[UdtCode] NULL,
+			[LayoutName] [dbo].[UdtName] NULL,
+			[InUse] [dbo].[UdtBool] NULL,
+			[InsertedAt] [dbo].[UdtDateTime] NULL,
+			[InsertedBy] [dbo].[UdtInt32] NULL,
+			[UpdatedAt] [dbo].[UdtDateTime] NULL,
+			[UpdatedBy] [dbo].[UdtInt32] NULL,
+			[IsDeleted] [dbo].[UdtBool] NULL,
+			[DeletedAt] [dbo].[UdtDateTime] NULL,
+			[DeletedBy] [dbo].[UdtInt32] NULL,
+			CONSTRAINT [PK_Meta_Layout] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_Layout]') AND name = N'Meta_Layout_IX0')
+			CREATE UNIQUE NONCLUSTERED INDEX [Meta_Layout_IX0] ON [Meta_Layout]
+			(
+			[LayoutCode] ASC
+
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+
+			/****** Object:  Column [Erp_Resource - PhoneNumbers] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PhoneNumbers')
+			begin
+			alter table Erp_Resource add PhoneNumbers UdtExpLong
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - LayoutTypeId] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='LayoutTypeId')
+			begin
+			alter table Erp_Resource add LayoutTypeId UdtInt64
+			end
+			GO
+
+			/****** Object:  ForeignKey [FK_Erp_Resource_Meta_Layout] Script Date: 06/24/2011 11:43:25 ******/
+			IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_Layout]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource]  WITH CHECK ADD  CONSTRAINT [FK_Erp_Resource_Meta_Layout] FOREIGN KEY([LayoutTypeId])
+			REFERENCES [dbo].[Meta_Layout] ([RecId])
+			GO
+			IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_Layout]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource] CHECK CONSTRAINT [FK_Erp_Resource_Meta_Layout]
+			GO
+
+			/****** Object:  Column [Erp_Resource - IsAvailable] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='IsAvailable')
+			begin
+			alter table Erp_Resource add IsAvailable UdtBool
+			end
+			GO
+
+
+
+			/****** Object:  ForeignKey [FK_Erp_Resource_Meta_BedType] Script Date: 06/24/2011 11:43:25 ******/
+			IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource]  WITH CHECK ADD  CONSTRAINT [FK_Erp_Resource_Meta_BedType] FOREIGN KEY([BedTypeId])
+			REFERENCES [dbo].[Meta_BedType] ([RecId])
+			GO
+			IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource] CHECK CONSTRAINT [FK_Erp_Resource_Meta_BedType]
+			GO
+
+			IF NOT EXISTS (SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Erp_Resource' AND COLUMN_NAME = 'Dnd')
+			BEGIN
+			ALTER TABLE Erp_Resource ADD Dnd UdtBool
+			END
+			GO
+		</Script>
+	</Updates>
+	<Updates>
+		<Version>
+			<Build>3</Build>
+			<Major>1</Major>
+			<Minor>0</Minor>
+			<Revision>-1</Revision>
+		</Version>
+		<Script>
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType1')
+			begin
+			alter table Erp_Resource add PaxType1 UdtQuantity
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType2')
+			begin
+			alter table Erp_Resource add PaxType2 UdtQuantity
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType3')
+			begin
+			alter table Erp_Resource add PaxType3 UdtQuantity
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType99')
+			begin
+			alter table Erp_Resource add PaxType99 UdtQuantity
+			end
+			GO
+		</Script>
+	</Updates>
+	<Updates>
+		<Version>
+			<Build>4</Build>
+			<Major>1</Major>
+			<Minor>0</Minor>
+			<Revision>-1</Revision>
+		</Version>
+		<Script>
+			/****** Object:  Table [dbo].[Log_TransactionTurunc]    Script Date: 02/10/2023 12:25:43 ******/
+			SET ANSI_PADDING ON
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Log_TransactionTurunc]') AND type in (N'U'))
+			BEGIN
+			CREATE TABLE [Log_TransactionTurunc](
+			[RecId] [dbo].[UdtRecId] IDENTITY(1,1) NOT NULL,
+			[CompanyCode] [dbo].[UdtCode] NULL,
+			[UserCode] [dbo].[UdtCode] NULL,
+			[SysUserCode] [dbo].[UdtCode] NULL,
+			[SysAdress] [dbo].[UdtCode] NULL,
+			[OperationType] [dbo].[UdtInt8] NULL,
+			[OperationDate] [dbo].[UdtDateTime] NULL,
+			[OperationTime] [dbo].[UdtDateTime] NULL,
+			[Program] [dbo].[UdtInt16] NULL,
+			[LogicalModule] [dbo].[UdtInt16] NULL,
+			[Module] [dbo].[UdtInt16] NULL,
+			[CommandName] [dbo].[UdtName] NULL,
+			[CommandId] [dbo].[UdtInt16] NULL,
+			[ItemId] [dbo].[UdtInt32] NULL,
+			[SubItemId] [dbo].[UdtInt32] NULL,
+			[ItemCode] [dbo].[UdtCode] NULL,
+			[Explanation] [dbo].[UdtExpLong] NULL,
+			[BOName] [dbo].[UdtName] NULL,
+			[BORecId] [dbo].[UdtInt64] NULL,
+			[GpsXCoordinate] [dbo].[UdtCoordinate] NULL,
+			[GpsYCoordinate] [dbo].[UdtCoordinate] NULL,
+			[IsReaded] [dbo].[UdtBool] NULL,
+			[LogData] [dbo].[UdtBinary] NULL,
+			[LogDataText] [dbo].[UdtTextMax] NULL,
+			CONSTRAINT [PK_Log_TransactionTurunc] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+			SET ANSI_PADDING OFF
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Log_TransactionTurunc]') AND name = N'Log_TransactionTurunc_IX0')
+			CREATE NONCLUSTERED INDEX [Log_TransactionTurunc_IX0] ON [Log_TransactionTurunc]
+			(
+			[UserCode] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Log_TransactionTurunc]') AND name = N'Log_TransactionTurunc_IX1')
+			CREATE NONCLUSTERED INDEX [Log_TransactionTurunc_IX1] ON [Log_TransactionTurunc]
+			(
+			[CompanyCode] ASC,
+			[UserCode] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+		</Script>
+	</Updates>
+	<CreateScript>
+		<DbVersion>
+			<Build>4</Build>
+			<Major>1</Major>
+			<Minor>0</Minor>
+			<Revision>-1</Revision>
+		</DbVersion>
+		<CreateScript>
+			/****** Object:  Table [dbo].[Erp_EmployeeLodging]    Script Date: 02/10/2011 12:25:43 ******/
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.objects
+			WHERE object_id = OBJECT_ID(N'[Erp_EmployeeLodging]')
+			AND type IN (N'U'))
+			BEGIN
+			CREATE TABLE [Erp_EmployeeLodging] (
+			[RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+			,[EmployeeId] [dbo].[UdtInt64] NULL
+			,[ResourceId] [dbo].[UdtInt64] NULL
+			,[BookingType] [dbo].UdtInt8 NULL
+			,[ArrivalDate] [dbo].[UdtDateTime] NULL
+			,[DepartureDate] [dbo].[UdtDateTime] NULL
+			,[IsCheckedIn] [dbo].[UdtBool] NULL
+			,[IsCheckedOut] [dbo].[UdtBool] NULL
+			,[Explanation] [dbo].UdtTextMax NULL
+			,[OptionExplanation] [dbo].UdtTextMax NULL
+			,[CancellationExplanation] [dbo].UdtTextMax NULL
+			,[CheckedInExplanation] [dbo].UdtTextMax NULL
+			,[CheckedOutExplanation] [dbo].UdtTextMax NULL
+			,[RoomExplanation] [dbo].UdtTextMax NULL
+			,[InUse] [dbo].[UdtBool] NULL
+			,[InsertedAt] [dbo].[UdtDateTime] NULL
+			,[InsertedBy] [dbo].[UdtInt32] NULL
+			,[UpdatedAt] [dbo].[UdtDateTime] NULL
+			,[UpdatedBy] [dbo].[UdtInt32] NULL
+			,[IsDeleted] [dbo].[UdtBool] NULL
+			,[DeletedAt] [dbo].[UdtDateTime] NULL
+			,[DeletedBy] [dbo].[UdtInt32] NULL
+			,CONSTRAINT [PK_Erp_EmployeeLodging] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+
+			SET ANSI_PADDING OFF
+			GO
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.indexes
+			WHERE object_id = OBJECT_ID(N'[Erp_EmployeeLodging]')
+			AND name = N'Erp_EmployeeLodging_IX0')
+			CREATE NONCLUSTERED INDEX [Erp_EmployeeLodging_IX0] ON [Erp_EmployeeLodging]
+			(
+			[EmployeeId] ASC
+			) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+			GO
+
+			/****** Object:  ForeignKey [FK_Erp_EmployeeLodging_Erp_Inventory]    Script Date: 02/10/2011 12:25:43 ******/
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Employee]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] WITH CHECK ADD CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Employee] FOREIGN KEY ([EmployeeId])
+			REFERENCES [Erp_Employee] ([RecId])
+			GO
+
+			IF EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Employee]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] CHECK CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Employee]
+			GO
+
+			/****** Object:  ForeignKey [FK_Erp_EmployeeLodging_Meta_UnitSetItem]    Script Date: 02/10/2011 12:25:43 ******/
+			IF NOT EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Resource]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] WITH CHECK ADD CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Resource] FOREIGN KEY ([ResourceId])
+			REFERENCES [Erp_Resource] ([RecId])
+			GO
+
+			IF EXISTS (SELECT
+			*
+			FROM sys.foreign_keys
+			WHERE object_id = OBJECT_ID(N'[FK_Erp_EmployeeLodging_Erp_Resource]')
+			AND parent_object_id = OBJECT_ID(N'[Erp_EmployeeLodging]'))
+			ALTER TABLE [Erp_EmployeeLodging] CHECK CONSTRAINT [FK_Erp_EmployeeLodging_Erp_Resource]
+			GO
+
+
+			/****** Object:  Table [dbo].[Meta_BedType]    Script Date: 08/21/2013 15:10:08 ******/
+			IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Meta_BedType]') AND type in (N'U'))
+			BEGIN
+			CREATE TABLE [dbo].[Meta_BedType](
+			[RecId] [dbo].[UdtRecId] IDENTITY(1,1) NOT NULL,
+			[BedTypeCode] [dbo].[UdtCode] NULL,
+			[BedTypeName] [dbo].[UdtName] NULL,
+			[InUse] [dbo].[UdtBool] NULL,
+			[InsertedAt] [dbo].[UdtDateTime] NULL,
+			[InsertedBy] [dbo].[UdtInt32] NULL,
+			[UpdatedAt] [dbo].[UdtDateTime] NULL,
+			[UpdatedBy] [dbo].[UdtInt32] NULL,
+			[IsDeleted] [dbo].[UdtBool] NULL,
+			[DeletedAt] [dbo].[UdtDateTime] NULL,
+			[DeletedBy] [dbo].[UdtInt32] NULL,
+			CONSTRAINT [PK_Meta_BedType] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_BedType]') AND name = N'Meta_BedType_IX0')
+			CREATE UNIQUE NONCLUSTERED INDEX [Meta_BedType_IX0] ON [Meta_BedType]
+			(
+			[BedTypeCode] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+
+			/****** Object:  Column [Erp_Resource - BedTypeId] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='BedTypeId')
+			begin
+			alter table Erp_Resource add BedTypeId UdtInt64
+			end
+			GO
+
+			IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource]  WITH CHECK ADD  CONSTRAINT [FK_Erp_Resource_Meta_BedType] FOREIGN KEY([BedTypeId])
+			REFERENCES [dbo].[Meta_BedType] ([RecId])
+			GO
+
+			IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource] CHECK CONSTRAINT [FK_Erp_Resource_Meta_BedType]
+			GO
+
+
+			/****** Object:  Table [dbo].[Meta_Layout]    Script Date: 08/21/2013 15:10:08 ******/
+			IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Meta_Layout]') AND type in (N'U'))
+			BEGIN
+			CREATE TABLE [dbo].[Meta_Layout](
+			[RecId] [dbo].[UdtRecId] IDENTITY(1,1) NOT NULL,
+			[LayoutCode] [dbo].[UdtCode] NULL,
+			[LayoutName] [dbo].[UdtName] NULL,
+			[InUse] [dbo].[UdtBool] NULL,
+			[InsertedAt] [dbo].[UdtDateTime] NULL,
+			[InsertedBy] [dbo].[UdtInt32] NULL,
+			[UpdatedAt] [dbo].[UdtDateTime] NULL,
+			[UpdatedBy] [dbo].[UdtInt32] NULL,
+			[IsDeleted] [dbo].[UdtBool] NULL,
+			[DeletedAt] [dbo].[UdtDateTime] NULL,
+			[DeletedBy] [dbo].[UdtInt32] NULL,
+			CONSTRAINT [PK_Meta_Layout] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_Layout]') AND name = N'Meta_Layout_IX0')
+			CREATE UNIQUE NONCLUSTERED INDEX [Meta_Layout_IX0] ON [Meta_Layout]
+			(
+			[LayoutCode] ASC
+
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+
+			/****** Object:  Column [Erp_Resource - PhoneNumbers] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PhoneNumbers')
+			begin
+			alter table Erp_Resource add PhoneNumbers UdtExpLong
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - LayoutTypeId] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='LayoutTypeId')
+			begin
+			alter table Erp_Resource add LayoutTypeId UdtInt64
+			end
+			GO
+
+			/****** Object:  ForeignKey [FK_Erp_Resource_Meta_Layout] Script Date: 06/24/2011 11:43:25 ******/
+			IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_Layout]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource]  WITH CHECK ADD  CONSTRAINT [FK_Erp_Resource_Meta_Layout] FOREIGN KEY([LayoutTypeId])
+			REFERENCES [dbo].[Meta_Layout] ([RecId])
+			GO
+			IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_Layout]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource] CHECK CONSTRAINT [FK_Erp_Resource_Meta_Layout]
+			GO
+
+			/****** Object:  Column [Erp_Resource - IsAvailable] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='IsAvailable')
+			begin
+			alter table Erp_Resource add IsAvailable UdtBool
+			end
+			GO
+
+
+
+			/****** Object:  ForeignKey [FK_Erp_Resource_Meta_BedType] Script Date: 06/24/2011 11:43:25 ******/
+			IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource]  WITH CHECK ADD  CONSTRAINT [FK_Erp_Resource_Meta_BedType] FOREIGN KEY([BedTypeId])
+			REFERENCES [dbo].[Meta_BedType] ([RecId])
+			GO
+			IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_Resource_Meta_BedType]') AND parent_object_id = OBJECT_ID(N'[Erp_Resource]'))
+			ALTER TABLE [dbo].[Erp_Resource] CHECK CONSTRAINT [FK_Erp_Resource_Meta_BedType]
+			GO
+
+			IF NOT EXISTS (SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Erp_Resource' AND COLUMN_NAME = 'Dnd')
+			BEGIN
+			ALTER TABLE Erp_Resource ADD Dnd UdtBool
+			END
+			GO
+
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType1')
+			begin
+			alter table Erp_Resource add PaxType1 UdtQuantity
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType2')
+			begin
+			alter table Erp_Resource add PaxType2 UdtQuantity
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType3')
+			begin
+			alter table Erp_Resource add PaxType3 UdtQuantity
+			end
+			GO
+
+			/****** Object:  Column [Erp_Resource - PaxType1] ******/
+			if not exists(select COLUMN_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_NAME ='Erp_Resource' and COLUMN_NAME='PaxType99')
+			begin
+			alter table Erp_Resource add PaxType99 UdtQuantity
+			end
+			GO
+
+			/****** Object:  Table [dbo].[Log_TransactionTurunc]    Script Date: 02/10/2023 12:25:43 ******/
+			SET ANSI_PADDING ON
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Log_TransactionTurunc]') AND type in (N'U'))
+			BEGIN
+			CREATE TABLE [Log_TransactionTurunc](
+			[RecId] [dbo].[UdtRecId] IDENTITY(1,1) NOT NULL,
+			[CompanyCode] [dbo].[UdtCode] NULL,
+			[UserCode] [dbo].[UdtCode] NULL,
+			[SysUserCode] [dbo].[UdtCode] NULL,
+			[SysAdress] [dbo].[UdtCode] NULL,
+			[OperationType] [dbo].[UdtInt8] NULL,
+			[OperationDate] [dbo].[UdtDateTime] NULL,
+			[OperationTime] [dbo].[UdtDateTime] NULL,
+			[Program] [dbo].[UdtInt16] NULL,
+			[LogicalModule] [dbo].[UdtInt16] NULL,
+			[Module] [dbo].[UdtInt16] NULL,
+			[CommandName] [dbo].[UdtName] NULL,
+			[CommandId] [dbo].[UdtInt16] NULL,
+			[ItemId] [dbo].[UdtInt32] NULL,
+			[SubItemId] [dbo].[UdtInt32] NULL,
+			[ItemCode] [dbo].[UdtCode] NULL,
+			[Explanation] [dbo].[UdtExpLong] NULL,
+			[BOName] [dbo].[UdtName] NULL,
+			[BORecId] [dbo].[UdtInt64] NULL,
+			[GpsXCoordinate] [dbo].[UdtCoordinate] NULL,
+			[GpsYCoordinate] [dbo].[UdtCoordinate] NULL,
+			[IsReaded] [dbo].[UdtBool] NULL,
+			[LogData] [dbo].[UdtBinary] NULL,
+			[LogDataText] [dbo].[UdtTextMax] NULL,
+			CONSTRAINT [PK_Log_TransactionTurunc] PRIMARY KEY CLUSTERED
+			(
+			[RecId] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			) ON [PRIMARY]
+			END
+			GO
+			SET ANSI_PADDING OFF
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Log_TransactionTurunc]') AND name = N'Log_TransactionTurunc_IX0')
+			CREATE NONCLUSTERED INDEX [Log_TransactionTurunc_IX0] ON [Log_TransactionTurunc]
+			(
+			[UserCode] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+			IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Log_TransactionTurunc]') AND name = N'Log_TransactionTurunc_IX1')
+			CREATE NONCLUSTERED INDEX [Log_TransactionTurunc_IX1] ON [Log_TransactionTurunc]
+			(
+			[CompanyCode] ASC,
+			[UserCode] ASC
+			)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+			GO
+		</CreateScript>
+	</CreateScript>
+</DbScripts>

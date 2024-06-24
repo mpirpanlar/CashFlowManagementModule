@@ -1,0 +1,115 @@
+﻿<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
+    xmlns:sye="clr-namespace:Sentez.Common.Extension;assembly=LiveCore.Desktop"
+    xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
+    x:Name="CrsResource"
+    Tag="{lange:TranslateExtension Lojman Kartı}"
+    >
+    <Grid>
+        <live:LiveDockLayoutManager Name="LiveDockLayoutManager" EnableSaveLayout="True" DockingStyle="Default" FloatingDocumentContainer="DocumentHost">
+            <live:LiveLayoutGroup Name="LlgMain" Orientation="Vertical"  ItemHeight="Auto">
+                <live:LiveLayoutGroup Name="LlgContractCode" ItemHeight="Auto">
+                    <live:LiveLayoutPanel  x:Name="KeyFieldPanel" ShowCaption="False" AllowClose="True" AllowFloat="False" AllowHide="False">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <live:LiveLabel HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Kodu}"/>
+                            <live:LiveKeyFieldEdit Grid.Row="0" Grid.Column="1" HorizontalAlignment="Left" Margin="2,1,0,0" Width="120" Text="{sye:SBinding KeyField}"/>
+                            <live:LiveCheckEdit Grid.Row="0" Grid.Column="1" Margin="220,2,50,2" Content="{lange:TranslateExtension Kullanımda}" IsChecked="{sye:SBinding Field=Erp_Resource.InUse}"/>
+                            <live:LiveLabel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Lojman Adı}"/>
+                            <live:LiveTextEdit Grid.Column="1" Grid.Row="1" HorizontalAlignment="Left" Margin="2,1,0,0" Width="200" Text="{sye:SBinding Field=Erp_Resource.Explanation}"/>
+                            <live:LiveLabel Grid.Column="0" Grid.Row="2" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension İş Yeri}"/>
+                            <live:LiveLookUpEdit Grid.Row="2" Grid.Column="1" Margin="2,1,1,0" HorizontalAlignment="Left" Width="140" Text="{sye:SBinding Field=Erp_Resource.WorkplaceCode , Lookup=Erp_Workplace.WorkplaceCode}"/>
+                        </Grid>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+                <live:LiveDocumentGroup x:Name="GenelDocumentPanel" ItemHeight="*">
+                    <live:LiveDocumentPanel Name="GenelTab" Caption="{lange:TranslateExtension Genel}" AllowFloat="True" AllowClose="True" AllowDock="True">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="0" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Erişim Kodu}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="1" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Özel Kod}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="2" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Oda Tipi}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="3" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Yatak Tipi}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="4" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Telefon Numaraları}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="5" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Ranza x 2}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="6" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Tek Kişilik}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="7" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Çift Kişilik}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="8" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Tolörans}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="9" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Kişi Sayısı}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="10" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension İlave Kişi Sayısı}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="11" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Bina}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="12" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Kat}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="13" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Koridor}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="14" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Görevli}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="15" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Oda Durumu}"/>
+                                <live:LiveLabel Grid.Column="0" Grid.Row="16" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Width="140" Padding="2" VerticalContentAlignment="Center" Content="{lange:TranslateExtension Temizleme / Değiştirme}"/>
+
+                                <live:LiveComboBoxEdit Grid.Column="1" Grid.Row="0" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" ItemsSource="{sye:SBinding Path=Lists[AccessCodeList]}" DisplayMember="Display" ValueMember="Value" EditValue="{sye:SBinding Field=Erp_Resource.AccessCode}" />
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="1" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.SpecialCode}"/>
+                                <live:LiveComboBoxEdit Grid.Column="1" Grid.Row="2" Margin="2,1,1,0" HorizontalAlignment="Left" Width="200" ItemsSource="{sye:SBinding Path=RoomTypeTable}" DisplayMember="Display" ValueMember="Value"  EditValue="{sye:SBinding Field=Erp_Resource.ParentResourceId}"/>
+                                <live:LiveComboBoxEdit Grid.Column="1" Grid.Row="3" Margin="2,1,1,0" HorizontalAlignment="Left" Width="200" ItemsSource="{sye:SBinding Path=BedTypeTable}" DisplayMember="Display" ValueMember="Value"  EditValue="{sye:SBinding Field=Erp_Resource.BedTypeId}"/>
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="4" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.PhoneNumbers}" />
+
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="5" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.PaxType1, Usage=VariantQuantity}" />
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="6" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.PaxType2, Usage=VariantQuantity}" />
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="7" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.PaxType3, Usage=VariantQuantity}" />
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="8" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.PaxType99, Usage=VariantQuantity}" />
+
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="9" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.Capacity, Usage=VariantQuantity}" />
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="10" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.ExtraCapacity, Usage=VariantQuantity}" />
+                                <!--<live:LiveTextEdit Grid.Column="1" Grid.Row="7" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.LocationBuilding}" />-->
+                                <live:LiveComboBoxEdit Name="lcbeLocationBuilding" Grid.Column="1" Grid.Row="11" Margin="2,1,1,0" HorizontalAlignment="Left" Width="200" ItemsSource="{sye:SBinding Path=LocationBuildingTable}" DisplayMember="LocationBuilding" ValueMember="LocationBuilding" EditValue="{sye:SBinding Field=Erp_Resource.LocationBuilding}" AutoComplete="True" ValidateOnTextInput="False" AllowRejectUnknownValues="False"/>
+                                <!--<live:LiveTextEdit Grid.Column="1" Grid.Row="8" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.LocationFloor}" />-->
+                                <live:LiveComboBoxEdit Name="lcbeLocationFloor" Grid.Column="1" Grid.Row="12" Margin="2,1,1,0" HorizontalAlignment="Left" Width="200" ItemsSource="{sye:SBinding Path=LocationFloorTable}" DisplayMember="LocationFloor" ValueMember="LocationFloor" EditValue="{sye:SBinding Field=Erp_Resource.LocationFloor}" AutoComplete="True" ValidateOnTextInput="False" AllowRejectUnknownValues="False"/>
+                                <!--<live:LiveTextEdit Grid.Column="1" Grid.Row="9" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.LocationAisle}" />-->
+                                <live:LiveComboBoxEdit Name="lcbeLocationAisle" Grid.Column="1" Grid.Row="13" Margin="2,1,1,0" HorizontalAlignment="Left" Width="200" ItemsSource="{sye:SBinding Path=LocationAisleTable}" DisplayMember="LocationAisle" ValueMember="LocationAisle" EditValue="{sye:SBinding Field=Erp_Resource.LocationAisle}" AutoComplete="True" ValidateOnTextInput="False" AllowRejectUnknownValues="False"/>
+                                <live:LiveTextEdit Grid.Column="1" Grid.Row="14" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" Text="{sye:SBinding Field=Erp_Resource.EmployeeCode, Lookup=Erp_Employee.EmployeeCode}" />
+                                <live:LiveLabel Grid.Column="1" Grid.Row="14" Width="140" Margin="125,1,1,0" HorizontalAlignment="Left" Content="{sye:SBinding Field=Erp_Employee.EmployeeName}"/>
+                                <live:LiveComboBoxEdit Grid.Column="1" Grid.Row="15" Margin="2,1,1,0" HorizontalAlignment="Left" Width="200" ItemsSource="{sye:SBinding Path=Lists[ResourceAvailableType]}" DisplayMember="Display" ValueMember="Value"  EditValue="{sye:SBinding Field=Erp_Resource.IsAvailable}"/>
+                                <live:LiveCalculatorEdit Grid.Column="1" Grid.Row="16" HorizontalAlignment="Left" Margin="2,1,1,0" Width="60" EditValue="{Binding Path=ActiveBO.CurrentRow.CleaningDay}"/>
+                                <live:LiveCalculatorEdit Grid.Column="1" Grid.Row="16" HorizontalAlignment="Left" Margin="62,1,1,0" Width="60" EditValue="{Binding Path=ActiveBO.CurrentRow.ChangingDay}"/>
+                            </Grid>
+                        </ScrollViewer>
+                    </live:LiveDocumentPanel>
+                    <live:LiveDocumentPanel Caption="{lange:TranslateExtension Özellikler}" AllowFloat="True" AllowClose="True" AllowDock="True">
+                        <live:LiveListBoxEdit Name="AttributeSetItemList" ShowCustomItems="True" SelectionMode="Multiple"/>
+                    </live:LiveDocumentPanel>
+                </live:LiveDocumentGroup>
+            </live:LiveLayoutGroup>
+        </live:LiveDockLayoutManager>
+    </Grid>
+</UserControl>

@@ -1,0 +1,37 @@
+﻿<UserControl x:Class="Sentez.CRSUIModule.Views.CrsRoomRackGotoDate"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
+             xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
+             xmlns:sye="clr-namespace:Sentez.Common.Extension;assembly=LiveCore.Desktop"
+             Height="Auto" Width="300" Loaded="UserControl_Loaded">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+            <live:LiveLabel Grid.Row="0" Margin="0,0,5,0" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="90" Content="{lange:TranslateExtension Tarih}"/>
+            <live:LiveDateEdit EditValue="{sye:SBinding RoomRackDate}"  Grid.Row="0" Grid.Column="1" Height="22" Name="LdeRoomRackDate" VerticalAlignment="Center" HorizontalAlignment="Left" Width="120"/>
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="10"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <live:LiveButton Grid.Row="1" Grid.Column="0" Height="25" Name="BtnOk" HorizontalAlignment="Center" VerticalAlignment="Center" Width="80" Content="{lange:TranslateExtension Tamam}" Click="btnOk_Click" />
+            <live:LiveButton Grid.Row="1" Grid.Column="1" Height="25" Name="BtnCancel" VerticalAlignment="Center" HorizontalAlignment="Center" Width="80" Content="{lange:TranslateExtension Vazgeç}" Click="btnCancel_Click" />
+        </Grid>
+    </Grid>
+</UserControl>

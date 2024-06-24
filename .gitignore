@@ -22,3 +22,5 @@
 /.vs/NermaReservationManagementModule/v17/.suo
 /.vs/ProjectEvaluation/nermareservationmanagementmodule.metadata.v7.bin
 /.vs/ProjectEvaluation/nermareservationmanagementmodule.projects.v7.bin
+/LodgingNetCoreManagementModule/obj
+/.vs
