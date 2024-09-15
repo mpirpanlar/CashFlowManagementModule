@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Document>
+	<Application Name="Live">
+		<MenuRoot Caption="Finans Yönetimi" Name="FinanceMenu" ImagePath="M11.5,1L2,6V8H21V6M16,10V17H19V10M2,22H21V19H2M10,10V17H13V10M4,10V17H7V10H4Z" Order="400">
+			<MenuItem CommandName="ModuleDefault" Caption="İşlemler" WebLink="" Tag="Root" WebVisible="false">
+				<CommandParam modulename="FinanceModule" secname="MenuSubRoots.Operations" />
+				<MenuItem CommandName="ModuleDefault"  Caption="Nakit Akış Yönetimi" WebLink=""  Order="1400">
+					<MenuItem CommandName="DefaultCardList" Caption="Yaşlandırma Raporları">
+						<CommandParam boname="Erp_AgingReportResultsReportNoList" modulename="FinanceModule" secname="FinanceSecurityItems.BedType" subsecname="FinanceSecurityItems.CurrentAccountRpr"/>
+					</MenuItem>
+					<MenuItem CommandName="CmdGeneralOpen" Caption="Yaşlandırma Rapor Yönetimi" WebLink="" Visible="true">
+						<CommandParam viewname="AgingReportResultsListManagementW" pmname="AgingReportResultsManagementPM" modulename="FinanceModule" secname="FinanceSecurityItems.CurrentAccountRiskControl" subsecname="CurrentAccountSubItems.None"/>
+					</MenuItem>
+				</MenuItem>
+			</MenuItem>
+		</MenuRoot>
+	</Application>
+</Document>

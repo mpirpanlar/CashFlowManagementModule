@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<SentezMetaData Application="3015" Version="1.0.1" >
+	<Tables>
+		<Table Id="288" Name="Erp_AgingReportResults" Description="Yaşlandırma Rapor Bilgileri" PrimaryKey="RecId" Caption="Yaşlandırma Rapor Bilgileri">
+			<Fields>
+				<Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+				<Field Id="2" Name="CompanyId" Description="Şirket No" DataType="Int32" Ordinal="2" UdtType="UdtInt32" Caption="Şirket No" Precision="10" />
+				<Field Id="3" Name="ReportNo" Description="Rapor Numarası" DataType="String" Ordinal="5" UdtType="UdtCode" Caption="Rapor Numarası" Size="25" IsFilterField="True" IsDefaultFilterField="True" />
+				<Field Id="4" Name="ReportDate" Description="Rapor Tarihi" DataType="DateTime" Ordinal="6" UdtType="UdtDate" FieldUsage="Date" Caption="Rapor Tarihi" IsFilterField="True" IsDefaultFilterField="True" ReportDefaultValue="[CompanyWorkPeriodStartDate;CompanyWorkPeriodEndDate]" />
+				<Field Id="5" Name="Explanation" Description="Açıklama" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Açıklama" Size="4000" IsFilterField="True" />
+				<Field Id="6" Name="CurrentAccountId" Description="Cari Hesap Kartı Kayıt Numarası" DataType="Int64" Ordinal="10" UdtType="UdtInt64" Caption="Cari Hesap Kodu" Precision="19"/>
+				<Field Id="7" Name="CurrentAccountCode" Description="Cari Hesap" DataType="String" Ordinal="22" UdtType="UdtCode" Caption="Cari Hesap" Size="25" IsFilterField="True" />
+				<Field Id="8" Name="CurrentAccountName" Description="Cari Hesap Adı" DataType="String" Ordinal="22" UdtType="UdtName" Caption="Cari Hesap" Size="50" IsFilterField="True" />
+				<Field Id="9" Name="TradeName" Description="Ticari Ünvanı" DataType="String" Ordinal="12" UdtType="UdtExpHuge" Caption="Ticari Ünvanı" Size="1000" IsFilterField="True" />
+				<Field Id="10" Name="AccessCode" Description="Erişim Kodu" DataType="String" Ordinal="13" UdtType="UdtSpecial" Caption="Erişim Kodu" Size="15" IsFilterField="True" ReportEditorType="ListSelector" ReportListName="AccessCodeList" ReportDefaultNullSelection="Yes" />
+				<Field Id="11" Name="CurrentAccountGroupCode" Description="Cari Hesap Grubu" DataType="String" Ordinal="22" UdtType="UdtCode" Caption="Cari Hesap Grubu" Size="25" IsFilterField="True" />
+				<Field Id="12" Name="CurrentAccountGroupName" Description="Cari Hesap Grup Adı" DataType="String" Ordinal="22" UdtType="UdtName" Caption="Cari Hesap Grup Adı" Size="50" IsFilterField="True" />
+				<Field Id="13" Name="AddressPhone" Description="Adres Telefon" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Adres Telefon" Size="4000" IsFilterField="True" />
+				<Field Id="14" Name="AddressMobilePhone" Description="Adres Mobil" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Adres Mobil" Size="4000" IsFilterField="True" />
+				<Field Id="15" Name="AddressFax" Description="Adres Faks" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Adres Faks" Size="4000" IsFilterField="True" />
+				<Field Id="16" Name="AddressDetail" Description="Adres Detayı" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Adres Detayı" Size="4000" IsFilterField="True" />
+				<Field Id="17" Name="IbanNo" Description="Iban No" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Iban No" Size="4000" IsFilterField="True" />
+				<Field Id="18" Name="BankAccountName" Description="Banka Hesap Adı" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Banka Hesap Adı" Size="4000" IsFilterField="True" />
+				<Field Id="19" Name="BankAccountExplanation" Description="Banka Hesap Açıklaması" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Banka Hesap Açıklaması" Size="4000" IsFilterField="True" />
+				<Field Id="20" Name="ReceiverTaxNo" Description="Vergi Kimlik No" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="Vergi Kimlik No" Size="4000" IsFilterField="True" />
+				<Field Id="21" Name="IdCardNo" Description="TC Kimlik No" DataType="String" Ordinal="16" UdtType="UdtTextLong" Caption="TC Kimlik No" Size="4000" IsFilterField="True" />
+				<Field Id="22" Name="TermDay" Description="Vade/Termin Opsiyonu" DataType="Int16" Ordinal="41" UdtType="UdtInt16" Caption="Vade/Termin Opsiyonu" Precision="5" IsFilterField="True" />
+				<Field Id="23" Name="InterestRate" Description="Vade Farkı Faiz Oranı" DataType="Decimal" Ordinal="45" UdtType="UdtPercentage" FieldUsage="Percentage" Caption="Faiz Oranı" Precision="11" Scale="8" IsFilterField="True" />
+				<Field Id="24" Name="ForexCode" Description="Döviz Cinsi Kodu" DataType="String" Ordinal="2" UdtType="UdtCode" Caption="Döviz Kodu" Size="25" IsFilterField="True"/>
+				<Field Id="25" Name="CurrentAccountForexCode" Description="Cari Döviz Cinsi Kodu" DataType="String" Ordinal="2" UdtType="UdtCode" Caption="Cari Döviz Döviz Kodu" Size="25" IsFilterField="True"/>
+				<Field Id="26" Name="Balance" Description="Bakiye" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye" Precision="28" Scale="8"/>
+				<Field Id="27" Name="ActualBalance" Description="Güncel Bakiye" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Güncel Bakiye" Precision="28" Scale="8"/>
+				<Field Id="28" Name="ForexBalance" Description="Döviz Bakiye" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Döviz Bakiye" Precision="28" Scale="8"/>
+				<Field Id="29" Name="ForexActualBalance" Description="Döviz Güncel Bakiye" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Döviz Güncel Bakiye" Precision="28" Scale="8"/>
+				<Field Id="30" Name="CurrentAccountForexBalance" Description="Cari Döviz Bakiye" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Cari Döviz Bakiye" Precision="28" Scale="8"/>
+				<Field Id="31" Name="CurrentAccountForexActualBalance" Description="Cari Döviz Güncel Bakiye" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Cari Döviz Güncel Bakiye" Precision="28" Scale="8"/>
+				<Field Id="32" Name="DebitDistribution_01" Description="Bakiye Dağılımı-01" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-01" Precision="28" Scale="8" />
+				<Field Id="33" Name="DebitDistribution_02" Description="Bakiye Dağılımı-02" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-02" Precision="28" Scale="8" />
+				<Field Id="34" Name="DebitDistribution_03" Description="Bakiye Dağılımı-03" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-03" Precision="28" Scale="8" />
+				<Field Id="35" Name="DebitDistribution_04" Description="Bakiye Dağılımı-04" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-04" Precision="28" Scale="8" />
+				<Field Id="36" Name="DebitDistribution_05" Description="Bakiye Dağılımı-05" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-05" Precision="28" Scale="8" />
+				<Field Id="37" Name="DebitDistribution_06" Description="Bakiye Dağılımı-06" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-06" Precision="28" Scale="8" />
+				<Field Id="38" Name="DebitDistribution_07" Description="Bakiye Dağılımı-07" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-07" Precision="28" Scale="8" />
+				<Field Id="39" Name="DebitDistribution_08" Description="Bakiye Dağılımı-08" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-08" Precision="28" Scale="8" />
+				<Field Id="40" Name="DebitDistribution_09" Description="Bakiye Dağılımı-09" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-09" Precision="28" Scale="8" />
+				<Field Id="41" Name="DebitDistribution_10" Description="Bakiye Dağılımı-10" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Bakiye Dağılımı-10" Precision="28" Scale="8" />
+				<Field Id="42" Name="IsApproved" Description="Onay Durumu" DataType="Byte" Ordinal="51" UdtType="UdtInt8" Caption="Onay Durumu" Precision="3" IsFilterField="True" IsDefaultFilterField="True" ReportEditorType="ListSelector" ReportListName="ApprovedList" />
+				<Field Id="43" Name="ApprovedAt" Description="Onay Zamanı" DataType="DateTime" Ordinal="52" UdtType="UdtDate" FieldUsage="DateTime" Caption="Onay Zamanı" IsFilterField="True" />
+				<Field Id="44" Name="ApprovedBy" Description="Onaylayan" DataType="Int32" Ordinal="53" UdtType="UdtInt32" Caption="Onaylayan" Precision="10" IsFilterField="True" />
+				<Field Id="45" Name="ApprovedExplanation" Description="Onaylama Açıklaması" DataType="String" Ordinal="54" UdtType="UdtTextLong" Caption="Onaylama Açıklaması" Size="4000" IsFilterField="True" />
+				<Field Id="46" Name="InsertedAt" Description="Kaydı Ekleme Zamanı" DataType="DateTime" Ordinal="31" UdtType="UdtDateTime" Caption="Kayıt Zamanı" />
+				<Field Id="47" Name="InsertedBy" Description="Kaydı Ekleyen" DataType="Int32" Ordinal="32" UdtType="UdtInt32" Caption="Kayıt Eden" Precision="10" />
+				<Field Id="48" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+				<Field Id="49" Name="UpdatedAt" Description="Kaydı Değiştirme Zamanı" DataType="DateTime" Ordinal="34" UdtType="UdtDateTime" Caption="Değişiklik Zamanı" />
+				<Field Id="50" Name="UpdatedBy" Description="Güncelleyen" DataType="Int32" Ordinal="35" UdtType="UdtInt32" Caption="Güncelleyen" Precision="10" IsFilterField="True" />
+				<Field Id="51" Name="DeletedAt" Description="Kaydı Silme Zamanı" DataType="DateTime" Ordinal="36" UdtType="UdtDateTime" Caption="Silme Zamanı" />
+				<Field Id="52" Name="DeletedBy" Description="Kaydı Silen" DataType="Int32" Ordinal="37" UdtType="UdtInt32" Caption="Silen" Precision="10" />
+			</Fields>
+			<Indexes>
+			</Indexes>
+			<Relations>
+				<Relation Id="0" Name="FK_Erp_AgingReportResults_Erp_Company" DestinationTable="Erp_Company" CheckExistingData="False" EnforceForReplication="False">
+					<RelationFields>
+						<RelationField Id="1" Name="CompanyId" DestinationField="RecId" />
+					</RelationFields>
+				</Relation>
+				<Relation Id="0" Name="FK_Erp_AgingReportResults_Erp_CurrentAccount" DestinationTable="Erp_CurrentAccount" CheckExistingData="False" EnforceForReplication="False">
+					<RelationFields>
+						<RelationField Id="1" Name="CurrentAccountId" DestinationField="RecId" />
+					</RelationFields>
+				</Relation>
+			</Relations>
+		</Table>
+	</Tables>
+</SentezMetaData>

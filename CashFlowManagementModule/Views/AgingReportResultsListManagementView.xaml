@@ -1,0 +1,443 @@
+﻿<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
+    xmlns:UtilCore="clr-namespace:Sentez.Common.Utilities;assembly=LiveCore"
+    xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
+    xmlns:cmd="clr-namespace:Sentez.Common.Commands;assembly=LiveCore"
+    xmlns:dxwui="http://schemas.devexpress.com/winfx/2008/xaml/windowsui"
+    xmlns:sye="clr-namespace:Sentez.Common.Extension;assembly=LiveCore.Desktop"
+    xmlns:conv="clr-namespace:Sentez.Common.Converters;assembly=LiveCore"
+    x:Name="AgingReportResultsListW"
+    Tag="AgingReportResultsListW"
+    Focusable="True">
+    <Grid>
+        <Grid.Resources>
+            <conv:BoolToExpandStateConverter x:Key="boolToExpandStateConverter"/>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid>
+            <live:LiveDockLayoutManager x:Name="WorklistDockLayoutManager" EnableSaveLayout="True">
+                <live:LiveDockLayoutManager.AutoHideGroups>
+
+                    <live:LiveAutoHideGroup x:Name="OptionsGroup" DockType="Left" AllowSplitters="True" Orientation="Vertical" AllowHide="True" >
+                        <live:LiveLayoutPanel  Caption="{lange:Translate Liste Seçenekleri}" ItemWidth="300" AllowDock="True" AllowFloat="False" AllowClose="False" VerticalContentAlignment="Center" AutoHideExpandState="{Binding ActivePolicy.OptionsPanelExpanded, Converter={StaticResource boolToExpandStateConverter}}" Visibility="Collapsed" x:Name="WorkListOptionsPanel">
+                            <live:LiveLayoutPanel.CaptionTemplate>
+                                <DataTemplate>
+                                    <TextBlock FontSize="14" Text="{lange:Translate Liste Seçenekleri}" Margin="0,2,0,2"></TextBlock>
+                                </DataTemplate>
+                            </live:LiveLayoutPanel.CaptionTemplate>
+                            <TreeView  x:Name="ReportOptionsTree" ItemTemplateSelector="{StaticResource OptionsTemplateSelector}"  ItemsSource="{Binding ActivePolicy.OptionsList}" Background="Transparent" BorderThickness="0" Height="Auto" />
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="FilterGroup" DockType="Left" Orientation="Vertical">
+                        <live:LiveLayoutPanel x:Name="FilterPanel" Caption="{lange:Translate F i l t r e}" ItemWidth="250">
+                            <live:LiveLayoutPanel.CaptionTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Margin="0,2,0,2"></TextBlock>
+                                </DataTemplate>
+                            </live:LiveLayoutPanel.CaptionTemplate>
+                            <live:LiveFilterPanel x:Name="LiveFilterPanel" Width="Auto" Height="Auto"></live:LiveFilterPanel>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+                    
+                    <live:LiveAutoHideGroup x:Name="LiveAutoHideGroupBouncedDocument" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Collapsed">
+                        <live:LiveLayoutPanel x:Name="LiveLayoutPanelBouncedDocument" Caption="{lange:TranslateExtension Karşılıksız Evrak Bilgileri}" ItemWidth="600">
+                            <live:LiveGridControl x:Name="LiveGridControlBouncedDocument" ItemsSource="{Binding Path=BouncedDocumentList}" Lookups="{sye:SBinding Lists}" >
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                                <live:LiveGridControl.ColumnDefinitions>
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  DefaultValue="" EditorType="DateEditor" UdtType="UdtDate"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Evrak Açıklama" EditorType="TextEditor" Width="300"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Quantity" Caption="Miktar" Width="75" UsageType="VariantQuantity"  DataType="{x:Type system:Decimal}"  DefaultValue="" EditorType="MaskEditor" UdtType="UdtQuantity" />
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionAmount" Caption="Tutar" Width="75" UsageType="Amount"  DataType="{x:Type system:Decimal}"  DefaultValue="" EditorType="MaskEditor" UdtType="UdtAmount"/>
+                                </live:LiveGridControl.ColumnDefinitions>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="LiveAutoHideGroupSellerNotes" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Collapsed">
+                        <live:LiveLayoutPanel x:Name="LiveLayoutPanelSellerNotes" Caption="{lange:TranslateExtension Pazarlamacı Notları}" ItemWidth="600">
+                            <live:LiveGridControl x:Name="LiveGridControlSellerNotes" ItemsSource="{Binding Path=SellerNotesList}" Lookups="{sye:SBinding Lists}" >
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                                <live:LiveGridControl.ColumnDefinitions>
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  DefaultValue="" EditorType="DateEditor" UdtType="UdtDate"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Evrak Açıklama" EditorType="TextEditor" Width="300"/>
+                                </live:LiveGridControl.ColumnDefinitions>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="LiveAutoHideGroupIntelligenceNotes" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Visible">
+                        <live:LiveLayoutPanel x:Name="LiveLayoutPanelIntelligenceNotes" Caption="{lange:TranslateExtension Cari Hesap Notları}" ItemWidth="600">
+                            <live:LiveGridControl x:Name="LiveGridControlIntelligenceNotes"  ItemsSource="{Binding Path=IntelligenceNotesList}" Lookups="{sye:SBinding Lists}" >
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                                <live:LiveGridControl.ColumnDefinitions>
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  DefaultValue="" EditorType="DateEditor" UdtType="UdtDate"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" EditorType="TextEditor" Width="300"/>
+                                </live:LiveGridControl.ColumnDefinitions>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="OperationGroup" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Visible">
+                        <live:LiveLayoutPanel x:Name="OperationPanel" Caption="{lange:TranslateExtension Finansal İşlemler}" ItemWidth="600">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="30"/>
+                                </Grid.RowDefinitions>
+                                <live:LiveGridControl x:Name="OperationGrid" FillAllCheckColumns="False" TableName="OperationList" ItemsSource="{Binding Path=OperationList}" Lookups="{sye:SBinding Lists}" >
+                                    <live:LiveGridControl.View>
+                                        <live:ReceiptView></live:ReceiptView>
+                                    </live:LiveGridControl.View>
+                                    <live:LiveGridControl.ColumnDefinitions>
+                                        <UtilCore:ReceiptColumn ColumnName="TransactionDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  DefaultValue="" EditorType="DateEditor" UdtType="UdtDate"/>
+                                        <UtilCore:ReceiptColumn ColumnName="TransactionActionKind" Caption="İşlem Türü" EditorType="ComboBox" Width="110" ComboLookup="TransactionActionKindList" ComboDisplayMember="Display" ComboValueMember="Value"/>
+                                        <UtilCore:ReceiptColumn ColumnName="TransactionActionType" Caption="İşlem Durum" EditorType="ComboBox" Width="110" ComboLookup="TransactionActionTypeList" ComboDisplayMember="Display" ComboValueMember="Value"/>
+                                        <UtilCore:ReceiptColumn ColumnName="SellerCode" Caption="Personel Kodu" EditorType="ListSelector"  Width="70" LookUpTable="Erp_Employee" LookUpField="EmployeeCode" />
+                                        <UtilCore:ReceiptColumn ColumnName="SellerName" Caption="Personel Adı" EditorType="ReadOnlyTextEditor" Width="120" LookUpTable="Erp_Employee" LookUpField="EmployeeName" />
+                                        <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" EditorType="TextEditor" Width="300"/>
+
+                                        <UtilCore:ReceiptColumn ColumnName="TransactionAmount" Caption="Tutar" EditorType="TextEditor" Width="90" UsageType="Amount"/>
+                                        <!--<UtilCore:ReceiptColumn ColumnName="IsManualStopSale" Caption="Elle Durdurma" EditorType="CheckBox" Width="100"/>-->
+                                    </live:LiveGridControl.ColumnDefinitions>
+                                </live:LiveGridControl>
+                                <Grid Grid.Row="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="200"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="200"/>
+                                    </Grid.ColumnDefinitions>
+                                    <live:LiveButton Content="{lange:Translate Kaydet}" Width="200" HorizontalAlignment="Left"/>
+                                    <live:LiveButton Grid.Column="3" Content="{lange:Translate Sil}" Width="200" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </Grid>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="RiskLimitGroup" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Collapsed">
+                        <live:LiveLayoutPanel x:Name="RiskLimitPanel" Caption="{lange:TranslateExtension Kredi Bilgileri}" ItemWidth="550">
+                            <live:LiveGridControl x:Name="RiskLimitGrid" ItemsSource="{Binding Path=RiskLimitList}" Lookups="{sye:SBinding Lists}">
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                                <live:LiveGridControl.ColumnDefinitions>
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  DefaultValue="" EditorType="DateEditor" UdtType="UdtDate"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" EditorType="TextEditor" Width="300"/>
+                                    <UtilCore:ReceiptColumn ColumnName="RiskLimit" Caption="Limit" Width="75" UsageType="VariantQuantity"  DataType="{x:Type system:Decimal}"  DefaultValue="" EditorType="MaskEditor" UdtType="UdtAmount" />
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionAmount" Caption="Tutar" Width="75" UsageType="Amount"  DataType="{x:Type system:Decimal}"  DefaultValue="" EditorType="MaskEditor" UdtType="UdtAmount"/>
+                                </live:LiveGridControl.ColumnDefinitions>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="AggrementGroup" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Collapsed">
+                        <live:LiveLayoutPanel x:Name="AggrementPanel" Caption="{lange:TranslateExtension Mutabakat Tarihçesi}" ItemWidth="600">
+                            <live:LiveGridControl x:Name="AggrementGrid" ItemsSource="{Binding Path=AggrementReceiptTable}" Lookups="{sye:SBinding Lists}">
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                                <live:LiveGridControl.ColumnDefinitions>
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  DefaultValue="" EditorType="DateEditor" UdtType="UdtDate"/>
+                                    <UtilCore:ReceiptColumn ColumnName="TransactionAggrementType" Caption="Durum" EditorType="ComboBox" Width="110" ComboLookup="TransactionAggrementTypeList" ComboDisplayMember="Display" ComboValueMember="Value"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" EditorType="TextEditor" Width="400"/>
+                                </live:LiveGridControl.ColumnDefinitions>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="RiskPointTable" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Collapsed">
+                        <live:LiveLayoutPanel x:Name="LiveLayoutPanelRiskPointTable" Caption="{lange:TranslateExtension Risk Puan Tablosu}" ItemWidth="600">
+                            <live:LiveGridControl x:Name="RiskPointTableGrid" ItemsSource="{Binding Path=RiskPointTable}" Lookups="{sye:SBinding Lists}">
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                                <live:LiveGridControl.ColumnDefinitions>
+                                    <UtilCore:ReceiptColumn ColumnName="AnalysisElementName" Caption="Unsur Adı" EditorType="TextEditor" Width="400"/>
+                                    <UtilCore:ReceiptColumn ColumnName="ElementPoint" Caption="Unsur Puanı" EditorType="MaskEditor" Width="50" UsageType="VariantQuantity"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" Width="200" UsageType="Name"  DataType="{x:Type system:String}"  DefaultValue="" EditorType="TextEditor" UdtType="UdtExpHuge"/>
+                                </live:LiveGridControl.ColumnDefinitions>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="OtherCompanyBalanceTable" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Collapsed">
+                        <live:LiveLayoutPanel x:Name="LiveLayoutPanelOtherCompanyBalanceTable" Caption="{lange:TranslateExtension Mhs Bakiye}" ItemWidth="600">
+                            <live:LiveGridControl x:Name="OtherCompanyBalanceTableGrid" ItemsSource="{Binding Path=OtherCompanyBalanceTable}" Lookups="{sye:SBinding Lists}">
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                                <live:LiveGridControl.ColumnDefinitions>
+                                    <UtilCore:ReceiptColumn ColumnName="CurrentAccountCode" Caption="Cari Hesap Kodu" EditorType="TextEditor" Width="200"/>
+                                    <UtilCore:ReceiptColumn ColumnName="CurrentAccountName" Caption="Cari Hesap Adı" EditorType="TextEditor" Width="200"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Debit" Caption="Borç" EditorType="TextEditor" Width="100" UsageType="Amount" DataType="{x:Type system:Decimal}"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Credit" Caption="Alacak" EditorType="TextEditor" Width="100" UsageType="Amount" DataType="{x:Type system:Decimal}"/>
+                                    <UtilCore:ReceiptColumn ColumnName="Balance" Caption="Bakiye" EditorType="TextEditor" Width="100" UsageType="Amount" DataType="{x:Type system:Decimal}"/>
+                                    <UtilCore:ReceiptColumn ColumnName="BalanceType" Caption="BT" EditorType="TextEditor" Width="60"/>
+                                </live:LiveGridControl.ColumnDefinitions>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="ChildCurrentAccountGroup" DockType="Right" AllowSplitters="True" Orientation="Vertical">
+                        <live:LiveLayoutPanel x:Name="ChildCurrentAccountPanel" Caption="{lange:TranslateExtension Bağlı Cari Hesaplar}">
+                            <Grid >
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" >
+                                    <live:LiveGridControl x:Name="ChildCurrentAccountGrid" ItemsSource="{Binding Path=ChildCurrentAccounts}" ShowTotalRow="True">
+                                        <live:LiveGridControl.View>
+                                            <live:ListView></live:ListView>
+                                        </live:LiveGridControl.View>
+                                        <live:LiveGridControl.ColumnDefinitions>
+                                            <UtilCore:ReceiptColumn ColumnName="CurrentAccountCode" Caption="Cari Hesap Kodu" Width="100" UsageType="Code" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                            <UtilCore:ReceiptColumn ColumnName="CurrentAccountName" Caption="Cari Hesap Adı" Width="150" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Debit" Caption="Borç" Width="100" UsageType="Amount" DataType="{x:Type system:Double}" DefaultValue="" EditorType="ReadOnlyMaskEditor" UdtType="UdtAmount"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Credit" Caption="Alacak" Width="100" UsageType="Amount" DataType="{x:Type system:Double}" DefaultValue="" EditorType="ReadOnlyMaskEditor" UdtType="UdtAmount"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Balance" Caption="Bakiye" Width="100" UsageType="Amount" DataType="{x:Type system:Double}" DefaultValue="" EditorType="ReadOnlyMaskEditor" UdtType="UdtAmount"/>
+                                            <UtilCore:ReceiptColumn ColumnName="BalanceType" Caption="BT" Width="50" UsageType="Code" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                        </live:LiveGridControl.ColumnDefinitions>
+                                    </live:LiveGridControl>
+                                </Grid>
+                            </Grid>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="CurrentAccountContactGroup" DockType="Right" AllowSplitters="True" Orientation="Vertical">
+                        <live:LiveLayoutPanel x:Name="CurrentAccountContactPanel" Caption="{lange:TranslateExtension Yetkililer}">
+                            <Grid >
+                                <Grid.RowDefinitions>
+                                    <RowDefinition/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" >
+                                    <live:LiveGridControl x:Name="CurrentAccountContactGrid" ItemsSource="{Binding Path=CurrentAccountContacts}" SelectionMode="Row">
+                                        <live:LiveGridControl.View>
+                                            <live:ListSelectionView></live:ListSelectionView>
+                                        </live:LiveGridControl.View>
+                                        <live:LiveGridControl.ColumnDefinitions>
+                                            <UtilCore:ReceiptColumn ColumnName="Title" Caption="Ünvan" Width="150" UsageType="Code" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Name" Caption="Adı" Width="150" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Surname" Caption="Soyadı" Width="150" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Position" Caption="Pozisyonu" Width="60" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Phone" Caption="Telefon" Width="60" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="Fax" Caption="Faks" Width="60" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="EMailAddress" Caption="E-Posta" Width="60" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                        </live:LiveGridControl.ColumnDefinitions>
+                                    </live:LiveGridControl>
+                                </Grid>
+                            </Grid>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+
+                    <live:LiveAutoHideGroup x:Name="CustomerActivityGroup" DockType="Right" AllowSplitters="True" Orientation="Vertical" Visibility="Collapsed">
+                        <live:LiveLayoutPanel x:Name="CustomerActivityPanel" Caption="{lange:TranslateExtension Aktiviteler}">
+                            <live:LiveGridControl x:Name="CustomerActivityGrid" ItemsSource="{Binding Path=CustomerActivityTable}" Lookups="{sye:SBinding Lists}">
+                                <live:LiveGridControl.View>
+                                    <live:ListView></live:ListView>
+                                </live:LiveGridControl.View>
+                            </live:LiveGridControl>
+                        </live:LiveLayoutPanel>
+                    </live:LiveAutoHideGroup>
+                    
+                </live:LiveDockLayoutManager.AutoHideGroups>
+                <live:LiveLayoutGroup>
+                    <live:LiveLayoutGroup Orientation="Vertical">
+                        <live:LiveLayoutGroup>
+                            <live:LiveDocumentGroup>
+                                <live:LiveDocumentPanel Caption="{lange:TranslateExtension Cari Hesap Yaşlandırma Tablosu}">
+                                    <live:LiveGridControl x:Name="dbGrid" SelectionMode="Row" EnableSaveLayout="False" ItemsSource="{Binding Path=Table}" CurrentItem="{Binding GridViewSelectedItem}">
+                                        <live:LiveGridControl.View>
+                                            <live:ListSelectionView />
+                                        </live:LiveGridControl.View>
+                                    </live:LiveGridControl>
+                                </live:LiveDocumentPanel>
+                                <live:LiveDocumentPanel x:Name="ChequeBondPanel" Caption="{lange:TranslateExtension Çek/Senet Dağılımı}" Visibility="Collapsed">
+                                    <Grid >
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <Grid Visibility="Collapsed">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="2"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="5"/>
+                                                <ColumnDefinition Width="100"/>
+                                                <ColumnDefinition Width="100"/>
+                                            </Grid.ColumnDefinitions>
+                                            <live:LiveLabel      Grid.Row="1" Grid.Column="1" Margin="5" VerticalAlignment="Center"  Content="{lange:TranslateExtension Borçlu Bazında}" FontWeight="Bold" />
+                                            <live:LiveCheckEdit  Grid.Row="1" Grid.Column="2" Margin="2" IsChecked="{Binding IsDebtorBased,Mode=TwoWay}" FontWeight="Bold"/>
+                                        </Grid>
+                                        <Grid Grid.Row="1" >
+                                            <live:LiveGridControl x:Name="ChequeBondGrid" ItemsSource="{Binding Path=ChequeBonds}" ShowTotalRow="True">
+                                                <live:LiveGridControl.View>
+                                                    <live:ListView></live:ListView>
+                                                </live:LiveGridControl.View>
+                                                <live:LiveGridControl.ColumnDefinitions>
+                                                    <UtilCore:ReceiptColumn ColumnName="Cari Hesap Kodu" Width="100" Caption="Cari Hesap Kodu" EditorType="ReadOnlyTextEditor" UdtType="UdtName" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Cari Hesap Adı" Width="200" Caption="Cari Hesap Adı" EditorType="ReadOnlyTextEditor" UdtType="UdtName" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Borçlu" Width="200" Caption="Borçlu" EditorType="ReadOnlyTextEditor" UdtType="UdtName" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Temiz Çek Adedi" Width="75" Caption="Temiz Çek Adedi" IsCalculateTotalColumn="True" EditorType="ReadOnlyTextEditor" UdtType="UdtQuantity" UsageType="VariantQuantity" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Temiz Çek Tutar" Width="85" Caption="Temiz Çek Tutar" IsCalculateTotalColumn="True" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount" UsageType="Amount" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Riskli Çek Adedi" Width="75" Caption="Riskli Çek Adedi" IsCalculateTotalColumn="True" EditorType="ReadOnlyTextEditor" UdtType="UdtQuantity" UsageType="VariantQuantity" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Riskli Çek Tutar" Width="85" Caption="Riskli Çek Tutar" IsCalculateTotalColumn="True" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount" UsageType="Amount" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Toplam Çek Adedi" Width="75" Caption="Toplam Çek Adedi" IsCalculateTotalColumn="True" EditorType="ReadOnlyTextEditor" UdtType="UdtQuantity" UsageType="VariantQuantity" IsReadOnly="True"/>
+                                                    <UtilCore:ReceiptColumn ColumnName="Toplam Çek Tutar" Width="85" Caption="Toplam Çek Tutar" IsCalculateTotalColumn="True" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount" UsageType="Amount" IsReadOnly="True"/>
+                                                </live:LiveGridControl.ColumnDefinitions>
+                                            </live:LiveGridControl>
+                                        </Grid>
+                                    </Grid>
+                                </live:LiveDocumentPanel>
+                            </live:LiveDocumentGroup>
+                        </live:LiveLayoutGroup>
+                    </live:LiveLayoutGroup>
+                </live:LiveLayoutGroup>
+            </live:LiveDockLayoutManager>
+        </Grid>
+        <Grid Grid.Row="1" >
+            <live:LiveAppBar Name="LiveAppBarOperationButtons" MinWidth="213" IsExitButtonEnabled="False"  Alignment="Bottom" IsOpen="True" IsBackButtonEnabled="False" HideMode="AlwaysVisible" >
+                <live:LiveAppBarButton x:Name="lappb1" MinWidth="150" HorizontalAlignment="Left"  GlyphHeight="16" GlyphWidth="16" EllipseDiameter="38" IsEllipseEnabled="True" Command="{Binding CmdList[RefreshList]}" Label="{lange:TranslateExtension Yükle}" Glyph="pack://application:,,,/LiveCore.Desktop;component/SystemResource/Ui2/Icons/64/Load.png" ToolTip="{lange:TranslateExtension Yükle}" />
+                <live:LiveAppBarButton MinWidth="150" HorizontalAlignment="Left"  GlyphHeight="16" GlyphWidth="16" EllipseDiameter="38" IsEllipseEnabled="True" Command="{Binding CmdList[OpenScreenCommand]}" Label="{lange:TranslateExtension Cari Hesap Kartı}" Glyph="pack://application:,,,/LiveCore.Desktop;component/SystemResource/Ui2/Icons/64/Group.png" ToolTip="{lange:TranslateExtension Cari Hesap Kartı}">
+                    <live:LiveAppBarButton.CommandParameter>
+                        <cmd:SysCommandParam>
+                            <cmd:SysCommandParam.Tag>
+                                Card
+                            </cmd:SysCommandParam.Tag>
+                        </cmd:SysCommandParam>
+                    </live:LiveAppBarButton.CommandParameter>
+                </live:LiveAppBarButton>
+                <live:LiveAppBarButton MinWidth="150" HorizontalAlignment="Left"  GlyphHeight="16" GlyphWidth="16" EllipseDiameter="38" IsEllipseEnabled="True" Command="{Binding CmdList[OpenScreenCommand]}" Label="{lange:TranslateExtension Cari Hesap Ekstresi}" Glyph="pack://application:,,,/LiveCore.Desktop;component/SystemResource/Ui2/Icons/64/Extre.png" ToolTip="{lange:TranslateExtension Cari Hesap Ekstresi}">
+                    <live:LiveAppBarButton.CommandParameter>
+                        <cmd:SysCommandParam>
+                            <cmd:SysCommandParam.Tag>
+                                Extre
+                            </cmd:SysCommandParam.Tag>
+                        </cmd:SysCommandParam>
+                    </live:LiveAppBarButton.CommandParameter>
+                </live:LiveAppBarButton>
+
+                <live:LiveAppBarButton MinWidth="150" HorizontalAlignment="Left"  GlyphHeight="16" GlyphWidth="16" EllipseDiameter="38" IsEllipseEnabled="True" Command="{Binding CmdList[OpenScreenCommand]}" Label="{lange:TranslateExtension Mutabakat Maili}" Glyph="pack://application:,,,/LiveCore.Desktop;component/SystemResource/Ui2/Icons/64/Extre.png" ToolTip="{lange:TranslateExtension Mutabakat Maili}">
+                    <live:LiveAppBarButton.CommandParameter>
+                        <cmd:SysCommandParam>
+                            <cmd:SysCommandParam.Tag>
+                                AgreementLetter
+                            </cmd:SysCommandParam.Tag>
+                        </cmd:SysCommandParam>
+                    </live:LiveAppBarButton.CommandParameter>
+                </live:LiveAppBarButton>
+
+                <live:LiveAppBarButton MinWidth="150" HorizontalAlignment="Left"  GlyphHeight="16" GlyphWidth="16" EllipseDiameter="38" IsEllipseEnabled="True" Command="{Binding CmdList[OpenScreenCommand]}" Label="{lange:TranslateExtension Tahsilat Maili}" Glyph="pack://application:,,,/LiveCore.Desktop;component/SystemResource/Ui2/Icons/64/Extre.png" ToolTip="{lange:TranslateExtension Tahsilat Maili}" Visibility="Collapsed">
+                    <live:LiveAppBarButton.CommandParameter>
+                        <cmd:SysCommandParam>
+                            <cmd:SysCommandParam.Tag>
+                                Collection
+                            </cmd:SysCommandParam.Tag>
+                        </cmd:SysCommandParam>
+                    </live:LiveAppBarButton.CommandParameter>
+                </live:LiveAppBarButton>
+
+                <live:LiveAppBarButton MinWidth="150" HorizontalAlignment="Right"  GlyphHeight="16" GlyphWidth="16" EllipseDiameter="38" IsEllipseEnabled="True" Label="{lange:TranslateExtension Cari Hesap Kart İşlemleri}" Glyph="pack://application:,,,/LiveCore.Desktop;component/SystemResource/Ui2/Icons/64/UpdateProductStatus.png" ToolTip="{lange:TranslateExtension Durum Değiştir}" Visibility="Collapsed">
+                    <live:LiveAppBarButton.Flyout>
+                        <dxwui:MenuFlyout ShowIndicator="True">
+                            <dxwui:MenuFlyoutItem Command="{Binding CmdList[CurrentAccountServiceCmd]}"  Content="{lange:Translate Satış Durdurma Servisi}" ToolTip="{lange:Translate Satış Durdurma Servisini Çalıştır}">
+                                <dxwui:MenuFlyoutItem.CommandParameter>
+                                    <cmd:SysCommandParam>
+                                        <cmd:SysCommandParam.Tag>
+                                            StopSale
+                                        </cmd:SysCommandParam.Tag>
+                                    </cmd:SysCommandParam>
+                                </dxwui:MenuFlyoutItem.CommandParameter>
+                            </dxwui:MenuFlyoutItem>
+                            <dxwui:MenuFlyoutItem Command="{Binding CmdList[CurrentAccountServiceCmd]}"  Content="{lange:Translate Satış Başlatma Servisi}" ToolTip="{lange:Translate Satış Başlatma Servisini Çalıştır}">
+                                <dxwui:MenuFlyoutItem.CommandParameter>
+                                    <cmd:SysCommandParam>
+                                        <cmd:SysCommandParam.Tag>
+                                            StartSale
+                                        </cmd:SysCommandParam.Tag>
+                                    </cmd:SysCommandParam>
+                                </dxwui:MenuFlyoutItem.CommandParameter>
+                            </dxwui:MenuFlyoutItem>
+                            <dxwui:MenuFlyoutSeparator/>
+                            <dxwui:MenuFlyoutItem Command="{Binding CmdList[ChangeStatus]}"  Content="{lange:Translate Kara Listeye Al}" ToolTip="{lange:Translate Kara Listeye Al}">
+                                <dxwui:MenuFlyoutItem.CommandParameter>
+                                    <cmd:SysCommandParam>
+                                        <cmd:SysCommandParam.itemCode>
+                                            IsBlackList
+                                        </cmd:SysCommandParam.itemCode>
+                                        <cmd:SysCommandParam.Tag>
+                                            1
+                                        </cmd:SysCommandParam.Tag>
+                                    </cmd:SysCommandParam>
+                                </dxwui:MenuFlyoutItem.CommandParameter>
+                            </dxwui:MenuFlyoutItem>
+                            <dxwui:MenuFlyoutItem Command="{Binding CmdList[ChangeStatus]}"  Content="{lange:Translate Kara Listeden Çıkar}" ToolTip="{lange:Translate Kara Listeden Çıkar}">
+                                <dxwui:MenuFlyoutItem.CommandParameter>
+                                    <cmd:SysCommandParam>
+                                        <cmd:SysCommandParam.itemCode>
+                                            IsBlackList
+                                        </cmd:SysCommandParam.itemCode>
+                                        <cmd:SysCommandParam.Tag>
+                                            0
+                                        </cmd:SysCommandParam.Tag>
+                                    </cmd:SysCommandParam>
+                                </dxwui:MenuFlyoutItem.CommandParameter>
+                            </dxwui:MenuFlyoutItem>
+                            <dxwui:MenuFlyoutSeparator/>
+                            <dxwui:MenuFlyoutItem Command="{Binding CmdList[ChangeStatus]}"  Content="{lange:Translate Kontrol Edilecek}" ToolTip="{lange:Translate Kontrol Edilecek}">
+                                <dxwui:MenuFlyoutItem.CommandParameter>
+                                    <cmd:SysCommandParam>
+                                        <cmd:SysCommandParam.itemCode>
+                                            IsRiskControl
+                                        </cmd:SysCommandParam.itemCode>
+                                        <cmd:SysCommandParam.Tag>
+                                            1
+                                        </cmd:SysCommandParam.Tag>
+                                    </cmd:SysCommandParam>
+                                </dxwui:MenuFlyoutItem.CommandParameter>
+                            </dxwui:MenuFlyoutItem>
+                            <dxwui:MenuFlyoutItem Command="{Binding CmdList[ChangeStatus]}"  Content="{lange:Translate Kontrol Edildi}" ToolTip="{lange:Translate Kontrol Edildi}">
+                                <dxwui:MenuFlyoutItem.CommandParameter>
+                                    <cmd:SysCommandParam>
+                                        <cmd:SysCommandParam.itemCode>
+                                            IsRiskControl
+                                        </cmd:SysCommandParam.itemCode>
+                                        <cmd:SysCommandParam.Tag>
+                                            0
+                                        </cmd:SysCommandParam.Tag>
+                                    </cmd:SysCommandParam>
+                                </dxwui:MenuFlyoutItem.CommandParameter>
+                            </dxwui:MenuFlyoutItem>
+                            <dxwui:MenuFlyoutSeparator/>
+                            <dxwui:MenuFlyoutItem Command="{Binding CmdList[PrintForm]}"  Content="{lange:Translate Cari Hesap Formu}" ToolTip="{lange:Translate Cari Hesap Formu}">
+                                <dxwui:MenuFlyoutItem.CommandParameter>
+                                    <cmd:SysCommandParam>
+                                        <cmd:SysCommandParam.itemCode>
+                                            CurrentAccountForm
+                                        </cmd:SysCommandParam.itemCode>
+                                    </cmd:SysCommandParam>
+                                </dxwui:MenuFlyoutItem.CommandParameter>
+                            </dxwui:MenuFlyoutItem>
+                        </dxwui:MenuFlyout>
+                    </live:LiveAppBarButton.Flyout>
+                </live:LiveAppBarButton>
+                
+                <live:LiveAppBarButton x:Name="lappb2" MinWidth="150" HorizontalAlignment="Right" GlyphHeight="16" GlyphWidth="16" EllipseDiameter="38" IsEllipseEnabled="True" Command="{Binding CmdList[CloseCommand]}" Label="{lange:TranslateExtension Kapat}" Glyph="pack://application:,,,/LiveCore.Desktop;component/SystemResource/Ui2/Icons/64/Exit.png" ToolTip="{lange:TranslateExtension Çıkış}" />
+            </live:LiveAppBar>
+        </Grid>
+    </Grid>
+</UserControl>
