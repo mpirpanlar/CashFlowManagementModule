@@ -82,6 +82,18 @@ namespace CashFlowManagementModule.Services
                 return false;
             }
 
+            var cardExpiryDate = SafeDate(expiryYear, expiryMonth, DateTime.DaysInMonth(expiryYear, expiryMonth));
+            if (bankAccountRow.Table.Columns.Contains(BankAccountCreditCardHelper.FieldIssueDate) &&
+                !bankAccountRow.IsNull(BankAccountCreditCardHelper.FieldIssueDate))
+            {
+                var issueDate = Convert.ToDateTime(bankAccountRow[BankAccountCreditCardHelper.FieldIssueDate]).Date;
+                if (issueDate > cardExpiryDate)
+                {
+                    errorMessage = SLanguage.GetString("Kart veriliş tarihi son kullanma tarihinden sonra olamaz.");
+                    return false;
+                }
+            }
+
             var today = DateTime.Today;
             var expiryMonthStart = new DateTime(expiryYear, expiryMonth, 1);
             var currentMonthStart = new DateTime(today.Year, today.Month, 1);
@@ -94,10 +106,29 @@ namespace CashFlowManagementModule.Services
             return true;
         }
 
-        public static List<CreditCardStatementPeriod> GeneratePeriods(short expiryMonth, short expiryYear, short statementCutDay, short paymentDueDay, DateTime? referenceDate = null)
+        public static List<CreditCardStatementPeriod> GeneratePeriods(
+            short expiryMonth,
+            short expiryYear,
+            short statementCutDay,
+            short paymentDueDay,
+            DateTime? issueDate = null,
+            DateTime? referenceDate = null)
         {
             var today = (referenceDate ?? DateTime.Today).Date;
-            var startCursor = new DateTime(today.Year, today.Month, 1);
+            DateTime startCursor;
+            DateTime? firstPeriodStartDate = null;
+
+            if (issueDate.HasValue)
+            {
+                var issue = issueDate.Value.Date;
+                startCursor = new DateTime(issue.Year, issue.Month, 1);
+                firstPeriodStartDate = issue;
+            }
+            else
+            {
+                startCursor = new DateTime(today.Year, today.Month, 1);
+            }
+
             var endCursor = new DateTime(expiryYear, expiryMonth, 1);
             var cardExpiryDate = SafeDate(expiryYear, expiryMonth, DateTime.DaysInMonth(expiryYear, expiryMonth));
 
@@ -120,7 +151,7 @@ namespace CashFlowManagementModule.Services
 
                 var statementStartDate = previousStatementDate.HasValue
                     ? previousStatementDate.Value.AddDays(1)
-                    : new DateTime(cursor.Year, cursor.Month, 1);
+                    : (firstPeriodStartDate ?? new DateTime(cursor.Year, cursor.Month, 1));
 
                 periods.Add(new CreditCardStatementPeriod
                 {

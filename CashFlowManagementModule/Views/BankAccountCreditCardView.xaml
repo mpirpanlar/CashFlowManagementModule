@@ -6,6 +6,7 @@
     xmlns:UtilCore="clr-namespace:Sentez.Common.Utilities;assembly=LiveCore"
     xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
     xmlns:sye="clr-namespace:Sentez.Common.Extension;assembly=LiveCore.Desktop"
+    xmlns:BoExt="clr-namespace:CashFlowManagementModule.BoExtensions;assembly=CashFlowManagementModule"
     x:Name="BankAccountCreditCardView"
     Tag="BankAccountCreditCardViewW">
     <Grid Margin="5">
@@ -24,25 +25,40 @@
                     <ColumnDefinition Width="120"/>
                     <ColumnDefinition Width="150"/>
                     <ColumnDefinition Width="140"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="140"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <live:LiveLabel Grid.Column="0" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Son Kullanma Ay}"/>
-                <live:LiveCalculatorEdit Grid.Column="1" Margin="2,1,1,0" HorizontalAlignment="Left" Width="100" EditValue="{sye:SBinding Field=Erp_BankAccount.UD_CreditCardExpiryMonth}"/>
+                <live:LiveLabel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Son Kullanma Ay}"/>
+                <live:LiveCalculatorEdit Grid.Row="0" Grid.Column="1" Margin="2,1,1,0" HorizontalAlignment="Left" Width="100" EditValue="{sye:SBinding Field=Erp_BankAccount.UD_CreditCardExpiryMonth}"/>
 
-                <live:LiveLabel Grid.Column="2" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Son Kullanma Yıl}"/>
-                <live:LiveCalculatorEdit Grid.Column="3" Margin="2,1,1,0" HorizontalAlignment="Left" Width="100" EditValue="{sye:SBinding Field=Erp_BankAccount.UD_CreditCardExpiryYear}"/>
+                <live:LiveLabel Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Son Kullanma Yıl}"/>
+                <live:LiveCalculatorEdit Grid.Row="0" Grid.Column="3" Margin="2,1,1,0" HorizontalAlignment="Left" Width="100" EditValue="{sye:SBinding Field=Erp_BankAccount.UD_CreditCardExpiryYear}"/>
 
-                <live:LiveLabel Grid.Column="4" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Hesap Kesim Tarihi}"/>
-                <live:LiveDateEdit MaskType="DateTimeAdvancingCaret" Grid.Column="5" Margin="2,1,1,0" HorizontalAlignment="Left" Width="97" DateTime="{Binding Path=ActiveBO.CurrentRow.UD_StatementCutDate}" MaskUseAsDisplayFormat="True"/>
+                <live:LiveLabel Grid.Row="0" Grid.Column="4" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Kart Veriliş Tarihi}"/>
+                <live:LiveDateEdit Grid.Row="0" Grid.Column="5" MaskType="DateTimeAdvancingCaret" Margin="2,1,1,0" HorizontalAlignment="Left" Width="185" DateTime="{Binding Path=ActiveBO.CurrentRow.UD_CreditCardIssueDate}" Mask="{x:Static BoExt:BankAccountCreditCardHelper.DateDisplayMask}" DisplayFormatString="{x:Static BoExt:BankAccountCreditCardHelper.DateDisplayMask}" MaskUseAsDisplayFormat="True"/>
 
-                <live:LiveLabel Grid.Column="6" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Son Ödeme Tarihi}"/>
-                <live:LiveDateEdit MaskType="DateTimeAdvancingCaret" Grid.Column="7" Margin="2,1,1,0" HorizontalAlignment="Left" Width="97" DateTime="{Binding Path=ActiveBO.CurrentRow.UD_PaymentDueDate}" MaskUseAsDisplayFormat="True"/>
+                <live:LiveLabel Grid.Row="1" Grid.Column="0" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Hesap Kesim Tarihi}"/>
+                <live:LiveDateEdit x:Name="dateStatementCut" Grid.Row="1" Grid.Column="1" MaskType="DateTimeAdvancingCaret" Margin="2,1,1,0" HorizontalAlignment="Left" Width="185" DateTime="{Binding Path=ActiveBO.CurrentRow.UD_StatementCutDate}" Mask="{x:Static BoExt:BankAccountCreditCardHelper.DateDisplayMask}" DisplayFormatString="{x:Static BoExt:BankAccountCreditCardHelper.DateDisplayMask}" MaskUseAsDisplayFormat="True"/>
+
+                <live:LiveLabel Grid.Row="1" Grid.Column="2" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Gün}"/>
+                <live:LiveCalculatorEdit x:Name="calcPaymentDueDays" Grid.Row="1" Grid.Column="3" Margin="2,1,1,0" HorizontalAlignment="Left" Width="100" EditValue="{Binding Path=ActiveBO.CurrentRow.PaymentDueDays, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <live:LiveLabel Grid.Row="1" Grid.Column="4" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Son Ödeme Tarihi}"/>
+                <live:LiveDateEdit x:Name="datePaymentDue" Grid.Row="1" Grid.Column="5" MaskType="DateTimeAdvancingCaret" Margin="2,1,1,0" HorizontalAlignment="Left" Width="185" DateTime="{Binding Path=ActiveBO.CurrentRow.UD_PaymentDueDate}" Mask="{x:Static BoExt:BankAccountCreditCardHelper.DateDisplayMask}" DisplayFormatString="{x:Static BoExt:BankAccountCreditCardHelper.DateDisplayMask}" MaskUseAsDisplayFormat="True"/>
+
+                <live:LiveLabel Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Toplam Limit}"/>
+                <live:LiveCalculatorEdit Grid.Row="2" Grid.Column="1" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" EditValue="{sye:SBinding Field=Erp_BankAccount.ChequeCreditLimit, Usage=Amount}"/>
+
+                <live:LiveLabel Grid.Row="2" Grid.Column="2" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Kullanılan Limit}"/>
+                <live:LiveCalculatorEdit Grid.Row="2" Grid.Column="3" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" IsReadOnly="True" EditValue="{sye:SBinding Field=Erp_BankAccount.UsedCreditLimit, Usage=Amount}"/>
+
+                <live:LiveLabel Grid.Row="2" Grid.Column="4" HorizontalAlignment="Right" HorizontalContentAlignment="Right" Padding="2" VerticalContentAlignment="Center" Width="140" Content="{lange:TranslateExtension Kalan Limit}"/>
+                <live:LiveCalculatorEdit Grid.Row="2" Grid.Column="5" Margin="2,1,1,0" HorizontalAlignment="Left" Width="120" IsReadOnly="True" EditValue="{sye:SBinding Field=Erp_BankAccount.RemainingCreditLimit, Usage=Amount}"/>
             </Grid>
         </GroupBox>
 
@@ -50,7 +66,7 @@
             <live:LiveButton MinWidth="150" Margin="2" Content="{lange:TranslateExtension Dönemleri Oluştur}" Command="{Binding CmdList[GenerateCreditCardPeriodsCommand]}"/>
         </StackPanel>
 
-        <GroupBox Grid.Row="2" Header="{lange:TranslateExtension Ekstre Dönemleri}">
+        <GroupBox Grid.Row="2" Header="{lange:TranslateExtension Hesap Kesim / Son Ödeme Dönemleri}">
             <live:LiveGridControl x:Name="gridCreditCardPeriods"
                                   ShowBorder="False"
                                   AutoPopulateColumns="False"
@@ -60,16 +76,22 @@
                                   ItemsSource="{sye:SBinding ActiveBO.Data.Tables[Erp_BankAccountCreditCardPeriod]}"
                                   TableName="Erp_BankAccountCreditCardPeriod">
                 <live:LiveGridControl.View>
-                    <live:ListView/>
+                    <live:ReceiptView/>
                 </live:LiveGridControl.View>
                 <live:LiveGridControl.ColumnDefinitions>
                     <UtilCore:ReceiptColumn ColumnName="PeriodNo" Caption="Dönem No" Width="70" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
-                    <UtilCore:ReceiptColumn ColumnName="PeriodYear" Caption="Yıl" Width="60" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                    <UtilCore:ReceiptColumn ColumnName="PeriodYear" Caption="Yıl" Width="60" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16" MaskString="####"/>
                     <UtilCore:ReceiptColumn ColumnName="PeriodMonth" Caption="Ay" Width="50" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
-                    <UtilCore:ReceiptColumn ColumnName="StatementStartDate" Caption="Dönem Başlangıç" Width="110" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate"/>
-                    <UtilCore:ReceiptColumn ColumnName="StatementDate" Caption="Hesap Kesim" Width="110" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate"/>
-                    <UtilCore:ReceiptColumn ColumnName="PaymentDueDate" Caption="Son Ödeme" Width="110" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate"/>
-                    <UtilCore:ReceiptColumn ColumnName="CardExpiryDate" Caption="Kart Son Kullanma" Width="120" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate"/>
+                    <UtilCore:ReceiptColumn ColumnName="StatementStartDate" Caption="Dönem Başlangıç" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
+                    <UtilCore:ReceiptColumn ColumnName="StatementDate" Caption="Hesap Kesim" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="DateEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
+                    <UtilCore:ReceiptColumn ColumnName="PaymentDueDays" Caption="Gün" Width="60" UsageType="None" DataType="{x:Type system:Int16}" EditorType="CalculatorEditor" UdtType="UdtInt16"/>
+                    <UtilCore:ReceiptColumn ColumnName="PaymentDueDate" Caption="Son Ödeme" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="DateEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
+                    <UtilCore:ReceiptColumn ColumnName="PeriodTotalCreditLimit" Caption="Toplam Limit" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="MaskEditor" UdtType="UdtAmount"/>
+                    <UtilCore:ReceiptColumn ColumnName="PeriodSpendingTotal" Caption="Harcama Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                    <UtilCore:ReceiptColumn ColumnName="PeriodRefundTotal" Caption="İade Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                    <UtilCore:ReceiptColumn ColumnName="PeriodCardPaymentTotal" Caption="Ödeme Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                    <UtilCore:ReceiptColumn ColumnName="PeriodRemainingCreditLimit" Caption="Kalan Limit" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                    <UtilCore:ReceiptColumn ColumnName="CardExpiryDate" Caption="Kart Son Kullanma" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
                 </live:LiveGridControl.ColumnDefinitions>
             </live:LiveGridControl>
         </GroupBox>

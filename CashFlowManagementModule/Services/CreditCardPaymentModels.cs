@@ -84,6 +84,7 @@ namespace CashFlowManagementModule.Services
         public short PeriodNo { get; set; }
         public short PeriodYear { get; set; }
         public short PeriodMonth { get; set; }
+        public DateTime StatementStartDate { get; set; }
         public DateTime StatementDate { get; set; }
         public DateTime PaymentDueDate { get; set; }
     }

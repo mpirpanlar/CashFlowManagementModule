@@ -126,6 +126,7 @@ namespace Sentez.CashFlowManagementModule
         {
             BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptPaymentOrderWorkPeriodExtension));
             BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptPaymentOrderControlExtension));
+            BusinessObjectBase.AddCustomExtension("BankAccountBO", typeof(BankAccountCreditCardSyncExtension));
         }
 
         private void RegisterServices()

@@ -1,6 +1,8 @@
 using CashFlowManagementModule.BoExtensions;
 using CashFlowManagementModule.Services;
 
+using DevExpress.Xpf.Grid;
+
 using LiveCore.Desktop.Common;
 using LiveCore.Desktop.UI.Controls;
 
@@ -11,6 +13,7 @@ using Sentez.Common;
 using Sentez.Common.Commands;
 using Sentez.Common.InformationMessages;
 using Sentez.Common.PresentationModels;
+using Sentez.Common.SystemServices;
 using Sentez.Data.BusinessObjects;
 using Sentez.Data.Tools;
 using Sentez.Localization;
@@ -18,6 +21,7 @@ using Sentez.Localization;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -29,6 +33,8 @@ namespace Sentez.CashFlowManagementModule
         LiveTabItem _ltiBankAccountCreditCard;
         bool _bankAccountCreditCardTabInitialized;
         bool _bankAccountCreditCardCommandRegistered;
+        bool _bankAccountCreditCardGridSyncInitialized;
+        bool _suppressCreditCardPaymentDueSync;
 
         void RegisterBankAccountHooks()
         {
@@ -51,6 +57,9 @@ namespace Sentez.CashFlowManagementModule
         {
             BankAccountCreditCardHelper.EnsureBankAccountMetaDataFields();
 
+            if (bo?.Data != null)
+                CreditCardPaymentDueDaysSyncService.EnsureVirtualColumns(bo.Data);
+
             bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "InUse", 1);
             bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "IsDeleted", 0);
             bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "BankAccountId", "Erp_BankAccount", "RecId", BankAccountCreditCardHelper.BankAccountFkName);
@@ -68,9 +77,7 @@ namespace Sentez.CashFlowManagementModule
 
             EnsureBankAccountCreditCardTab();
             UpdateBankAccountCreditCardTabVisibility();
-
-            if (_bankAccountPm.ActiveBO != null)
-                _bankAccountPm.ActiveBO.ColumnChanged += BankAccountPm_ActiveBO_ColumnChanged;
+            EnsureBankAccountCreditCardVisibilityHook();
 
             if (!_bankAccountCreditCardCommandRegistered)
             {
@@ -81,8 +88,7 @@ namespace Sentez.CashFlowManagementModule
 
         void BankAccountPm_Dispose(PMBase pm, PmParam parameter)
         {
-            if (_bankAccountPm?.ActiveBO != null)
-                _bankAccountPm.ActiveBO.ColumnChanged -= BankAccountPm_ActiveBO_ColumnChanged;
+            DetachCreditCardPeriodGridSync();
 
             _bankAccountPm = null;
             _ltiBankAccountCreditCard = null;
@@ -98,8 +104,12 @@ namespace Sentez.CashFlowManagementModule
                 return;
 
             EnsureBankAccountCreditCardTab();
+            EnsureBankAccountCreditCardVisibilityHook();
             ApplyCreditCardPeriodGridFilter();
             UpdateBankAccountCreditCardTabVisibility();
+            EnsureCreditCardPeriodGridSync();
+            RecalculateCreditCardPaymentDueDays();
+            RefreshCreditCardPeriodPaymentSummary();
         }
 
         void EnsureBankAccountCreditCardTab()
@@ -113,7 +123,7 @@ namespace Sentez.CashFlowManagementModule
 
             _ltiBankAccountCreditCard = new LiveTabItem
             {
-                Header = SLanguage.GetString("Kredi Kartı Ekstre"),
+                Header = SLanguage.GetString("Kredi Kartı Detay Bilgileri"),
                 Visibility = Visibility.Collapsed
             };
             liveTabControl.Items.Add(_ltiBankAccountCreditCard);
@@ -122,17 +132,121 @@ namespace Sentez.CashFlowManagementModule
             var creditCardView = pmDesktop.LoadXamlRes("BankAccountCreditCardViewW");
             if (creditCardView?._view is UserControl userControl)
             {
+                if (_bankAccountPm.ActiveBO?.Data != null)
+                    CreditCardPaymentDueDaysSyncService.EnsureVirtualColumns(_bankAccountPm.ActiveBO.Data);
+
                 userControl.DataContext = _bankAccountPm;
+                userControl.IsVisibleChanged += BankAccountCreditCardView_IsVisibleChanged;
                 _ltiBankAccountCreditCard.Content = userControl;
             }
 
             _bankAccountCreditCardTabInitialized = true;
         }
 
-        void BankAccountPm_ActiveBO_ColumnChanged(object sender, DataColumnChangeEventArgs e)
+        void BankAccountCreditCardView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (sender is UIElement element && element.IsVisible)
+                RefreshCreditCardPeriodPaymentSummary();
+        }
+
+        void EnsureCreditCardPeriodGridSync()
+        {
+            if (_bankAccountCreditCardGridSyncInitialized || _ltiBankAccountCreditCard?.Content is not UserControl userControl)
+                return;
+
+            if (userControl.FindName("gridCreditCardPeriods") is not LiveGridControl grid ||
+                grid.View is not ReceiptView receiptView)
+                return;
+
+            receiptView.CellValueChanged -= CreditCardPeriodGrid_CellValueChanged;
+            receiptView.CellValueChanged += CreditCardPeriodGrid_CellValueChanged;
+            _bankAccountCreditCardGridSyncInitialized = true;
+        }
+
+        void DetachCreditCardPeriodGridSync()
+        {
+            if (!_bankAccountCreditCardGridSyncInitialized || _ltiBankAccountCreditCard?.Content is not UserControl userControl)
+                return;
+
+            if (userControl.FindName("gridCreditCardPeriods") is LiveGridControl grid &&
+                grid.View is ReceiptView receiptView)
+            {
+                receiptView.CellValueChanged -= CreditCardPeriodGrid_CellValueChanged;
+            }
+
+            _bankAccountCreditCardGridSyncInitialized = false;
+        }
+
+        void CreditCardPeriodGrid_CellValueChanged(object sender, CellValueChangedEventArgs e)
+        {
+            if (e.Column?.FieldName == null || CreditCardPaymentDueDaysSyncService.IsSyncing)
+                return;
+
+            if (!BankAccountCreditCardSyncExtension.IsPeriodPaymentDueSyncColumn(e.Column.FieldName))
+                return;
+
+            if (e.Row is not DataRowView rowView || rowView.Row == null)
+                return;
+
+            try
+            {
+                _suppressCreditCardPaymentDueSync = true;
+                CreditCardPaymentDueDaysSyncService.SyncPeriodOnColumnChange(rowView.Row, e.Column.FieldName);
+            }
+            finally
+            {
+                _suppressCreditCardPaymentDueSync = false;
+            }
+        }
+
+        void EnsureBankAccountCreditCardVisibilityHook()
+        {
+            var bo = _bankAccountPm?.ActiveBO;
+            if (bo == null)
+                return;
+
+            bo.ColumnChanged -= BankAccountPm_ForCreditCard_ColumnChanged;
+            bo.ColumnChanged += BankAccountPm_ForCreditCard_ColumnChanged;
+        }
+
+        void BankAccountPm_ForCreditCard_ColumnChanged(object sender, DataColumnChangeEventArgs e)
         {
             if (e.Column?.ColumnName == "ForCreditCard")
                 UpdateBankAccountCreditCardTabVisibility();
+        }
+
+        void RecalculateCreditCardPaymentDueDays()
+        {
+            if (_bankAccountPm?.ActiveBO is not BusinessObjectBase bo)
+                return;
+
+            var extension = bo.Extensions?.Values.OfType<BankAccountCreditCardSyncExtension>().FirstOrDefault();
+            if (extension != null)
+            {
+                extension.RecalculatePaymentDueDays();
+                return;
+            }
+
+            if (bo.Data == null)
+                return;
+
+            CreditCardPaymentDueDaysSyncService.EnsureVirtualColumns(bo.Data);
+
+            try
+            {
+                _suppressCreditCardPaymentDueSync = true;
+
+                if (bo.CurrentRow?.Row != null)
+                    CreditCardPaymentDueDaysSyncService.RecalculateHeaderDays(bo.CurrentRow.Row);
+
+                if (bo.Data.Tables.Contains(BankAccountCreditCardHelper.PeriodTableName))
+                    CreditCardPaymentDueDaysSyncService.RecalculateAllPeriodRows(
+                        bo.Data.Tables[BankAccountCreditCardHelper.PeriodTableName]);
+            }
+            finally
+            {
+                _suppressCreditCardPaymentDueSync = false;
+            }
         }
 
         void UpdateBankAccountCreditCardTabVisibility()
@@ -143,6 +257,9 @@ namespace Sentez.CashFlowManagementModule
             var isCreditCard = ! _bankAccountPm.ActiveBO.CurrentRow.Row.IsNull("ForCreditCard") &&
                                Convert.ToBoolean(_bankAccountPm.ActiveBO.CurrentRow.Row["ForCreditCard"]);
             _ltiBankAccountCreditCard.Visibility = isCreditCard ? Visibility.Visible : Visibility.Collapsed;
+
+            if (isCreditCard)
+                RefreshCreditCardPeriodPaymentSummary();
         }
 
         void ApplyCreditCardPeriodGridFilter()
@@ -195,7 +312,8 @@ namespace Sentez.CashFlowManagementModule
                 expiryMonth,
                 expiryYear,
                 statementCutDay,
-                paymentDueDay);
+                paymentDueDay,
+                BankAccountCreditCardHelper.GetIssueDate(bankAccountRow));
 
             var applyError = CreditCardStatementPeriodGeneratorService.ApplyGeneratedPeriods(_bankAccountPm.ActiveBO as BusinessObjectBase, periods);
             if (!string.IsNullOrEmpty(applyError))
@@ -204,10 +322,51 @@ namespace Sentez.CashFlowManagementModule
                 return;
             }
 
+            try
+            {
+                _suppressCreditCardPaymentDueSync = true;
+                CreditCardPaymentDueDaysSyncService.RecalculateAllPeriodRows(periodTable);
+            }
+            finally
+            {
+                _suppressCreditCardPaymentDueSync = false;
+            }
+
             ApplyCreditCardPeriodGridFilter();
+            RefreshCreditCardPeriodPaymentSummary();
             _sysMng.ActWndMng.ShowMsg(
                 string.Format(SLanguage.GetString("{0} adet ekstre dönemi oluşturuldu."), periods.Count),
                 ConstantStr.Information);
+        }
+
+        void RefreshCreditCardPeriodPaymentSummary()
+        {
+            if (_bankAccountPm?.ActiveBO is not BusinessObjectBase bo)
+                return;
+
+            var extension = bo.Extensions?.Values.OfType<BankAccountCreditCardSyncExtension>().FirstOrDefault();
+            if (extension != null)
+            {
+                extension.RefreshPeriodPaymentSummary();
+                return;
+            }
+
+            if (bo.CurrentRow?.Row == null)
+                return;
+
+            var bankAccountRow = bo.CurrentRow.Row;
+            if (bankAccountRow.IsNull("ForCreditCard") || !Convert.ToBoolean(bankAccountRow["ForCreditCard"]))
+                return;
+
+            if (bankAccountRow.IsNull("RecId"))
+                return;
+
+            if (_bankAccountPm.ActiveSession is not LiveSession session)
+                return;
+
+            long bankAccountId = Convert.ToInt64(bankAccountRow["RecId"]);
+            CreditCardPeriodPaymentSummaryService.RefreshSummary(session, bo.Data, bankAccountId);
+            ApplyCreditCardPeriodGridFilter();
         }
     }
 }
