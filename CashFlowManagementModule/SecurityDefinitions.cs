@@ -1,6 +1,7 @@
 ﻿using Sentez.Common.ModuleBase;
 using Sentez.Common.Security;
 using Sentez.Localization;
+using CashFlowManagementModule.BoExtensions;
 
 namespace Sentez.CashFlowManagementModule
 {
@@ -8,17 +9,28 @@ namespace Sentez.CashFlowManagementModule
     {
         public static void RegisterSecurityDefinitions()
         {
-            short _moduleId = (short)Modules.ExternalModule15;
+            short moduleId = (short)Modules.ExternalModule16;
+            short logicalModuleId = moduleId;
 
-            SecurityDefinition mainSecurity = new SecurityDefinition(SLanguage.GetString("Maliyet Kontrol Modülü"), _moduleId, _moduleId, 0, 0, Privileges.Select);
-            mainSecurity.AddChild(new SecurityDefinition(SLanguage.GetString("Satış-Sevkiyat Karşılaştırması"), _moduleId, _moduleId, (short)CashFlowManagementModuleSecurityItems.VariantItemMark, (short)CashFlowManagementModuleSecuritySubItems.None, Privileges.Select));
-            mainSecurity.AddChild(new SecurityDefinition(SLanguage.GetString("Hata Kontrol Mekanizması"), _moduleId, _moduleId, (short)CashFlowManagementModuleSecurityItems.InventoryMark, (short)CashFlowManagementModuleSecuritySubItems.None, Privileges.Select));
-            mainSecurity.AddChild(new SecurityDefinition(SLanguage.GetString("Hata Görev Kontrolü"), _moduleId, _moduleId, (short)CashFlowManagementModuleSecurityItems.FaultTaskControl, (short)CashFlowManagementModuleSecuritySubItems.None, Privileges.All));
-            mainSecurity.AddChild(new SecurityDefinition(SLanguage.GetString("Aylık Gerçek Maliyet"), _moduleId, _moduleId, (short)CashFlowManagementModuleSecurityItems.MonthlyActualCost, (short)CashFlowManagementModuleSecuritySubItems.None, Privileges.All));
-            mainSecurity.AddChild(new SecurityDefinition(SLanguage.GetString("Order Tarihçesi"), _moduleId, _moduleId, (short)CashFlowManagementModuleSecurityItems.OrderAllHistory, (short)CashFlowManagementModuleSecuritySubItems.None, Privileges.All));
+            SecurityDefinition mainSecurity = new SecurityDefinition(
+                SLanguage.GetString("Aytur Nakit Akış Yönetimi"),
+                logicalModuleId, moduleId, 0, 0, Privileges.Select);
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                PaymentOrderTerminology.LineApprovalSecurityName,
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.PaymentOrderLineApproval,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                PaymentOrderTerminology.HeaderApprovalSecurityName,
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.PaymentOrderHeaderApproval,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
 
             PrivilegeInfo.SecurityDefinitions.AddDefinition(mainSecurity);
         }
     }
-
 }

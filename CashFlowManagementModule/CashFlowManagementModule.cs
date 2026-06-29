@@ -26,6 +26,8 @@ using Sentez.Common.Report;
 using Sentez.Data.BusinessObjects;
 using Sentez.FinanceModule.Models;
 using Sentez.Finance.PresentationModels;
+using CashFlowManagementModule.BoExtensions;
+using CashFlowManagementModule.PresentationModels;
 
 namespace Sentez.CashFlowManagementModule
 {
@@ -34,6 +36,7 @@ namespace Sentez.CashFlowManagementModule
         //Deneme değişiklik
         IContainerExtension _container;
         SysMng _sysMng;
+        bool _bankReceiptApprovedChangeCommandRegistered;
         LiveSession ActiveSession
         {
             get
@@ -61,6 +64,13 @@ namespace Sentez.CashFlowManagementModule
             {
                 _sysMng.AfterDesktopLogin += _sysMng_AfterDesktopLogin;
             }
+
+            SLanguage.ActiveLanguageChanged += _sLanguage_ActiveLanguageChanged;
+        }
+
+        void _sLanguage_ActiveLanguageChanged(object sender, EventArgs e)
+        {
+            PaymentOrderTerminology.ApplyBankReceiptTypeDisplayName();
         }
 
         public override void OnRegister(IContainerRegistry containerRegistry)
@@ -74,6 +84,9 @@ namespace Sentez.CashFlowManagementModule
             RegisterModuleCommands();
             RegisterServices();
             RegisterList();
+            RegisterBoExtensions();
+            RegisterBankReceiptBoHooks();
+            RegisterBankReceiptPmHooks();
             CashFlowManagementModuleSecurity.RegisterSecurityDefinitions();
 
             MenuManager.Instance.RegisterMenu("CashFlowManagementModule", "CashFlowManagementModuleMenu", moduleID, true);
@@ -82,15 +95,18 @@ namespace Sentez.CashFlowManagementModule
         public override void OnInitialize(IContainerProvider containerProvider)
         {
             _sysMng.AddApplication("CashFlowManagementModule");
+            _container.Register<IPMBase, PaymentOrderBankReceiptPM>("BankReceiptPM");
+            EnsureBankReceiptApprovedChangeCommandRegistered();
+            PaymentOrderTerminology.ApplyBankReceiptTypeDisplayName();
         }
 
         public override void RegisterModuleCommands()
         {
-            //RegisterModuleCommands_CurrentAccount();
         }
 
         private void _sysMng_AfterDesktopLogin(object sender, EventArgs e)
         {
+            EnsureBankReceiptApprovedChangeCommandRegistered();
         }
 
         public void Initialize()
@@ -101,6 +117,12 @@ namespace Sentez.CashFlowManagementModule
         {
             ParameterFactory.StaticFactory.RegisterParameterClass(typeof(CrsParameters), (int)Modules.ExternalModule16);
             _container.Register<IBusinessObject, AgingReportResultsListBO>("AgingReportResultsListBO");
+        }
+
+        private void RegisterBoExtensions()
+        {
+            BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptPaymentOrderWorkPeriodExtension));
+            BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptPaymentOrderControlExtension));
         }
 
         private void RegisterServices()
@@ -126,6 +148,7 @@ namespace Sentez.CashFlowManagementModule
 
         private void RegisterPM()
         {
+            _container.Register<IPMBase, PaymentOrderBankReceiptPM>("BankReceiptPM");
             _container.Register<IPMBase, AgingReportResultsListPM>("AgingReportResultsListPM");
             _container.Register<IPMBase, AgingReportResultsManagementPM>("AgingReportResultsManagementPM");
         }

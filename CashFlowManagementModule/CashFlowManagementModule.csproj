@@ -96,6 +96,14 @@
 		  <HintPath>..\..\..\LiveOutputs\Debug\net6.0-windows\DevExpress.XtraScheduler.v22.1.Core.Desktop.dll</HintPath>
 		</Reference>
 		
+		<Reference Include="BankModule">
+		  <HintPath>..\..\..\LiveOutputs\Debug\net6.0-windows\BankModule.dll</HintPath>
+		</Reference>
+
+		<Reference Include="BankUIModule">
+		  <HintPath>..\..\..\LiveOutputs\Debug\net6.0-windows\BankUIModule.dll</HintPath>
+		</Reference>
+
 		<Reference Include="FinanceModule">
 		  <HintPath>..\..\..\LiveOutputs\Debug\net6.0-windows\FinanceModule.dll</HintPath>
 		</Reference>

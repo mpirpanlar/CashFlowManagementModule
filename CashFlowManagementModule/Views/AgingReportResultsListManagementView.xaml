@@ -97,20 +97,25 @@
                                     <RowDefinition Height="*"/>
                                     <RowDefinition Height="30"/>
                                 </Grid.RowDefinitions>
-                                <live:LiveGridControl x:Name="OperationGrid" FillAllCheckColumns="False" TableName="OperationList" ItemsSource="{Binding Path=OperationList}" Lookups="{sye:SBinding Lists}" >
+                                <live:LiveGridControl x:Name="OperationGrid" FillAllCheckColumns="False" TableName="Erp_CurrentAccountReceiptItem" ItemsSource="{Binding Path=OperationList}" Lookups="{sye:SBinding Lists}" >
                                     <live:LiveGridControl.View>
                                         <live:ReceiptView></live:ReceiptView>
                                     </live:LiveGridControl.View>
                                     <live:LiveGridControl.ColumnDefinitions>
-                                        <UtilCore:ReceiptColumn ColumnName="TransactionDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  DefaultValue="" EditorType="DateEditor" UdtType="UdtDate"/>
-                                        <UtilCore:ReceiptColumn ColumnName="TransactionActionKind" Caption="İşlem Türü" EditorType="ComboBox" Width="110" ComboLookup="TransactionActionKindList" ComboDisplayMember="Display" ComboValueMember="Value"/>
-                                        <UtilCore:ReceiptColumn ColumnName="TransactionActionType" Caption="İşlem Durum" EditorType="ComboBox" Width="110" ComboLookup="TransactionActionTypeList" ComboDisplayMember="Display" ComboValueMember="Value"/>
-                                        <UtilCore:ReceiptColumn ColumnName="SellerCode" Caption="Personel Kodu" EditorType="ListSelector"  Width="70" LookUpTable="Erp_Employee" LookUpField="EmployeeCode" />
-                                        <UtilCore:ReceiptColumn ColumnName="SellerName" Caption="Personel Adı" EditorType="ReadOnlyTextEditor" Width="120" LookUpTable="Erp_Employee" LookUpField="EmployeeName" />
+                                        <UtilCore:ReceiptColumn ColumnName="ReceiptType" Caption="Fiş Tipi" Width="90" UsageType="VariantQuantity"  DataType="{x:Type system:Int16}"  DefaultValue="35" EditorType="TextEditor" UdtType="UdtType" IsVisible="False"/>
+                                        <UtilCore:ReceiptColumn ColumnName="DocumentType" Caption="İşlem Türü" EditorType="ComboBox" Width="110" ComboLookup="DocumentTypeList2" ComboDisplayMember="Display" ComboValueMember="Value"/>
+                                        <UtilCore:ReceiptColumn ColumnName="ReceiptDate" Caption="Tarih" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}" EditorType="DateEditor" UdtType="UdtDate"/>
+                                        <UtilCore:ReceiptColumn ColumnName="TermDate" Caption="Vade" Width="90" UsageType="Date"  DataType="{x:Type system:DateTime}"  EditorType="DateEditor" UdtType="UdtDate"/>
+                                        <UtilCore:ReceiptColumn ColumnName="EmployeeCode" Caption="Personel Kodu" EditorType="ListSelector"  Width="70" LookUpTable="Erp_Employee" LookUpField="EmployeeCode" ListIdField="EmployeeId" ListWorkListName="Erp_EmployeeEmployeeCodeList"/>
+                                        <UtilCore:ReceiptColumn ColumnName="EmployeeName" Caption="Personel Adı" EditorType="ReadOnlyTextEditor" Width="120" LookUpTable="Erp_Employee" LookUpField="EmployeeName" />
                                         <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" EditorType="TextEditor" Width="300"/>
+                                        <UtilCore:ReceiptColumn ColumnName="Debit" Caption="Borç" EditorType="TextEditor" Width="90" UsageType="Amount"/>
+                                        <UtilCore:ReceiptColumn ColumnName="Credit" Caption="Alacak" EditorType="TextEditor" Width="90" UsageType="Amount"/>
 
-                                        <UtilCore:ReceiptColumn ColumnName="TransactionAmount" Caption="Tutar" EditorType="TextEditor" Width="90" UsageType="Amount"/>
-                                        <!--<UtilCore:ReceiptColumn ColumnName="IsManualStopSale" Caption="Elle Durdurma" EditorType="CheckBox" Width="100"/>-->
+                                        <UtilCore:ReceiptColumn ColumnName="ForexId" Caption="Döviz" EditorType="ComboBox" Width="110" ComboLookup="Forex" ComboDisplayMember="ForexCode" ComboValueMember="RecId"/>
+                                        <UtilCore:ReceiptColumn ColumnName="ForexRate" Caption="Döviz Kuru" EditorType="TextEditor" Width="90" UsageType="ForexRate"/>
+                                        <UtilCore:ReceiptColumn ColumnName="ForexDebit" Caption="Döviz Borç" EditorType="TextEditor" Width="90" UsageType="ForexAmount"/>
+                                        <UtilCore:ReceiptColumn ColumnName="ForexCredit" Caption="Döviz Alacak" EditorType="TextEditor" Width="90" UsageType="ForexAmount"/>
                                     </live:LiveGridControl.ColumnDefinitions>
                                 </live:LiveGridControl>
                                 <Grid Grid.Row="1">
@@ -120,8 +125,8 @@
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="200"/>
                                     </Grid.ColumnDefinitions>
-                                    <live:LiveButton Content="{lange:Translate Kaydet}" Width="200" HorizontalAlignment="Left"/>
-                                    <live:LiveButton Grid.Column="3" Content="{lange:Translate Sil}" Width="200" HorizontalAlignment="Right"/>
+                                    <live:LiveButton Content="{lange:Translate Kaydet}" Width="200" HorizontalAlignment="Left" Command="{Binding CmdList[SaveOperationCmd]}"/>
+                                    <live:LiveButton Grid.Column="3" Content="{lange:Translate Sil}" Width="200" HorizontalAlignment="Right" Command="{Binding CmdList[DeleteOperationCmd]}"/>
                                 </Grid>
                             </Grid>
                         </live:LiveLayoutPanel>
@@ -205,6 +210,7 @@
                                         <live:LiveGridControl.ColumnDefinitions>
                                             <UtilCore:ReceiptColumn ColumnName="CurrentAccountCode" Caption="Cari Hesap Kodu" Width="100" UsageType="Code" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
                                             <UtilCore:ReceiptColumn ColumnName="CurrentAccountName" Caption="Cari Hesap Adı" Width="150" UsageType="Name" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                            <UtilCore:ReceiptColumn ColumnName="ForexCode" Caption="Döviz" Width="100" UsageType="Code" DataType="{x:Type system:String}" DefaultValue="" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
                                             <UtilCore:ReceiptColumn ColumnName="Debit" Caption="Borç" Width="100" UsageType="Amount" DataType="{x:Type system:Double}" DefaultValue="" EditorType="ReadOnlyMaskEditor" UdtType="UdtAmount"/>
                                             <UtilCore:ReceiptColumn ColumnName="Credit" Caption="Alacak" Width="100" UsageType="Amount" DataType="{x:Type system:Double}" DefaultValue="" EditorType="ReadOnlyMaskEditor" UdtType="UdtAmount"/>
                                             <UtilCore:ReceiptColumn ColumnName="Balance" Caption="Bakiye" Width="100" UsageType="Amount" DataType="{x:Type system:Double}" DefaultValue="" EditorType="ReadOnlyMaskEditor" UdtType="UdtAmount"/>

@@ -2,23 +2,22 @@
 {
     public enum MenuSubRoots : short
     {
-        Descriptions = 1000, 
-        Transactions, 
-        Operations, 
-        Reports, 
-        Settings 
+        Descriptions = 1000,
+        Transactions,
+        Operations,
+        Reports,
+        Settings
     }
+
     public enum CashFlowManagementModuleSecurityItems : short
     {
-        None,
-        VariantItemMark,
-        InventoryMark,
-        FaultTaskControl,
-        MonthlyActualCost,
-        OrderAllHistory
+        None = 0,
+        PaymentOrderLineApproval = 1,
+        PaymentOrderHeaderApproval = 2
     }
+
     public enum CashFlowManagementModuleSecuritySubItems : short
     {
-        None
+        None = 0
     }
 }

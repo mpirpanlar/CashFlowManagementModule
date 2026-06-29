@@ -25,11 +25,15 @@ using DevExpress.DocumentServices.ServiceModel.DataContracts;
 using static DevExpress.Mvvm.Native.Either;
 using System.Windows.Forms;
 using Sentez.Common.PresentationModels;
+using Sentez.FinanceModule.Models;
+using System.Windows.Shapes;
+using Sentez.Core.ParameterClasses;
 
 namespace Sentez.Finance.PresentationModels
 {
     public class AgingReportResultsManagementPM : ReportPM
     {
+        IBusinessObject CurrentAccountReceiptItemBo;
         bool FirstRange = false, SecondRange = false, ThirdRange = false, FourthRange = false, FifthRange = false, SixthRange = false, SeventhRange = false, EighthRange = false, NinthRange = false, TenthRange = false;
         bool IsIbanNo, IsForexCorrection, IsTaxNo, IsGsmPhone, IsAddressPhone, IsAddressFax, IsAddressInfo;
 
@@ -163,6 +167,16 @@ namespace Sentez.Finance.PresentationModels
             Lists.AddLookupList(new LookupListParam("ForexPrm", "Meta_ForexPrm", new[] { "RateCode", "RateName" }, "RecId", new[] { WhereField.GetIsDeletedRule("Meta_ForexPrm") }, EmptyLookupType.First) { FirstEmptyDisplayValue = SLanguage.GetString("Parametre") });
             Lists.AddLookupList("VisitPeriodTypeList", "Display", typeof(string), new object[] { SLanguage.GetString("Aralık Yok"), SLanguage.GetString("Gün"), SLanguage.GetString("Hafta"), SLanguage.GetString("Ay"), SLanguage.GetString("Yıl") }, "Value", typeof(byte), new object[] { (byte)0, (byte)1, (byte)2, (byte)3, (byte)4 });
             Lists.AddLookupList("CurrentAccountTransactionType", "Display", typeof(string), new object[] { SLanguage.GetString("Risk Limit"), SLanguage.GetString("Karşılıksız Evrak"), SLanguage.GetString("Kredi Bilgileri"), SLanguage.GetString("İşlem Tanımlama"), SLanguage.GetString("Pazarlamacı Notları"), SLanguage.GetString("Mutabakat") }, "Value", typeof(short), new object[] { (short)1, (short)2, (short)3, (short)4, (short)5, (short)6 }); // 1- de risk tarihçesi var
+            //Lists.AddLookupList("DetailPaymentTypeList", "Display", typeof(string), new object[] { SLanguage.GetString("Nakit"), SLanguage.GetString("Havale"), SLanguage.GetString("Kredi Kartı") }, "Value", typeof(byte), new object[] { (byte)1, (byte)2, (byte)3 });
+
+            Lists.AddLookupList("DocumentTypeList2",
+                "Display", typeof(string), new object[] {
+                SLanguage.GetString("Cari Hesap Fişi"),
+                SLanguage.GetString("Banka Fişi"),
+                SLanguage.GetString("Çek/Senet")},
+
+                "Value", typeof(short), new object[] { (short)0, (short)1, (short)2 });
+
             RiskPointTableVisibility = Visibility.Collapsed;
             if (sysMng.HasApplication("RbKaresiModule"))
                 RiskPointTableVisibility = Visibility.Visible;
@@ -176,10 +190,40 @@ namespace Sentez.Finance.PresentationModels
             CmdList.AddCmd(302, "OpenScreenCommand", SLanguage.GetString("Ekran Aç"), OnOpenScreenCommand, null);
             CmdList.AddCmd(303, "PrintForm", SLanguage.GetString("Form Basımı"), OnPrintForm, null);
             CmdList.AddCmd(304, "CurrentAccountServiceCmd", SLanguage.GetString("Cari Hesap Servisi"), OnCurrentAccountServiceCommand, null);
+
+            CmdList.AddCmd(304, "SaveOperationCmd", SLanguage.GetString("Cari Hesap Servisi"), OnSaveOperationCmd, null);
+            CmdList.AddCmd(304, "DeleteOperationCmd", SLanguage.GetString("Cari Hesap Servisi"), OnDeleteOperationCmd, null);
+        }
+
+        private void OnDeleteOperationCmd(ISysCommandParam param)
+        {
+
+        }
+
+        private void OnSaveOperationCmd(ISysCommandParam param)
+        {
+            if (CurrentAccountReceiptItemBo?.CurrentRow != null)
+            {
+                byte currentAccountReceiptIntegration = CurrentAccountReceiptItemBo.ActiveSession.ParamService.GetParameterClass<GLParameters>().CurrentAccountReceiptIntegration;
+                CurrentAccountReceiptItemBo.ActiveSession.ParamService.GetParameterClass<GLParameters>().CurrentAccountReceiptIntegration = 0;
+                try
+                {
+                    PostResult postResult = CurrentAccountReceiptItemBo.PostData();
+                    if (postResult == PostResult.Succeed)
+                    {
+
+                    }
+                }
+                finally
+                {
+                    CurrentAccountReceiptItemBo.ActiveSession.ParamService.GetParameterClass<GLParameters>().CurrentAccountReceiptIntegration = currentAccountReceiptIntegration;
+                }
+            }
         }
 
         public override void Init()
         {
+            CurrentAccountReceiptItemBo = container.Resolve<CurrentAccountReceiptItemBO>();
             PmName = "AgingReportResultsManagementPM";
             pPolicy = _container.Resolve<IReport>("CurrentAccountDebitDistributionList") as ReportBase;
             if (pPolicy != null && pPolicy.PolicyParam == null)
@@ -196,7 +240,8 @@ namespace Sentez.Finance.PresentationModels
 
             foreach (var fitem in pPolicy.statementList[0].filterList.Where(fitem => fitem.field1Name == "CurrentAccountCode" && fitem.filterTable1Name == "Erp_CurrentAccount"))
             {
-                string fVal = "1", lVal = "1";
+                //string fVal = "1", lVal = "1";
+                string fVal = "32002010024 01", lVal = "32002010024 01";
                 try
                 {
                     //fVal = SysMng.Instance.getSession().WindowSettings.GetValue(0, "AgingReportResultsManagementPM", "FilterOptions", "FCurrentAccountCode");
@@ -212,7 +257,11 @@ namespace Sentez.Finance.PresentationModels
                     //}
                     fitem.valueList[1] = lVal;
                 }
-                catch { fitem.valueList[0] = "1"; fitem.valueList[1] = "1"; }
+                catch
+                {
+                    //fitem.valueList[0] = "1"; fitem.valueList[1] = "1";
+                    fitem.valueList[0] = "32002010024 01"; fitem.valueList[1] = "32002010024 01";
+                }
             }
             /*
             foreach (var fitem in pPolicy.statementList[0].filterList.Where(fitem => fitem.field1Name == "GroupCode" && fitem.filterTable1Name == "Erp_TradingGroup"))
@@ -284,11 +333,30 @@ namespace Sentez.Finance.PresentationModels
             if (LiveLayoutPanelOtherCompanyBalanceTable != null) LiveLayoutPanelOtherCompanyBalanceTable.IsVisibleChanged += LayoutPanel_IsVisibleChanged;
 
             liveDockLayoutManager = FCtrl("WorklistDockLayoutManager") as LiveDockLayoutManager;
+            if (CurrentAccountReceiptItemBo != null)
+            {
+                CurrentAccountReceiptItemBo.TableNewRow += CurrentAccountReceiptItemBo_TableNewRow;
+                (CurrentAccountReceiptItemBo as BusinessObjectBase).ValueFiller.AddRule("Erp_CurrentAccountReceiptItem", "ReceiptType", 56);
+                (CurrentAccountReceiptItemBo as BusinessObjectBase).ValueFiller.AddRule("Erp_CurrentAccountReceiptItem", "DocumentType", 0);
+                //(CurrentAccountReceiptItemBo as BusinessObjectBase).ValueFiller.AddRule("Erp_CurrentAccountReceiptItem", "CurrentAccountId", GetRefId("CurrentAccountId"));
+            }
+        }
+
+        private void CurrentAccountReceiptItemBo_TableNewRow(object sender, DataTableNewRowEventArgs e)
+        {
+            if (e.Row != null)
+            {
+                e.Row["CurrentAccountId"] = GetRefId("CurrentAccountId");
+            }
         }
 
         private void OperationGrid_CreatedNewRow(object sender, NewRowViewEventArgs e)
         {
-            //throw new NotImplementedException();
+            if (e.View is DataRowView)
+            {
+                e.View.Row["ReceiptType"] = 56;
+                e.View.Row["CurrentAccountId"] = GetRefId("CurrentAccountId");
+            }
         }
 
         private void Get_WindowSetting()
@@ -622,7 +690,11 @@ namespace Sentez.Finance.PresentationModels
                         lVal = SysMng.Instance.getSession().WindowSettings.GetValue(0, "AgingReportResultsManagementPM", "FilterOptions", "LCurrentAccountCode");
                         fitem.valueList[1] = lVal;
                     }
-                    catch { fitem.valueList[0] = "1"; fitem.valueList[1] = "1"; }
+                    catch
+                    {
+                        //fitem.valueList[0] = "1"; fitem.valueList[1] = "1";
+                        fitem.valueList[0] = "32002010024 01"; fitem.valueList[1] = "32002010024 01";
+                    }
                 }
 
                 foreach (var fitem in pPolicy.statementList[0].filterList.Where(fitem => fitem.field1Name == "GroupCode" && fitem.filterTable1Name == "Erp_TradingGroup"))
@@ -1210,19 +1282,54 @@ namespace Sentez.Finance.PresentationModels
             //    ChildCurrentAccounts.Columns.Add(new DataColumn("Cari Hesap Kodu") { DataType = UdtTypes.GetUdtSystemType(Schema.Tables["Erp_CurrentAccount"].Fields["CurrentAccountCode"].UdtType) });
             //    ChildCurrentAccounts.Columns.Add(new DataColumn("Cari Hesap Adı") { DataType = UdtTypes.GetUdtSystemType(Schema.Tables["Erp_CurrentAccount"].Fields["CurrentAccountName"].UdtType) });
             //}
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine("SELECT");
-            stringBuilder.AppendLine("ECA.RecId");
-            stringBuilder.AppendLine(", ECA.CurrentAccountCode");
-            stringBuilder.AppendLine(", ECA.CurrentAccountName");
-            stringBuilder.AppendLine(", (select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) Debit");
-            stringBuilder.AppendLine(", (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) Credit");
-            stringBuilder.AppendLine(", (case when(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) > (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) then(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) - (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) else (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) -(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) end) Balance");
-            stringBuilder.AppendLine($", (case when(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) > (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) then '{SLanguage.GetString("BB")}' when(select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) > (select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) then '{SLanguage.GetString("AB")}' else '' end) BalanceType");
-            stringBuilder.AppendLine("FROM Erp_CurrentAccount ECA WITH (NOLOCK)");
-            stringBuilder.AppendLine("LEFT JOIN Erp_CurrentAccountGroup ECAG ON ECA.GroupId = ECAG.RecId");
-            stringBuilder.AppendLine($"WHERE (ECA.ParentId={(dbGrid.CurrentItem as DataRowView).Row["CurrentAccountId"]} OR ECAG.GroupCode='{(dbGrid.CurrentItem as DataRowView).Row[SLanguage.GetString("Grup Kodu")]}')");
-            ChildCurrentAccounts = UtilityFunctions.GetDataTableList(ActiveSession.dbInfo.DBProvider, ActiveSession.dbInfo.Connection, null, "ChildCurrentAccounts", stringBuilder.ToString());
+            StringBuilder sb = new StringBuilder();
+
+
+            sb.AppendLine($"SELECT");
+            sb.AppendLine($"    ECA.RecId,");
+            sb.AppendLine($"    ECA.CurrentAccountCode,");
+            sb.AppendLine($"    ECA.CurrentAccountName,");
+            sb.AppendLine($"    T.ForexId,");
+            sb.AppendLine($"    COALESCE(MF.ForexCode, 'TL') AS ForexCode,");
+            sb.AppendLine($"    T.DebitSum,");
+            sb.AppendLine($"    T.CreditSum,");
+            sb.AppendLine($"    CASE WHEN T.DebitSum > T.CreditSum");
+            sb.AppendLine($"         THEN T.DebitSum - T.CreditSum");
+            sb.AppendLine($"         ELSE T.CreditSum - T.DebitSum END AS Balance,");
+            sb.AppendLine($"    CASE WHEN T.DebitSum > T.CreditSum THEN 'BB'");
+            sb.AppendLine($"         WHEN T.CreditSum > T.DebitSum THEN 'AB'");
+            sb.AppendLine($"         ELSE '' END AS BalanceType");
+            sb.AppendLine($"FROM Erp_CurrentAccount ECA WITH (NOLOCK)");
+            sb.AppendLine($"LEFT JOIN Erp_CurrentAccountGroup ECAG ON ECA.GroupId = ECAG.RecId");
+            sb.AppendLine($"LEFT JOIN (");
+            sb.AppendLine($"    SELECT");
+            sb.AppendLine($"        ECAT.CurrentAccountId,");
+            sb.AppendLine($"        ECAT.ForexId,");
+            sb.AppendLine($"        SUM(ISNULL(ECAT.Debit01,0)+ISNULL(ECAT.Debit02,0)+ISNULL(ECAT.Debit03,0)+ISNULL(ECAT.Debit04,0)+");
+            sb.AppendLine($"            ISNULL(ECAT.Debit05,0)+ISNULL(ECAT.Debit06,0)+ISNULL(ECAT.Debit07,0)+ISNULL(ECAT.Debit08,0)+");
+            sb.AppendLine($"            ISNULL(ECAT.Debit09,0)+ISNULL(ECAT.Debit10,0)+ISNULL(ECAT.Debit11,0)+ISNULL(ECAT.Debit12,0)) AS DebitSum,");
+            sb.AppendLine($"        SUM(ISNULL(ECAT.Credit01,0)+ISNULL(ECAT.Credit02,0)+ISNULL(ECAT.Credit03,0)+ISNULL(ECAT.Credit04,0)+");
+            sb.AppendLine($"            ISNULL(ECAT.Credit05,0)+ISNULL(ECAT.Credit06,0)+ISNULL(ECAT.Credit07,0)+ISNULL(ECAT.Credit08,0)+");
+            sb.AppendLine($"            ISNULL(ECAT.Credit09,0)+ISNULL(ECAT.Credit10,0)+ISNULL(ECAT.Credit11,0)+ISNULL(ECAT.Credit12,0)) AS CreditSum");
+            sb.AppendLine($"    FROM Erp_CurrentAccountTotal ECAT WITH (NOLOCK)");
+            sb.AppendLine($"    GROUP BY ECAT.CurrentAccountId, ECAT.ForexId");
+            sb.AppendLine($") T ON T.CurrentAccountId = ECA.RecId");
+            sb.AppendLine($"LEFT JOIN Meta_Forex MF ON MF.RecId = T.ForexId");
+            sb.AppendLine($"WHERE (ECA.ParentId={(dbGrid.CurrentItem as DataRowView).Row["CurrentAccountId"]} OR ECAG.GroupCode='{(dbGrid.CurrentItem as DataRowView).Row[SLanguage.GetString("Grup Kodu")]}')");
+            sb.AppendLine($"ORDER BY ECA.CurrentAccountCode, COALESCE(MF.ForexCode,'TL');");
+            
+            //stringBuilder.AppendLine("SELECT");
+            //stringBuilder.AppendLine("ECA.RecId");
+            //stringBuilder.AppendLine(", ECA.CurrentAccountCode");
+            //stringBuilder.AppendLine(", ECA.CurrentAccountName");
+            //stringBuilder.AppendLine(", (select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) Debit");
+            //stringBuilder.AppendLine(", (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) Credit");
+            //stringBuilder.AppendLine(", (case when(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) > (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) then(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) - (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) else (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) -(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) end) Balance");
+            //stringBuilder.AppendLine($", (case when(select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) > (select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) then '{SLanguage.GetString("BB")}' when(select sum(isnull(ECAT.Credit01, 0) + isnull(ECAT.Credit02, 0) + isnull(ECAT.Credit03, 0) + isnull(ECAT.Credit04, 0) + isnull(ECAT.Credit05, 0) + isnull(ECAT.Credit06, 0) + isnull(ECAT.Credit07, 0) + isnull(ECAT.Credit08, 0) + isnull(ECAT.Credit09, 0) + isnull(ECAT.Credit10, 0) + isnull(ECAT.Credit11, 0) + isnull(ECAT.Credit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) > (select sum(isnull(ECAT.Debit01, 0) + isnull(ECAT.Debit02, 0) + isnull(ECAT.Debit03, 0) + isnull(ECAT.Debit04, 0) + isnull(ECAT.Debit05, 0) + isnull(ECAT.Debit06, 0) + isnull(ECAT.Debit07, 0) + isnull(ECAT.Debit08, 0) + isnull(ECAT.Debit09, 0) + isnull(ECAT.Debit10, 0) + isnull(ECAT.Debit11, 0) + isnull(ECAT.Debit12, 0)) from Erp_CurrentAccountTotal ECAT WITH(NOLOCK) where ECAT.CurrentAccountId = ECA.RecId and ECAT.ForexId is null) then '{SLanguage.GetString("AB")}' else '' end) BalanceType");
+            //stringBuilder.AppendLine("FROM Erp_CurrentAccount ECA WITH (NOLOCK)");
+            //stringBuilder.AppendLine("LEFT JOIN Erp_CurrentAccountGroup ECAG ON ECA.GroupId = ECAG.RecId");
+            //sb.AppendLine($"WHERE (ECA.ParentId={(dbGrid.CurrentItem as DataRowView).Row["CurrentAccountId"]} OR ECAG.GroupCode='{(dbGrid.CurrentItem as DataRowView).Row[SLanguage.GetString("Grup Kodu")]}')");
+            ChildCurrentAccounts = UtilityFunctions.GetDataTableList(ActiveSession.dbInfo.DBProvider, ActiveSession.dbInfo.Connection, null, "ChildCurrentAccounts", sb.ToString());
         }
 
         public void ShowCurrentAccountContactList()
@@ -1289,17 +1396,26 @@ namespace Sentez.Finance.PresentationModels
             if (OperationPanel == null || !OperationPanel.IsVisible) return;
             if (dbGrid?.CurrentItem == null) return;
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("select ");
-            sb.AppendLine("ct.*");
-            sb.AppendLine(", EE.EmployeeCode, EE.EmployeeName");
-            sb.AppendLine("from Erp_CurrentAccountTransaction ct with (nolock) ");
-            sb.AppendLine("LEFT JOIN Erp_Employee EE WITH (NOLOCK) ON ct.SellerId=EE.RecId");
-            sb.AppendLine($"where ct.CurrentAccountId = {GetRefId("CurrentAccountId")} and ct.TransactionType = 4");
-            sb.AppendLine("order by ct.TransactionDate");
-            OperationList = UtilityFunctions.GetDataTableList(ActiveSession.dbInfo.DBProvider, ActiveSession.dbInfo.Connection, null, "OperationList", sb.ToString());
+            if (CurrentAccountReceiptItemBo == null)
+                CurrentAccountReceiptItemBo = container.Resolve<CurrentAccountReceiptItemBO>();
+            CurrentAccountReceiptItemBo.GetAll(new WhereField[]
+            {
+                new WhereField("Erp_CurrentAccountReceiptItem", "CurrentAccountId", GetRefId("CurrentAccountId"), WhereCondition.Equal),
+                new WhereField("Erp_CurrentAccountReceiptItem", "ReceiptType", 56, WhereCondition.Equal)
+            });
+
+            //StringBuilder sb = new StringBuilder();
+            //sb.AppendLine("select ");
+            //sb.AppendLine("ct.*");
+            //sb.AppendLine(", EE.EmployeeCode, EE.EmployeeName");
+            //sb.AppendLine("from Erp_CurrentAccountReceiptItem ct with (nolock) ");
+            //sb.AppendLine("LEFT JOIN Erp_Employee EE WITH (NOLOCK) ON ct.EmployeeId=EE.RecId");
+            //sb.AppendLine($"where ct.CurrentAccountId = {GetRefId("CurrentAccountId")} and ct.TransactionType = 35 and CurrentAccountReceiptId is null");
+            //sb.AppendLine("order by ct.ReceiptDate");
+            //OperationList = UtilityFunctions.GetDataTableList(ActiveSession.dbInfo.DBProvider, ActiveSession.dbInfo.Connection, null, "OperationList", sb.ToString());
+
             if (OperationGrid != null)
-                OperationGrid.ItemsSource = OperationList.DefaultView;
+                OperationGrid.ItemsSource = CurrentAccountReceiptItemBo.Data.Tables["Erp_CurrentAccountReceiptItem"].DefaultView;
         }
 
         public void ShowAggrementList()
@@ -1494,6 +1610,7 @@ namespace Sentez.Finance.PresentationModels
             ShowCurrentAccountContactList();
         }
 
+        bool isLoaded = false;
         public override void _view_Loaded(object sender, RoutedEventArgs e)
         {
             base._view_Loaded(sender, e);
@@ -1510,7 +1627,15 @@ namespace Sentez.Finance.PresentationModels
                     }
                 }
             }
-            //Init_ColumnVisible();
+            if (!isLoaded)
+            {
+            }
+            isLoaded = true;
+        }
+
+        public override void OnListCommand(ISysCommandParam obj)
+        {
+            base.OnListCommand(obj);
         }
 
         public override void Dispose()
