@@ -11,6 +11,9 @@
 					<MenuItem CommandName="CmdGeneralOpen" Caption="Yaşlandırma Rapor Yönetimi" WebLink="" Visible="true">
 						<CommandParam viewname="AgingReportResultsListManagementW" pmname="AgingReportResultsManagementPM" modulename="FinanceModule" secname="FinanceSecurityItems.CurrentAccountRiskControl" subsecname="CurrentAccountSubItems.None"/>
 					</MenuItem>
+					<MenuItem CommandName="CmdGeneralOpen" Caption="Kredi Kartı Detay Analizi" WebLink="" Visible="true">
+						<CommandParam viewname="CreditCardDetailAnalysisViewW" pmname="CreditCardDetailAnalysisPM" modulename="FinanceModule" secname="FinanceSecurityItems.CurrentAccount" subsecname="CurrentAccountSubItems.None"/>
+					</MenuItem>
 				</MenuItem>
 			</MenuItem>
 		</MenuRoot>

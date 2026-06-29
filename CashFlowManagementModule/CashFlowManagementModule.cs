@@ -70,7 +70,7 @@ namespace Sentez.CashFlowManagementModule
 
         void _sLanguage_ActiveLanguageChanged(object sender, EventArgs e)
         {
-            PaymentOrderTerminology.ApplyBankReceiptTypeDisplayName();
+            PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
         }
 
         public override void OnRegister(IContainerRegistry containerRegistry)
@@ -87,6 +87,8 @@ namespace Sentez.CashFlowManagementModule
             RegisterBoExtensions();
             RegisterBankReceiptBoHooks();
             RegisterBankReceiptPmHooks();
+            RegisterBankAccountHooks();
+            RegisterCurrentAccountReceiptHooks();
             CashFlowManagementModuleSecurity.RegisterSecurityDefinitions();
 
             MenuManager.Instance.RegisterMenu("CashFlowManagementModule", "CashFlowManagementModuleMenu", moduleID, true);
@@ -97,7 +99,7 @@ namespace Sentez.CashFlowManagementModule
             _sysMng.AddApplication("CashFlowManagementModule");
             _container.Register<IPMBase, PaymentOrderBankReceiptPM>("BankReceiptPM");
             EnsureBankReceiptApprovedChangeCommandRegistered();
-            PaymentOrderTerminology.ApplyBankReceiptTypeDisplayName();
+            PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
         }
 
         public override void RegisterModuleCommands()
@@ -107,6 +109,7 @@ namespace Sentez.CashFlowManagementModule
         private void _sysMng_AfterDesktopLogin(object sender, EventArgs e)
         {
             EnsureBankReceiptApprovedChangeCommandRegistered();
+            PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
         }
 
         public void Initialize()
@@ -144,6 +147,8 @@ namespace Sentez.CashFlowManagementModule
         {
             ResMng.AddRes("AgingReportResultsListW", "/CashFlowManagementModule;component/Views/AgingReportResultsListView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("AgingReportResultsListManagementW", "/CashFlowManagementModule;component/Views/AgingReportResultsListManagementView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("BankAccountCreditCardViewW", "/CashFlowManagementModule;component/Views/BankAccountCreditCardView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("CreditCardDetailAnalysisViewW", "/CashFlowManagementModule;component/Views/CreditCardDetailAnalysisView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
         }
 
         private void RegisterPM()
@@ -151,6 +156,7 @@ namespace Sentez.CashFlowManagementModule
             _container.Register<IPMBase, PaymentOrderBankReceiptPM>("BankReceiptPM");
             _container.Register<IPMBase, AgingReportResultsListPM>("AgingReportResultsListPM");
             _container.Register<IPMBase, AgingReportResultsManagementPM>("AgingReportResultsManagementPM");
+            _container.Register<IPMBase, CreditCardDetailAnalysisPM>("CreditCardDetailAnalysisPM");
         }
 
         private void RegisterRpr()

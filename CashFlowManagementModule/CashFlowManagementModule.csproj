@@ -21,6 +21,8 @@
 	<ItemGroup>
 	  <Page Remove="Views\AgingReportResultsListManagementView.xaml" />
 	  <Page Remove="Views\AgingReportResultsListView.xaml" />
+	  <Page Remove="Views\BankAccountCreditCardView.xaml" />
+	  <Page Remove="Views\CreditCardDetailAnalysisView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
 		
@@ -179,6 +181,8 @@
 		  <Generator>MSBuild:Compile</Generator>
 		</Resource>
 		<Resource Include="Views\AgingReportResultsListView.xaml" />
+		<Resource Include="Views\BankAccountCreditCardView.xaml" />
+		<Resource Include="Views\CreditCardDetailAnalysisView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="CashFlowManagementModuleDataSchema.xml" />
@@ -196,6 +200,5 @@
 		<PackageReference Include="System.ServiceModel.Federation" Version="4.8.1" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Folder Include="BoExtensions\" />
 	</ItemGroup>
 </Project>

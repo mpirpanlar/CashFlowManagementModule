@@ -2,8 +2,10 @@
 using LiveCore.Desktop.UI.Controls;
 
 using CashFlowManagementModule.BoExtensions;
+using CashFlowManagementModule.Services;
 
 using Sentez.BankModule.PresentationModels;
+using Sentez.Common;
 using Sentez.Common.Commands;
 using Sentez.Common.PresentationModels;
 using Sentez.Common.Utilities;
@@ -12,6 +14,7 @@ using Sentez.Data.MetaData;
 using Sentez.Localization;
 
 using LiveCore.Desktop.Common;
+using Sentez.Common.SystemServices;
 
 using System;
 using System.Collections;
@@ -29,6 +32,7 @@ namespace Sentez.CashFlowManagementModule
         BankReceiptPM _paymentOrderBankReceiptPm;
         bool _paymentOrderHooksApplied;
         const string PaymentOrderLineApprovalToolbarName = "PaymentOrderLineApprovalToolbar";
+        const string PaymentOrderCreditCardValidationLabelName = "PaymentOrderCreditCardValidationLabel";
 
         void RegisterBankReceiptPmHooks()
         {
@@ -140,6 +144,68 @@ namespace Sentez.CashFlowManagementModule
                 ApplyPaymentOrderCardLockState();
                 RefreshPaymentOrderDetailGrid();
             }
+            else if (e.Row.Table.TableName == "Erp_BankReceiptItem"
+                     && (e.Column.ColumnName == "BankAccountId"
+                         || e.Column.ColumnName == "UD_PaymentDate"
+                         || e.Column.ColumnName == "Credit"
+                         || e.Column.ColumnName == BankReceiptCreditCardHelper.FieldInstallmentCount))
+            {
+                NormalizeInstallmentCount(e.Row);
+                RefreshPaymentOrderCreditCardValidationMessage(e.Row);
+            }
+        }
+
+        void NormalizeInstallmentCount(DataRow itemRow)
+        {
+            if (itemRow == null) return;
+            if (!itemRow.Table.Columns.Contains(BankReceiptCreditCardHelper.FieldInstallmentCount)) return;
+
+            if (itemRow.IsNull(BankReceiptCreditCardHelper.FieldInstallmentCount)
+                || Convert.ToInt16(itemRow[BankReceiptCreditCardHelper.FieldInstallmentCount]) < 1)
+            {
+                itemRow[BankReceiptCreditCardHelper.FieldInstallmentCount] = (short)1;
+            }
+        }
+
+        void RefreshPaymentOrderCreditCardValidationMessage(DataRow itemRow)
+        {
+            if (_paymentOrderBankReceiptPm == null || itemRow == null) return;
+            if (itemRow.IsNull("BankAccountId")) return;
+
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            if (session == null) return;
+
+            DateTime? fallbackDate = null;
+            if (_paymentOrderBankReceiptPm.ActiveBO?.CurrentRow?.Row != null
+                && _paymentOrderBankReceiptPm.ActiveBO.CurrentRow.Row.Table.Columns.Contains("UD_PaymentDate")
+                && !_paymentOrderBankReceiptPm.ActiveBO.CurrentRow.Row.IsNull("UD_PaymentDate"))
+            {
+                fallbackDate = Convert.ToDateTime(_paymentOrderBankReceiptPm.ActiveBO.CurrentRow.Row["UD_PaymentDate"]);
+            }
+
+            CreditCardPaymentLineInput line = CreditCardPaymentLineInput.FromBankReceiptItem(itemRow, fallbackDate);
+            CreditCardPaymentValidationResult result = CreditCardPaymentWarningService.ValidateLinePreview(session, line);
+            UpdatePaymentOrderCreditCardValidationLabel(result);
+        }
+
+        void UpdatePaymentOrderCreditCardValidationLabel(CreditCardPaymentValidationResult result)
+        {
+            if (_paymentOrderBankReceiptPm?.ActiveViewControl == null) return;
+
+            TextBlock label = _paymentOrderBankReceiptPm.ActiveViewControl.FindName(PaymentOrderCreditCardValidationLabelName) as TextBlock;
+            if (label == null) return;
+
+            if (result == null || (!result.IsBlocked && !result.HasWarning))
+            {
+                label.Text = string.Empty;
+                label.Foreground = System.Windows.Media.Brushes.Black;
+                return;
+            }
+
+            label.Text = result.IsBlocked ? result.BlockMessage : result.WarningMessage;
+            label.Foreground = result.IsBlocked
+                ? System.Windows.Media.Brushes.DarkRed
+                : System.Windows.Media.Brushes.DarkOrange;
         }
 
         void AddPaymentOrderDetailColumns()
@@ -147,6 +213,7 @@ namespace Sentez.CashFlowManagementModule
             if (_paymentOrderBankReceiptPm?.BankReceiptColumnCollection == null) return;
 
             AddColumnIfMissing("IsApproved", SLanguage.GetString("Onay Durumu"), EditorType.ComboBox, FieldUsage.None, 90, "ApprovedList");
+            AddColumnIfMissing(BankReceiptCreditCardHelper.FieldInstallmentCount, SLanguage.GetString("Taksit Sayısı"), EditorType.TextEditor, FieldUsage.None, 90);
 
             ReceiptColumnCollection columns = _paymentOrderBankReceiptPm.BankReceiptColumnCollection;
             _paymentOrderBankReceiptPm.BankReceiptColumnCollection = columns;
@@ -273,9 +340,20 @@ namespace Sentez.CashFlowManagementModule
 
             toolbar.Children.Add(btnApprove);
             toolbar.Children.Add(btnUnapprove);
+
+            var validationLabel = new TextBlock
+            {
+                Name = PaymentOrderCreditCardValidationLabelName,
+                Margin = new Thickness(12, 4, 0, 0),
+                TextWrapping = TextWrapping.Wrap,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            toolbar.Children.Add(validationLabel);
+
             Grid.SetRow(toolbar, 0);
             parentGrid.Children.Add(toolbar);
             parentGrid.RegisterName(PaymentOrderLineApprovalToolbarName, toolbar);
+            parentGrid.RegisterName(PaymentOrderCreditCardValidationLabelName, validationLabel);
         }
 
         void HookPaymentOrderCommands(BankReceiptPM pm)
