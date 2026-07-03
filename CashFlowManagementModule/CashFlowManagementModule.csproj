@@ -23,6 +23,8 @@
 	  <Page Remove="Views\AgingReportResultsListView.xaml" />
 	  <Page Remove="Views\BankAccountCreditCardView.xaml" />
 	  <Page Remove="Views\CreditCardDetailAnalysisView.xaml" />
+	  <Page Remove="Views\CurrentAccountFixedPaymentView.xaml" />
+	  <Page Remove="Views\MetaFixedPaymentType.xaml" />
 	</ItemGroup>
 	<ItemGroup>
 		
@@ -183,6 +185,8 @@
 		<Resource Include="Views\AgingReportResultsListView.xaml" />
 		<Resource Include="Views\BankAccountCreditCardView.xaml" />
 		<Resource Include="Views\CreditCardDetailAnalysisView.xaml" />
+		<Resource Include="Views\CurrentAccountFixedPaymentView.xaml" />
+		<Resource Include="Views\MetaFixedPaymentType.xaml" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="CashFlowManagementModuleDataSchema.xml" />

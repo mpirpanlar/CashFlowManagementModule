@@ -27,16 +27,15 @@ namespace CashFlowManagementModule.Services
             var periodTable = data.Tables[BankAccountCreditCardHelper.PeriodTableName];
             var periods = LoadPeriodsFromTable(periodTable);
             int companyId = session.ActiveCompany.RecId ?? 0;
-            var provider = session._dbInfo.DBProvider;
-            var connection = session._dbInfo.Connection;
+            CashFlowDbContext context = CashFlowDbContext.FromSession(session);
             DataRow bankAccountRow = GetBankAccountRow(data);
 
             var spendingLines = LoadCurrentAccountReceiptLines(
-                provider, connection, null, companyId, bankAccountId, 51, preferDebit: true, bankAccountRow);
+                context, companyId, bankAccountId, 51, preferDebit: true, bankAccountRow);
             var refundLines = LoadCurrentAccountReceiptLines(
-                provider, connection, null, companyId, bankAccountId, 53, preferDebit: false, bankAccountRow);
+                context, companyId, bankAccountId, 53, preferDebit: false, bankAccountRow);
             var paymentLines = LoadVirmanPaymentLines(
-                provider, connection, null, companyId, bankAccountId, bankAccountRow);
+                context, companyId, bankAccountId, bankAccountRow);
 
             var spendingTotals = BuildPeriodTotals(periods, spendingLines);
             var refundTotals = BuildPeriodTotals(periods, refundLines);
@@ -96,6 +95,25 @@ namespace CashFlowManagementModule.Services
         }
 
         public static IList<CreditCardPeriodMovementLine> LoadCurrentAccountReceiptLines(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            short receiptType,
+            bool preferDebit,
+            DataRow bankAccountRow = null)
+        {
+            return LoadCurrentAccountReceiptLines(
+                context.Provider,
+                context.Connection,
+                context.Transaction,
+                companyId,
+                bankAccountId,
+                receiptType,
+                preferDebit,
+                bankAccountRow);
+        }
+
+        public static IList<CreditCardPeriodMovementLine> LoadCurrentAccountReceiptLines(
             ProviderType provider,
             DbConnection connection,
             DbTransaction transaction,
@@ -119,14 +137,14 @@ namespace CashFlowManagementModule.Services
 
             string dateFilter = BuildReceiptDateFilter(bankAccountRow, "cri.ReceiptDate");
 
-            DataTable table = UtilityFunctions.GetDataTableList(
-                provider,
-                connection,
-                transaction,
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                CashFlowDbContext.From(connection, transaction, provider, keepConnectionOpen: true),
                 "Erp_CurrentAccountReceiptItem",
                 $@"select cri.RecId,
                           cri.ReceiptDate,
+                          cri.TermDate,
                           cri.InstalmentStartDate,
+                          cr.ReceiptDate HeaderReceiptDate,
                           IsNull(cri.InstallmentCount, 1) InstallmentCount,
                           {amountSql} TotalAmount
                    from Erp_CurrentAccountReceiptItem cri with (nolock)
@@ -143,6 +161,21 @@ namespace CashFlowManagementModule.Services
         }
 
         public static IList<CreditCardPeriodMovementLine> LoadVirmanPaymentLines(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            DataRow bankAccountRow = null)
+        {
+            return LoadVirmanPaymentLines(
+                context.Provider,
+                context.Connection,
+                context.Transaction,
+                companyId,
+                bankAccountId,
+                bankAccountRow);
+        }
+
+        public static IList<CreditCardPeriodMovementLine> LoadVirmanPaymentLines(
             ProviderType provider,
             DbConnection connection,
             DbTransaction transaction,
@@ -156,10 +189,8 @@ namespace CashFlowManagementModule.Services
 
             string dateFilter = BuildReceiptDateFilter(bankAccountRow, "bri.ReceiptDate");
 
-            DataTable table = UtilityFunctions.GetDataTableList(
-                provider,
-                connection,
-                transaction,
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                CashFlowDbContext.From(connection, transaction, provider, keepConnectionOpen: true),
                 "Erp_BankReceiptItem",
                 $@"select bri.RecId,
                           bri.ReceiptDate,
@@ -197,14 +228,18 @@ namespace CashFlowManagementModule.Services
                 if (installmentCount < 1)
                     installmentCount = 1;
 
-                DateTime referenceDate = Convert.ToDateTime(row["ReceiptDate"]).Date;
-                if (table.Columns.Contains("InstalmentStartDate") && !row.IsNull("InstalmentStartDate"))
-                    referenceDate = Convert.ToDateTime(row["InstalmentStartDate"]).Date;
+                DateTime? headerReceiptDate = null;
+                if (table.Columns.Contains("HeaderReceiptDate") && !row.IsNull("HeaderReceiptDate"))
+                    headerReceiptDate = Convert.ToDateTime(row["HeaderReceiptDate"]).Date;
+
+                DateTime? referenceDate = CurrentAccountReceiptCreditCardHelper.ResolveInstalmentStartDate(row, headerReceiptDate);
+                if (!referenceDate.HasValue)
+                    continue;
 
                 lines.Add(new CreditCardPeriodMovementLine
                 {
                     RecId = Convert.ToInt64(row["RecId"]),
-                    ReceiptDate = referenceDate,
+                    ReceiptDate = referenceDate.Value,
                     InstallmentCount = installmentCount,
                     TotalAmount = amount
                 });

@@ -30,6 +30,20 @@ namespace Sentez.CashFlowManagementModule
                 (short)CashFlowManagementModuleSecuritySubItems.None,
                 Privileges.Update));
 
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Tekrar Eden Ödeme Tipleri"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.FixedPaymentType,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Select | Privileges.Insert | Privileges.Update | Privileges.Delete));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Tekrar Eden Ödemeleri Aktar"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.FixedPaymentImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
             PrivilegeInfo.SecurityDefinitions.AddDefinition(mainSecurity);
         }
     }

@@ -4,6 +4,7 @@ using System.Data;
 using System.Windows;
 
 using CashFlowManagementModule.BoExtensions;
+using CashFlowManagementModule.Services;
 
 using LiveCore.Desktop.Common;
 using LiveCore.Desktop.UI.Controls;
@@ -154,9 +155,8 @@ namespace Sentez.CashFlowManagementModule
                         throw new LiveCommandItemException(SLanguage.GetString("Onay durumu değiştirme yetkiniz bulunmamaktadır."));
                     }
 
-                    object bankReceiptId = UtilityFunctions.SqlCustomScalarQuery(
-                        bankReceiptBo.Connection,
-                        bankReceiptBo.Transaction,
+                    object bankReceiptId = CashFlowDbAccess.ExecuteScalar(
+                        CashFlowDbContext.FromBusinessObject(bankReceiptBo),
                         $"select BankReceiptId from Erp_BankReceiptItem where RecId={recList[index]}");
                     if (bankReceiptId == null)
                     {

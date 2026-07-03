@@ -4,6 +4,8 @@ using Sentez.Data.MetaData;
 using Sentez.Data.Tools;
 using Sentez.Localization;
 
+using System.Data;
+
 namespace CashFlowManagementModule.BoExtensions
 {
     public static class BankReceiptCreditCardHelper
@@ -27,7 +29,10 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static short GetInstallmentCount(System.Data.DataRow bankReceiptItemRow)
         {
-            if (bankReceiptItemRow == null)
+            if (bankReceiptItemRow == null
+                || bankReceiptItemRow.Table == null
+                || bankReceiptItemRow.RowState == DataRowState.Deleted
+                || bankReceiptItemRow.RowState == DataRowState.Detached)
                 return 1;
 
             if (bankReceiptItemRow.Table.Columns.Contains(FieldInstallmentCount)

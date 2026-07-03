@@ -2,11 +2,15 @@
 using LiveCore.Desktop.UI.Controls;
 
 using CashFlowManagementModule.BoExtensions;
+using CashFlowManagementModule.PresentationModels;
 using CashFlowManagementModule.Services;
 
 using Sentez.BankModule.PresentationModels;
 using Sentez.Common;
 using Sentez.Common.Commands;
+using Sentez.Common.ModuleBase;
+using Sentez.Common.Security;
+using Sentez.Common.ModuleBase;
 using Sentez.Common.PresentationModels;
 using Sentez.Common.Utilities;
 using Sentez.Data.BusinessObjects;
@@ -23,6 +27,7 @@ using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Threading;
 
 namespace Sentez.CashFlowManagementModule
@@ -33,6 +38,7 @@ namespace Sentez.CashFlowManagementModule
         bool _paymentOrderHooksApplied;
         const string PaymentOrderLineApprovalToolbarName = "PaymentOrderLineApprovalToolbar";
         const string PaymentOrderCreditCardValidationLabelName = "PaymentOrderCreditCardValidationLabel";
+        const string PaymentOrderDefaultBankAccountPanelName = "PaymentOrderDefaultBankAccountPanel";
 
         void RegisterBankReceiptPmHooks()
         {
@@ -93,8 +99,17 @@ namespace Sentez.CashFlowManagementModule
             _paymentOrderBankReceiptPm.ActiveViewControl?.Dispatcher.BeginInvoke(
                 new Action(() =>
                 {
+                    if (BankReceiptPaymentOrderHelper.IsPaymentOrderContext(_paymentOrderBankReceiptPm))
+                    {
+                        var session = SysMng.Instance.getSession();
+                        if (session?.LookupList != null)
+                            MetaFixedPaymentTypeHelper.RefreshLookupList(session.LookupList);
+                        MetaFixedPaymentTypeHelper.RefreshLookupList(_paymentOrderBankReceiptPm.Lists);
+                    }
+
                     AddPaymentOrderDetailColumns();
                     EnsurePaymentOrderLineApprovalToolbar();
+                    EnsurePaymentOrderDefaultBankAccountPanel();
                     ApplyPaymentOrderCardLockState();
                     ApplyPaymentOrderApprovalColumnAccess();
                     ApplyPaymentOrderApprovalContextMenuAccess();
@@ -112,8 +127,17 @@ namespace Sentez.CashFlowManagementModule
             _paymentOrderBankReceiptPm.ActiveViewControl?.Dispatcher.BeginInvoke(
                 new Action(() =>
                 {
+                    if (BankReceiptPaymentOrderHelper.IsPaymentOrderContext(_paymentOrderBankReceiptPm))
+                    {
+                        var session = SysMng.Instance.getSession();
+                        if (session?.LookupList != null)
+                            MetaFixedPaymentTypeHelper.RefreshLookupList(session.LookupList);
+                        MetaFixedPaymentTypeHelper.RefreshLookupList(_paymentOrderBankReceiptPm.Lists);
+                    }
+
                     AddPaymentOrderDetailColumns();
                     EnsurePaymentOrderLineApprovalToolbar();
+                    EnsurePaymentOrderDefaultBankAccountPanel();
                     ApplyPaymentOrderCardLockState();
                     ApplyPaymentOrderApprovalColumnAccess();
                     ApplyPaymentOrderApprovalContextMenuAccess();
@@ -175,6 +199,9 @@ namespace Sentez.CashFlowManagementModule
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             if (session == null) return;
 
+            BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
+            if (businessObject?.Connection == null) return;
+
             DateTime? fallbackDate = null;
             if (_paymentOrderBankReceiptPm.ActiveBO?.CurrentRow?.Row != null
                 && _paymentOrderBankReceiptPm.ActiveBO.CurrentRow.Row.Table.Columns.Contains("UD_PaymentDate")
@@ -184,7 +211,12 @@ namespace Sentez.CashFlowManagementModule
             }
 
             CreditCardPaymentLineInput line = CreditCardPaymentLineInput.FromBankReceiptItem(itemRow, fallbackDate);
-            CreditCardPaymentValidationResult result = CreditCardPaymentWarningService.ValidateLinePreview(session, line);
+            CreditCardPaymentValidationResult result = CreditCardPaymentWarningService.ValidateLinePreview(
+                businessObject.Provider,
+                businessObject.Connection,
+                businessObject.Transaction,
+                session.ActiveCompany.RecId ?? 0,
+                line);
             UpdatePaymentOrderCreditCardValidationLabel(result);
         }
 
@@ -214,11 +246,48 @@ namespace Sentez.CashFlowManagementModule
 
             AddColumnIfMissing("IsApproved", SLanguage.GetString("Onay Durumu"), EditorType.ComboBox, FieldUsage.None, 90, "ApprovedList");
             AddColumnIfMissing(BankReceiptCreditCardHelper.FieldInstallmentCount, SLanguage.GetString("Taksit Sayısı"), EditorType.TextEditor, FieldUsage.None, 90);
+            EnsureFixedPaymentTypeDetailColumn();
 
             ReceiptColumnCollection columns = _paymentOrderBankReceiptPm.BankReceiptColumnCollection;
             _paymentOrderBankReceiptPm.BankReceiptColumnCollection = columns;
 
             ApplyPaymentOrderApprovalColumnAccess();
+        }
+
+        void EnsureFixedPaymentTypeDetailColumn()
+        {
+            if (_paymentOrderBankReceiptPm?.BankReceiptColumnCollection == null) return;
+
+            string columnName = BankReceiptFixedPaymentHelper.FieldFixedPaymentTypeId;
+            ReceiptColumn column = _paymentOrderBankReceiptPm.BankReceiptColumnCollection
+                .FirstOrDefault(c => c.ColumnName == columnName);
+
+            if (column == null)
+            {
+                column = new ReceiptColumn
+                {
+                    ColumnName = columnName,
+                    Caption = SLanguage.GetString("Ödeme Tipi"),
+                    EditorType = EditorType.ComboBox,
+                    ComboLookup = MetaFixedPaymentTypeHelper.LookupListName,
+                    ComboDisplayMember = "FixedPaymentTypeName",
+                    ComboValueMember = "RecId",
+                    Width = 220,
+                    UsageType = FieldUsage.None,
+                    IsVisible = true
+                };
+                _paymentOrderBankReceiptPm.BankReceiptColumnCollection.Add(column);
+                return;
+            }
+
+            column.Caption = SLanguage.GetString("Ödeme Tipi");
+            column.EditorType = EditorType.ComboBox;
+            column.ComboLookup = MetaFixedPaymentTypeHelper.LookupListName;
+            column.ComboDisplayMember = "FixedPaymentTypeName";
+            column.ComboValueMember = "RecId";
+            column.Width = 220;
+            column.UsageType = FieldUsage.None;
+            column.IsVisible = true;
         }
 
         void AddColumnIfMissing(string columnName, string caption, EditorType editorType, FieldUsage usageType, int width, string comboLookup = null)
@@ -244,6 +313,65 @@ namespace Sentez.CashFlowManagementModule
             }
 
             _paymentOrderBankReceiptPm.BankReceiptColumnCollection.Add(column);
+        }
+
+        void EnsurePaymentOrderDefaultBankAccountPanel()
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+            if (_paymentOrderBankReceiptPm.ActiveViewControl?.FindName(PaymentOrderDefaultBankAccountPanelName) != null) return;
+
+            var paymentOrderPm = _paymentOrderBankReceiptPm as PaymentOrderBankReceiptPM;
+            if (paymentOrderPm == null) return;
+
+            var genelTab = _paymentOrderBankReceiptPm.FCtrl("GenelTab") as LiveTabControl;
+            if (genelTab?.Items.Count == 0 || genelTab.Items[0] is not LiveTabItem tabItem) return;
+            if (tabItem.Content is not ScrollViewer scrollViewer || scrollViewer.Content is not Grid grid) return;
+
+            int rowIndex = grid.RowDefinitions.Count;
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+
+            var panel = new StackPanel
+            {
+                Name = PaymentOrderDefaultBankAccountPanelName,
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 4, 0, 0)
+            };
+
+            var label = new LiveLabel
+            {
+                HorizontalAlignment = HorizontalAlignment.Right,
+                HorizontalContentAlignment = HorizontalAlignment.Right,
+                Padding = new Thickness(2),
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Width = 130,
+                Content = SLanguage.GetString("Ön Değer Banka Hesabı")
+            };
+
+            var textEdit = new LiveTextEdit
+            {
+                Name = "TxtDefaultBankAccountCode",
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(2, 1, 0, 0),
+                Width = 120
+            };
+            textEdit.SetBinding(
+                LiveTextEdit.TextProperty,
+                new Binding(nameof(PaymentOrderBankReceiptPM.DefaultBankAccountCode))
+                {
+                    Source = paymentOrderPm,
+                    Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                });
+            textEdit.KeyDown += paymentOrderPm.OnDefaultBankAccountCodeKeyDown;
+
+            panel.Children.Add(label);
+            panel.Children.Add(textEdit);
+
+            Grid.SetRow(panel, rowIndex);
+            Grid.SetColumn(panel, 0);
+            Grid.SetColumnSpan(panel, 4);
+            grid.Children.Add(panel);
+            grid.RegisterName(PaymentOrderDefaultBankAccountPanelName, panel);
         }
 
         void ApplyPaymentOrderApprovalColumnAccess()
@@ -341,6 +469,15 @@ namespace Sentez.CashFlowManagementModule
             toolbar.Children.Add(btnApprove);
             toolbar.Children.Add(btnUnapprove);
 
+            var btnImportFixedPayments = new LiveButton
+            {
+                Content = SLanguage.GetString("Tekrar Eden Ödemeleri Aktar"),
+                Margin = new Thickness(6, 0, 0, 0),
+                Padding = new Thickness(8, 2, 8, 2)
+            };
+            btnImportFixedPayments.Command = _paymentOrderBankReceiptPm.CmdList["ImportFixedPaymentsCommand"];
+            toolbar.Children.Add(btnImportFixedPayments);
+
             var validationLabel = new TextBlock
             {
                 Name = PaymentOrderCreditCardValidationLabelName,
@@ -390,6 +527,64 @@ namespace Sentez.CashFlowManagementModule
                     PaymentOrderBulkLineUnapproveCommand,
                     null);
             }
+
+            if (pm.CmdList["ImportFixedPaymentsCommand"] == null)
+            {
+                pm.CmdList.AddCmd(
+                    322,
+                    "ImportFixedPaymentsCommand",
+                    SLanguage.GetString("Tekrar Eden Ödemeleri Aktar"),
+                    ImportFixedPaymentsCommand,
+                    CanImportFixedPaymentsCommand);
+            }
+        }
+
+        bool CanImportFixedPaymentsCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return false;
+            if (BankReceiptPaymentOrderHelper.ShouldLockPaymentOrder(_paymentOrderBankReceiptPm.ActiveBO)) return false;
+
+            return SysMng.Instance.CheckRights(
+                OperationType.Update,
+                (short)Modules.ExternalModule16,
+                (short)Modules.ExternalModule16,
+                (short)CashFlowManagementModuleSecurityItems.FixedPaymentImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None);
+        }
+
+        void ImportFixedPaymentsCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+
+            var paymentOrderPm = _paymentOrderBankReceiptPm as PaymentOrderBankReceiptPM;
+            if (paymentOrderPm == null) return;
+
+            BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
+            if (businessObject?.CurrentRow?.Row == null) return;
+
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            if (session?.ActiveCompany?.RecId == null) return;
+
+            if (paymentOrderPm.DefaultBankAccountId <= 0
+                && !string.IsNullOrWhiteSpace(paymentOrderPm.DefaultBankAccountCode))
+            {
+                paymentOrderPm.ResolveDefaultBankAccount(0, paymentOrderPm.DefaultBankAccountCode);
+            }
+
+            DateTime receiptDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+                ? DateTime.Today
+                : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+
+            FixedPaymentImportResult importResult = FixedPaymentImportService.Import(
+                businessObject,
+                session.ActiveCompany.RecId.Value,
+                receiptDate,
+                paymentOrderPm.DefaultBankAccountId);
+
+            if (!string.IsNullOrEmpty(importResult.Message))
+                SysMng.Instance.ActWndMng.ShowMsg(importResult.Message, importResult.AddedCount > 0 ? null : ConstantStr.Warning);
+
+            RefreshPaymentOrderDetailGrid();
         }
 
         bool PaymentOrderCanApprovedChangeCommand(ISysCommandParam obj)

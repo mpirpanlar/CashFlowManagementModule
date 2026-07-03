@@ -45,6 +45,48 @@ namespace CashFlowManagementModule.Services
                 InstallmentCount = BankReceiptCreditCardHelper.GetInstallmentCount(row)
             };
         }
+
+        public static CreditCardPaymentLineInput FromCurrentAccountReceiptItem(DataRow itemRow, DataRow headerRow)
+        {
+            if (itemRow == null) return null;
+
+            DateTime? paymentDate = CurrentAccountReceiptCreditCardHelper.ResolveInstalmentStartDate(itemRow, headerRow);
+            if (!paymentDate.HasValue)
+                paymentDate = DateTime.Today;
+
+            decimal amount = 0m;
+            if (!itemRow.IsNull("Debit"))
+                amount = Convert.ToDecimal(itemRow["Debit"]);
+            else if (!itemRow.IsNull("Credit"))
+                amount = Convert.ToDecimal(itemRow["Credit"]);
+
+            decimal? forexAmount = null;
+            if (itemRow.Table.Columns.Contains("ForexDebit") && !itemRow.IsNull("ForexDebit"))
+                forexAmount = Convert.ToDecimal(itemRow["ForexDebit"]);
+            else if (itemRow.Table.Columns.Contains("ForexCredit") && !itemRow.IsNull("ForexCredit"))
+                forexAmount = Convert.ToDecimal(itemRow["ForexCredit"]);
+
+            long bankAccountId = itemRow.IsNull("BankAccountId") ? 0L : Convert.ToInt64(itemRow["BankAccountId"]);
+            long currentAccountReceiptItemId = itemRow.IsNull("RecId") ? 0L : Convert.ToInt64(itemRow["RecId"]);
+
+            short installmentCount = 1;
+            if (itemRow.Table.Columns.Contains("InstallmentCount") && !itemRow.IsNull("InstallmentCount"))
+            {
+                installmentCount = Convert.ToInt16(itemRow["InstallmentCount"]);
+                if (installmentCount < 1)
+                    installmentCount = 1;
+            }
+
+            return new CreditCardPaymentLineInput
+            {
+                BankReceiptItemId = 0L,
+                BankAccountId = bankAccountId,
+                PaymentReferenceDate = paymentDate.Value,
+                Amount = amount,
+                ForexAmount = forexAmount,
+                InstallmentCount = installmentCount
+            };
+        }
     }
 
     public sealed class CreditCardPaymentValidationResult

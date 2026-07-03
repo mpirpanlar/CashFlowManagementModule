@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<SentezMetaData Application="3015" Version="1.0.3" >
+<?xml version="1.0" encoding="utf-8" ?>
+<SentezMetaData Application="3015" Version="1.0.5" >
   <Tables>
     <Table Id="288" Name="Erp_AgingReportResults" Description="Yaşlandırma Rapor Bilgileri" PrimaryKey="RecId" Caption="Yaşlandırma Rapor Bilgileri">
       <Fields>
@@ -146,6 +146,83 @@
         <Relation Id="0" Name="FK_Erp_BankAccountCreditCardPeriodAllocation_Erp_BankAccountCreditCardPeriod" DestinationTable="Erp_BankAccountCreditCardPeriod" CheckExistingData="False" EnforceForReplication="False">
           <RelationFields>
             <RelationField Id="1" Name="CreditCardPeriodId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+      </Relations>
+    </Table>
+    <Table Id="291" Name="Erp_CurrentAccountFixedPaymentSchedule" Description="Cari Hesap Tekrar Eden Ödeme Tanımları" PrimaryKey="RecId" Caption="Tekrar Eden Ödeme Tanımları">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="CompanyId" Description="Şirket No" DataType="Int32" Ordinal="2" UdtType="UdtInt32" Caption="Şirket No" Precision="10" />
+        <Field Id="3" Name="CurrentAccountId" Description="Cari Hesap Kartı Kayıt Numarası" DataType="Int64" Ordinal="3" UdtType="UdtInt64" Caption="Cari Hesap" Precision="19" />
+        <Field Id="4" Name="FixedPaymentTypeId" Description="Tekrar Eden Ödeme Tipi" DataType="Int64" Ordinal="4" UdtType="UdtInt64" Caption="Ödeme Tipi" Precision="19" />
+        <Field Id="5" Name="PaymentDay" Description="Ödeme Günü" DataType="Int16" Ordinal="5" UdtType="UdtInt16" Caption="Gün" Precision="5" />
+        <Field Id="6" Name="PaymentMonth" Description="Ödeme Ayı" DataType="Byte" Ordinal="6" UdtType="UdtInt8" Caption="Ay" Precision="3" />
+        <Field Id="7" Name="Amount" Description="Tutar" DataType="Decimal" Ordinal="7" UdtType="UdtAmount" FieldUsage="Amount" Caption="Tutar" Precision="28" Scale="8" />
+        <Field Id="8" Name="Explanation" Description="Açıklama" DataType="String" Ordinal="8" UdtType="UdtTextLong" Caption="Açıklama" Size="4000" />
+        <Field Id="9" Name="InUse" Description="Kullanımda" DataType="Boolean" Ordinal="9" UdtType="UdtBool" Caption="Aktif" Precision="3" />
+        <Field Id="10" Name="InsertedAt" Description="Kaydı Ekleme Zamanı" DataType="DateTime" Ordinal="31" UdtType="UdtDateTime" Caption="Kayıt Zamanı" />
+        <Field Id="11" Name="InsertedBy" Description="Kaydı Ekleyen" DataType="Int32" Ordinal="32" UdtType="UdtInt32" Caption="Kayıt Eden" Precision="10" />
+        <Field Id="12" Name="UpdatedAt" Description="Kaydı Değiştirme Zamanı" DataType="DateTime" Ordinal="34" UdtType="UdtDateTime" Caption="Değişiklik Zamanı" />
+        <Field Id="13" Name="UpdatedBy" Description="Güncelleyen" DataType="Int32" Ordinal="35" UdtType="UdtInt32" Caption="Güncelleyen" Precision="10" />
+        <Field Id="14" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+        <Field Id="15" Name="DeletedAt" Description="Kaydı Silme Zamanı" DataType="DateTime" Ordinal="36" UdtType="UdtDateTime" Caption="Silme Zamanı" />
+        <Field Id="16" Name="DeletedBy" Description="Kaydı Silen" DataType="Int32" Ordinal="37" UdtType="UdtInt32" Caption="Silen" Precision="10" />
+      </Fields>
+      <Indexes>
+      </Indexes>
+      <Relations>
+        <Relation Id="0" Name="FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company" DestinationTable="Erp_Company" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="CompanyId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+        <Relation Id="0" Name="FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount" DestinationTable="Erp_CurrentAccount" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="CurrentAccountId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+        <Relation Id="0" Name="FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType" DestinationTable="Meta_FixedPaymentType" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="FixedPaymentTypeId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+      </Relations>
+    </Table>
+    <Table Id="292" Name="Meta_FixedPaymentType" Description="Tekrar Eden Ödeme Tipi Tanımları" PrimaryKey="RecId" KeyField="FixedPaymentTypeCode" Caption="Tekrar Eden Ödeme Tipleri">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="FixedPaymentTypeCode" Description="Ödeme Tipi Kodu" DataType="String" Ordinal="2" UdtType="UdtCode" Caption="Kod" Size="25" IsFilterField="True" IsDefaultFilterField="True" />
+        <Field Id="3" Name="FixedPaymentTypeName" Description="Ödeme Tipi Adı" DataType="String" Ordinal="3" UdtType="UdtExpHuge" Caption="Adı" Size="1000" IsFilterField="True" />
+        <Field Id="4" Name="InUse" Description="Kullanımda" DataType="Boolean" Ordinal="4" UdtType="UdtBool" Caption="Kullanımda" Precision="3" IsFilterField="True" />
+        <Field Id="5" Name="InsertedAt" Description="Kaydı Ekleme Zamanı" DataType="DateTime" Ordinal="31" UdtType="UdtDateTime" Caption="Kayıt Zamanı" />
+        <Field Id="6" Name="InsertedBy" Description="Kaydı Ekleyen" DataType="Int32" Ordinal="32" UdtType="UdtInt32" Caption="Kayıt Eden" Precision="10" />
+        <Field Id="7" Name="UpdatedAt" Description="Kaydı Değiştirme Zamanı" DataType="DateTime" Ordinal="34" UdtType="UdtDateTime" Caption="Değişiklik Zamanı" />
+        <Field Id="8" Name="UpdatedBy" Description="Güncelleyen" DataType="Int32" Ordinal="35" UdtType="UdtInt32" Caption="Güncelleyen" Precision="10" />
+        <Field Id="9" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+        <Field Id="10" Name="DeletedAt" Description="Kaydı Silme Zamanı" DataType="DateTime" Ordinal="36" UdtType="UdtDateTime" Caption="Silme Zamanı" />
+        <Field Id="11" Name="DeletedBy" Description="Kaydı Silen" DataType="Int32" Ordinal="37" UdtType="UdtInt32" Caption="Silen" Precision="10" />
+      </Fields>
+      <Indexes>
+        <Index Id="2" Name="Meta_FixedPaymentType_IX0" Ordinal="2" isUnique="True">
+          <IndexFields>
+            <IndexField Id="1" Name="FixedPaymentTypeCode" Ordinal="1" />
+          </IndexFields>
+        </Index>
+      </Indexes>
+      <Relations>
+      </Relations>
+    </Table>
+    <Table Id="32" Name="Erp_BankReceiptItem" Description="Banka Fişleri Detay Bilgileri" PrimaryKey="RecId" KeyField="DocumentNo" Caption="Banka Fişi Detay">
+      <Fields>
+        <Field Id="500" Name="FixedPaymentTypeId" Description="Tekrar Eden Ödeme Tipi" DataType="Int64" Ordinal="500" UdtType="UdtInt64" Caption="Ödeme Tipi" Precision="19" />
+      </Fields>
+      <Indexes>
+      </Indexes>
+      <Relations>
+        <Relation Id="0" Name="FK_Erp_BankReceiptItem_Meta_FixedPaymentType" DestinationTable="Meta_FixedPaymentType" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="FixedPaymentTypeId" DestinationField="RecId" />
           </RelationFields>
         </Relation>
       </Relations>

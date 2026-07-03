@@ -70,7 +70,11 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static DateTime? GetIssueDate(DataRow bankAccountRow)
         {
-            if (bankAccountRow == null || !bankAccountRow.Table.Columns.Contains(FieldIssueDate))
+            if (bankAccountRow == null
+                || bankAccountRow.Table == null
+                || bankAccountRow.RowState == DataRowState.Deleted
+                || bankAccountRow.RowState == DataRowState.Detached
+                || !bankAccountRow.Table.Columns.Contains(FieldIssueDate))
                 return null;
 
             if (bankAccountRow.IsNull(FieldIssueDate))
@@ -81,11 +85,14 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static DateTime? GetCardExpiryEndDate(DataRow bankAccountRow)
         {
-            if (bankAccountRow == null ||
-                !bankAccountRow.Table.Columns.Contains(FieldExpiryMonth) ||
-                !bankAccountRow.Table.Columns.Contains(FieldExpiryYear) ||
-                bankAccountRow.IsNull(FieldExpiryMonth) ||
-                bankAccountRow.IsNull(FieldExpiryYear))
+            if (bankAccountRow == null
+                || bankAccountRow.Table == null
+                || bankAccountRow.RowState == DataRowState.Deleted
+                || bankAccountRow.RowState == DataRowState.Detached
+                || !bankAccountRow.Table.Columns.Contains(FieldExpiryMonth)
+                || !bankAccountRow.Table.Columns.Contains(FieldExpiryYear)
+                || bankAccountRow.IsNull(FieldExpiryMonth)
+                || bankAccountRow.IsNull(FieldExpiryYear))
                 return null;
 
             short month = Convert.ToInt16(bankAccountRow[FieldExpiryMonth]);

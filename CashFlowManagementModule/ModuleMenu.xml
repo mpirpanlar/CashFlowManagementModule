@@ -14,6 +14,9 @@
 					<MenuItem CommandName="CmdGeneralOpen" Caption="Kredi Kartı Detay Analizi" WebLink="" Visible="true">
 						<CommandParam viewname="CreditCardDetailAnalysisViewW" pmname="CreditCardDetailAnalysisPM" modulename="FinanceModule" secname="FinanceSecurityItems.CurrentAccount" subsecname="CurrentAccountSubItems.None"/>
 					</MenuItem>
+					<MenuItem CommandName="CmdGeneralOpen" Caption="Tekrar Eden Ödeme Tipleri" WebLink="" Visible="true">
+						<CommandParam viewname="MetaFixedPaymentType" boname="MetaFixedPaymentTypeBO" pmparam="MetaFixedPaymentTypeListEditScreen,BOMetaContext" logicalmoduleid="2" modulename="ExternalModule16" secname="CashFlowManagementModuleSecurityItems.FixedPaymentType" subsecname="CashFlowManagementModuleSecuritySubItems.None"/>
+					</MenuItem>
 				</MenuItem>
 			</MenuItem>
 		</MenuRoot>

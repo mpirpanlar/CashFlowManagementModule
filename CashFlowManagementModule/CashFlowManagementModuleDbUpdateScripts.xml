@@ -232,9 +232,129 @@
       GO
     </Script>
   </Updates>
+  <Updates>
+    <Version>
+      <Build>4</Build>
+      <Major>1</Major>
+      <Minor>0</Minor>
+      <Revision>-1</Revision>
+    </Version>
+    <Script>
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Meta_FixedPaymentType]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Meta_FixedPaymentType] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[FixedPaymentTypeCode] [dbo].[UdtCode] NULL
+      ,[FixedPaymentTypeName] [dbo].[UdtExpHuge] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Meta_FixedPaymentType] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_FixedPaymentType]') AND name = N'Meta_FixedPaymentType_IX0')
+      CREATE UNIQUE INDEX [Meta_FixedPaymentType_IX0] ON [Meta_FixedPaymentType] ([FixedPaymentTypeCode] ASC)
+      GO
+
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'MTV')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('MTV', N'MTV Ödemesi', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'KDV1')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('KDV1', N'KDV-1 Muhtasar Ödemesi', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'KDV2')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('KDV2', N'KDV-2 Geçici Vergi Ödemesi', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'TEMIZLIK')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('TEMIZLIK', N'Büyükçekmece Beld. Temizlik Vergi Ödemesi', 1, 0)
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_CurrentAccountFixedPaymentSchedule] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[CompanyId] [dbo].[UdtInt32] NULL
+      ,[CurrentAccountId] [dbo].[UdtInt64] NULL
+      ,[FixedPaymentTypeId] [dbo].[UdtInt64] NULL
+      ,[PaymentDay] [dbo].[UdtInt16] NULL
+      ,[PaymentMonth] [dbo].[UdtInt8] NULL
+      ,[Amount] [dbo].[UdtAmount] NULL
+      ,[Explanation] [dbo].[UdtTextLong] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Erp_CurrentAccountFixedPaymentSchedule] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] WITH CHECK ADD CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company] FOREIGN KEY ([CompanyId])
+      REFERENCES [Erp_Company] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] CHECK CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] WITH CHECK ADD CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount] FOREIGN KEY ([CurrentAccountId])
+      REFERENCES [Erp_CurrentAccount] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] CHECK CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] WITH CHECK ADD CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType] FOREIGN KEY ([FixedPaymentTypeId])
+      REFERENCES [Meta_FixedPaymentType] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] CHECK CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType]
+      GO
+    </Script>
+  </Updates>
+  <Updates>
+    <Version>
+      <Build>5</Build>
+      <Major>1</Major>
+      <Minor>0</Minor>
+      <Revision>-1</Revision>
+    </Version>
+    <Script>
+      IF NOT EXISTS(SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME ='Erp_BankReceiptItem' AND COLUMN_NAME='FixedPaymentTypeId')
+      ALTER TABLE [Erp_BankReceiptItem] ADD [FixedPaymentTypeId] [dbo].[UdtInt64] NULL
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankReceiptItem_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankReceiptItem]'))
+      ALTER TABLE [Erp_BankReceiptItem] WITH CHECK ADD CONSTRAINT [FK_Erp_BankReceiptItem_Meta_FixedPaymentType] FOREIGN KEY ([FixedPaymentTypeId])
+      REFERENCES [Meta_FixedPaymentType] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankReceiptItem_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankReceiptItem]'))
+      ALTER TABLE [Erp_BankReceiptItem] CHECK CONSTRAINT [FK_Erp_BankReceiptItem_Meta_FixedPaymentType]
+      GO
+    </Script>
+  </Updates>
   <CreateScript>
     <DbVersion>
-      <Build>3</Build>
+      <Build>5</Build>
       <Major>1</Major>
       <Minor>0</Minor>
       <Revision>-1</Revision>
@@ -443,6 +563,108 @@
 
       IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountCreditCardPeriodAllocation_Erp_BankAccountCreditCardPeriod]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountCreditCardPeriodAllocation]'))
       ALTER TABLE [Erp_BankAccountCreditCardPeriodAllocation] CHECK CONSTRAINT [FK_Erp_BankAccountCreditCardPeriodAllocation_Erp_BankAccountCreditCardPeriod]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Meta_FixedPaymentType]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Meta_FixedPaymentType] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[FixedPaymentTypeCode] [dbo].[UdtCode] NULL
+      ,[FixedPaymentTypeName] [dbo].[UdtExpHuge] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Meta_FixedPaymentType] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_FixedPaymentType]') AND name = N'Meta_FixedPaymentType_IX0')
+      CREATE UNIQUE INDEX [Meta_FixedPaymentType_IX0] ON [Meta_FixedPaymentType] ([FixedPaymentTypeCode] ASC)
+      GO
+
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'MTV')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('MTV', N'MTV Ödemesi', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'KDV1')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('KDV1', N'KDV-1 Muhtasar Ödemesi', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'KDV2')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('KDV2', N'KDV-2 Geçici Vergi Ödemesi', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_FixedPaymentType] WHERE [FixedPaymentTypeCode] = 'TEMIZLIK')
+      INSERT INTO [Meta_FixedPaymentType] ([FixedPaymentTypeCode],[FixedPaymentTypeName],[InUse],[IsDeleted]) VALUES ('TEMIZLIK', N'Büyükçekmece Beld. Temizlik Vergi Ödemesi', 1, 0)
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_CurrentAccountFixedPaymentSchedule] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[CompanyId] [dbo].[UdtInt32] NULL
+      ,[CurrentAccountId] [dbo].[UdtInt64] NULL
+      ,[FixedPaymentTypeId] [dbo].[UdtInt64] NULL
+      ,[PaymentDay] [dbo].[UdtInt16] NULL
+      ,[PaymentMonth] [dbo].[UdtInt8] NULL
+      ,[Amount] [dbo].[UdtAmount] NULL
+      ,[Explanation] [dbo].[UdtTextLong] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Erp_CurrentAccountFixedPaymentSchedule] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] WITH CHECK ADD CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company] FOREIGN KEY ([CompanyId])
+      REFERENCES [Erp_Company] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] CHECK CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_Company]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] WITH CHECK ADD CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount] FOREIGN KEY ([CurrentAccountId])
+      REFERENCES [Erp_CurrentAccount] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] CHECK CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] WITH CHECK ADD CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType] FOREIGN KEY ([FixedPaymentTypeId])
+      REFERENCES [Meta_FixedPaymentType] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_CurrentAccountFixedPaymentSchedule]'))
+      ALTER TABLE [Erp_CurrentAccountFixedPaymentSchedule] CHECK CONSTRAINT [FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType]
+      GO
+
+      IF NOT EXISTS(SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME ='Erp_BankReceiptItem' AND COLUMN_NAME='FixedPaymentTypeId')
+      ALTER TABLE [Erp_BankReceiptItem] ADD [FixedPaymentTypeId] [dbo].[UdtInt64] NULL
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankReceiptItem_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankReceiptItem]'))
+      ALTER TABLE [Erp_BankReceiptItem] WITH CHECK ADD CONSTRAINT [FK_Erp_BankReceiptItem_Meta_FixedPaymentType] FOREIGN KEY ([FixedPaymentTypeId])
+      REFERENCES [Meta_FixedPaymentType] ([RecId])
+      GO
+
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankReceiptItem_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankReceiptItem]'))
+      ALTER TABLE [Erp_BankReceiptItem] CHECK CONSTRAINT [FK_Erp_BankReceiptItem_Meta_FixedPaymentType]
       GO
     </CreateScript>
   </CreateScript>

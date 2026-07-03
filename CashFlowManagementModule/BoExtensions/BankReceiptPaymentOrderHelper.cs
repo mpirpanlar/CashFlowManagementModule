@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Data;
 using System.Linq;
+
+using CashFlowManagementModule.Services;
+
 using Sentez.Common;
 using Sentez.Common.Commands;
 using Sentez.Common.ModuleBase;
@@ -23,6 +26,50 @@ namespace CashFlowManagementModule.BoExtensions
     {
         public const short ReceiptType = 15;
         const short ModuleId = (short)Modules.ExternalModule16;
+        const string IsApprovedColumn = "IsApproved";
+
+        static bool IsUsableDataRow(DataRow row)
+        {
+            return row != null
+                && row.Table != null
+                && row.RowState != DataRowState.Deleted
+                && row.RowState != DataRowState.Detached;
+        }
+
+        static bool HasColumn(DataRow row, string columnName)
+        {
+            return IsUsableDataRow(row)
+                && !string.IsNullOrEmpty(columnName)
+                && row.Table.Columns.Contains(columnName);
+        }
+
+        static bool TryGetRowByte(DataRow row, string columnName, DataRowVersion version, out byte value)
+        {
+            value = 0;
+            if (!HasColumn(row, columnName))
+                return false;
+
+            try
+            {
+                object rawValue;
+                if (version == DataRowVersion.Default)
+                    rawValue = row[columnName];
+                else if (!row.HasVersion(version))
+                    return false;
+                else
+                    rawValue = row[columnName, version];
+
+                if (rawValue == null || rawValue == DBNull.Value)
+                    return false;
+
+                value = Convert.ToByte(rawValue);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         public static bool IsPaymentOrderReceipt(BusinessObjectBase businessObject)
         {
@@ -32,7 +79,9 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static bool IsPaymentOrderReceipt(DataRow headerRow)
         {
-            if (headerRow == null || headerRow.IsNull("ReceiptType")) return false;
+            if (!IsUsableDataRow(headerRow) || !HasColumn(headerRow, "ReceiptType") || headerRow.IsNull("ReceiptType"))
+                return false;
+
             return Convert.ToInt16(headerRow["ReceiptType"]) == ReceiptType;
         }
 
@@ -72,25 +121,26 @@ namespace CashFlowManagementModule.BoExtensions
             }
             else
             {
-                object bankReceiptId = UtilityFunctions.SqlCustomScalarQuery(
-                    businessObject.Connection,
-                    businessObject.Transaction,
+                object bankReceiptId = CashFlowDbAccess.ExecuteScalar(
+                    CashFlowDbContext.FromBusinessObject(businessObject),
                     $"select BankReceiptId from Erp_BankReceiptItem where RecId={recId}");
                 if (bankReceiptId == null) return false;
                 headerRecId = Convert.ToInt64(bankReceiptId);
             }
 
             if (businessObject.Get(headerRecId) <= 0) return false;
-            if (businessObject.CurrentRow?.Row == null || businessObject.CurrentRow.Row.IsNull("ReceiptType"))
+
+            DataRow headerRow = businessObject.CurrentRow?.Row;
+            if (!IsUsableDataRow(headerRow) || !HasColumn(headerRow, "ReceiptType") || headerRow.IsNull("ReceiptType"))
                 return false;
 
-            receiptType = Convert.ToInt16(businessObject.CurrentRow.Row["ReceiptType"]);
+            receiptType = Convert.ToInt16(headerRow["ReceiptType"]);
             return true;
         }
 
         public static void ApplyHeaderApprovalChange(DataRow headerRow, byte newApproved, string approvedExplanation = null)
         {
-            if (headerRow == null) return;
+            if (!IsUsableDataRow(headerRow) || !HasColumn(headerRow, IsApprovedColumn)) return;
 
             if (!string.IsNullOrEmpty(approvedExplanation)
                 && headerRow.Table.Columns.Contains("ApprovedExplanation"))
@@ -105,7 +155,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static void ApplyLineApprovalChange(DataRow itemRow, byte newApproved)
         {
-            if (itemRow == null) return;
+            if (!IsUsableDataRow(itemRow) || !HasColumn(itemRow, IsApprovedColumn)) return;
 
             bool isApproving = newApproved == 1;
             itemRow["IsApproved"] = newApproved;
@@ -117,9 +167,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static bool IsHeaderApproved(BusinessObjectBase businessObject)
         {
-            if (businessObject?.CurrentRow?.Row == null) return false;
-            if (businessObject.CurrentRow.Row.IsNull("IsApproved")) return false;
-            return Convert.ToByte(businessObject.CurrentRow.Row["IsApproved"]) == 1;
+            return GetApprovedValue(businessObject?.CurrentRow?.Row) == 1;
         }
 
         public static bool ShouldLockPaymentOrder(IBusinessObject businessObject)
@@ -152,9 +200,11 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static byte GetPersistedApprovedValue(DataRow row)
         {
-            if (row == null) return 0;
+            if (!IsUsableDataRow(row)) return 0;
+
             if (row.HasVersion(DataRowVersion.Original))
                 return GetApprovedValue(row, DataRowVersion.Original);
+
             return GetApprovedValue(row);
         }
 
@@ -170,9 +220,9 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static void ResetApprovalFields(DataRow row)
         {
-            if (row == null || !row.Table.Columns.Contains("IsApproved")) return;
+            if (!HasColumn(row, IsApprovedColumn)) return;
 
-            row["IsApproved"] = (byte)0;
+            row[IsApprovedColumn] = (byte)0;
 
             if (row.Table.Columns.Contains("ApprovedBy"))
                 row["ApprovedBy"] = DBNull.Value;
@@ -194,7 +244,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static void SetLineApprovedMetadata(DataRow itemRow, bool approved, long? userId, DateTime? approvedAt)
         {
-            if (itemRow == null) return;
+            if (!IsUsableDataRow(itemRow)) return;
 
             if (!approved)
             {
@@ -213,7 +263,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static void SetHeaderApprovedMetadata(DataRow headerRow, bool approved, long? userId, DateTime? approvedAt)
         {
-            if (headerRow == null) return;
+            if (!IsUsableDataRow(headerRow)) return;
 
             if (!approved)
             {
@@ -282,41 +332,30 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static bool CanToggleHeaderApproval(DataRow headerRow)
         {
-            if (headerRow == null) return false;
+            if (!IsUsableDataRow(headerRow)) return false;
             if (GetPersistedApprovedValue(headerRow) == 0) return true;
             return HasHeaderApprovedEditRight();
         }
 
         public static byte GetApprovedValue(DataRow row)
         {
-            if (row == null || row.IsNull("IsApproved")) return 0;
-            return Convert.ToByte(row["IsApproved"]);
+            return GetApprovedValue(row, DataRowVersion.Default);
         }
 
         public static byte GetApprovedValue(DataRow row, DataRowVersion version)
         {
-            if (row == null) return 0;
-
-            try
-            {
-                if (!row.HasVersion(version) || row["IsApproved", version] == DBNull.Value) return 0;
-                return Convert.ToByte(row["IsApproved", version]);
-            }
-            catch
-            {
-                return 0;
-            }
+            return TryGetRowByte(row, IsApprovedColumn, version, out byte value) ? value : (byte)0;
         }
 
         public static bool IsApprovedValueChanged(DataRow row)
         {
-            if (row == null || !row.HasVersion(DataRowVersion.Original)) return false;
+            if (!IsUsableDataRow(row) || !row.HasVersion(DataRowVersion.Original)) return false;
             return GetApprovedValue(row) != GetApprovedValue(row, DataRowVersion.Original);
         }
 
         public static bool HasUdColumn(DataRow row, string columnName)
         {
-            return row?.Table != null && row.Table.Columns.Contains(columnName);
+            return HasColumn(row, columnName);
         }
 
         public static bool HasUdColumn(DataTable table, string columnName)
@@ -324,13 +363,12 @@ namespace CashFlowManagementModule.BoExtensions
             return table?.Columns.Contains(columnName) == true;
         }
 
-        public static void SetDefaultPaymentDateFromHeader(DataRow itemRow, DataRow headerRow)
+        public static void SetDefaultPaymentDateForNewItem(DataRow itemRow)
         {
-            if (!HasUdColumn(itemRow, PaymentOrderUdFields.PaymentDate)) return;
+            if (!HasUdColumn(itemRow, PaymentOrderUdFields.PaymentDate) || !IsUsableDataRow(itemRow)) return;
             if (!itemRow.IsNull(PaymentOrderUdFields.PaymentDate)) return;
-            if (headerRow == null || headerRow.IsNull("ReceiptDate")) return;
 
-            itemRow[PaymentOrderUdFields.PaymentDate] = headerRow["ReceiptDate"];
+            itemRow[PaymentOrderUdFields.PaymentDate] = new DateHelper().GetToday();
         }
     }
 }

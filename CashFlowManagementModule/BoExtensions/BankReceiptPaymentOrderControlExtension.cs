@@ -7,16 +7,29 @@ using Sentez.Common.Utilities;
 
 namespace CashFlowManagementModule.BoExtensions
 {
+    /// <summary>
+    /// Banka fişi tip 15 (ödeme planlama) kayıtları için onay kilidi, yetki kontrolü
+    /// ve yeni satır varsayılan alan yönetimini sağlayan BO extension.
+    /// </summary>
     public class BankReceiptPaymentOrderControlExtension : BoExtensionBase
     {
+        /// <summary>Detay satırı onay değişimi sırasında başlık onay senkronunu geçici olarak bastırır.</summary>
         bool _lineApprovalInProgress;
+
+        /// <summary>Başlık onayının kullanıcı tarafından bilinçli olarak verildiğini işaretler.</summary>
         bool _explicitHeaderApproval;
 
+        /// <summary>
+        /// Ödeme planlama fişi BO extension'ını oluşturur.
+        /// </summary>
         public BankReceiptPaymentOrderControlExtension(BusinessObjectBase bo)
             : base(bo)
         {
         }
 
+        /// <summary>
+        /// Kayıt yüklendikten sonra value filler ayarlarını uygular ve yeni kayıtta onay alanlarını sıfırlar.
+        /// </summary>
         protected override void OnAfterGet(object sender, EventArgs e)
         {
             base.OnAfterGet(sender, e);
@@ -26,6 +39,9 @@ namespace CashFlowManagementModule.BoExtensions
             EnsureHeaderUnapprovedOnNewRecord();
         }
 
+        /// <summary>
+        /// Başlık satırı eklendiğinde ödeme planlama kurulumunu ve onay sıfırlamayı tetikler.
+        /// </summary>
         protected override void OnRowChanged(object sender, DataRowChangeEventArgs e)
         {
             base.OnRowChanged(sender, e);
@@ -38,6 +54,9 @@ namespace CashFlowManagementModule.BoExtensions
             }
         }
 
+        /// <summary>
+        /// Yeni kayıt moduna geçildiğinde value filler ve onay alanı başlangıç durumunu hazırlar.
+        /// </summary>
         protected override void OnBOPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             base.OnBOPropertyChanged(sender, e);
@@ -50,6 +69,9 @@ namespace CashFlowManagementModule.BoExtensions
             }
         }
 
+        /// <summary>
+        /// Yeni detay satırında UD_PaymentDate için günün tarihini atar ve onay alanlarını sıfırlar.
+        /// </summary>
         protected override void OnTableNewRow(object sender, DataTableNewRowEventArgs e)
         {
             base.OnTableNewRow(sender, e);
@@ -57,17 +79,21 @@ namespace CashFlowManagementModule.BoExtensions
 
             if (e.Row.Table.TableName == "Erp_BankReceiptItem")
             {
-                BankReceiptPaymentOrderHelper.SetDefaultPaymentDateFromHeader(
-                    e.Row, BusinessObject?.CurrentRow?.Row);
+                BankReceiptPaymentOrderHelper.SetDefaultPaymentDateForNewItem(e.Row);
 
                 BankReceiptPaymentOrderHelper.ResetApprovalFields(e.Row);
             }
         }
 
+        /// <summary>
+        /// Onaylı fiş/satır kilidi ve onay yetkisi kurallarını kolon değişiminden önce uygular.
+        /// ReceiptDate alanları bu kontrolden muaf tutulur.
+        /// </summary>
         protected override void OnColumnChanging(object sender, DataColumnChangeEventArgs e)
         {
             base.OnColumnChanging(sender, e);
             if (_suppressEvents || !BankReceiptPaymentOrderHelper.IsPaymentOrderReceipt(BusinessObject)) return;
+            if (e.Row?.Table == null) return;
 
             if (e.Row.Table.TableName == "Erp_BankReceipt" && e.Column.ColumnName == "ReceiptDate")
                 return;
@@ -134,10 +160,14 @@ namespace CashFlowManagementModule.BoExtensions
             }
         }
 
+        /// <summary>
+        /// Detay satırı onay değişiminde metadata alanlarını günceller ve başlık otomatik onayını engeller.
+        /// </summary>
         protected override void OnColumnChanged(object sender, DataColumnChangeEventArgs e)
         {
             base.OnColumnChanged(sender, e);
             if (_suppressEvents || !BankReceiptPaymentOrderHelper.IsPaymentOrderReceipt(BusinessObject)) return;
+            if (e.Row?.Table == null) return;
 
             try
             {
@@ -165,6 +195,9 @@ namespace CashFlowManagementModule.BoExtensions
             }
         }
 
+        /// <summary>
+        /// Kayıt öncesi onaylı fiş kilidi, yetki doğrulaması ve istenmeyen başlık otomatik onayını kontrol eder.
+        /// </summary>
         protected override void OnBeforePost(object sender, CancelEventArgs e)
         {
             base.OnBeforePost(sender, e);
@@ -192,8 +225,7 @@ namespace CashFlowManagementModule.BoExtensions
             if (!BankReceiptPaymentOrderHelper.IsHeaderBeingApproved(headerRow))
                 PreventHeaderAutoApprovalFromLines();
 
-            if (!headerRow.IsNull("IsApproved")
-                && Convert.ToByte(headerRow["IsApproved"]) == 1
+            if (BankReceiptPaymentOrderHelper.GetApprovedValue(headerRow) == 1
                 && !_explicitHeaderApproval
                 && !BankReceiptPaymentOrderHelper.IsHeaderBeingApproved(headerRow))
             {
@@ -205,6 +237,9 @@ namespace CashFlowManagementModule.BoExtensions
             }
         }
 
+        /// <summary>
+        /// Kayıt sonrası onay akışı için kullanılan geçici bayrakları sıfırlar.
+        /// </summary>
         protected override void OnAfterPost(object sender, EventArgs e)
         {
             base.OnAfterPost(sender, e);
@@ -212,6 +247,9 @@ namespace CashFlowManagementModule.BoExtensions
             _lineApprovalInProgress = false;
         }
 
+        /// <summary>
+        /// Onaylı ödeme planlama fişinin silinmesini engeller.
+        /// </summary>
         protected override void OnBeforeDelete(object sender, CancelEventArgs e)
         {
             base.OnBeforeDelete(sender, e);
@@ -224,6 +262,9 @@ namespace CashFlowManagementModule.BoExtensions
             }
         }
 
+        /// <summary>
+        /// Yeni kayıtta başlık ve tüm detay satırlarının onay alanlarını varsayılan (onaysız) duruma getirir.
+        /// </summary>
         void EnsureHeaderUnapprovedOnNewRecord()
         {
             if (BusinessObject == null || !BusinessObject.IsNewRecord || BusinessObject.CurrentRow?.Row == null) return;
@@ -234,11 +275,14 @@ namespace CashFlowManagementModule.BoExtensions
             _suppressEvents = false;
         }
 
+        /// <summary>
+        /// Detay satır onayından kaynaklanan başlık otomatik onayını geri alır.
+        /// </summary>
         void PreventHeaderAutoApprovalFromLines()
         {
             DataRow headerRow = BusinessObject?.CurrentRow?.Row;
-            if (headerRow == null || headerRow.IsNull("IsApproved")) return;
-            if (Convert.ToByte(headerRow["IsApproved"]) != 1 || _explicitHeaderApproval) return;
+            if (!BankReceiptPaymentOrderHelper.IsPaymentOrderReceipt(headerRow)) return;
+            if (BankReceiptPaymentOrderHelper.GetApprovedValue(headerRow) != 1 || _explicitHeaderApproval) return;
             if (BankReceiptPaymentOrderHelper.IsHeaderBeingApproved(headerRow)) return;
 
             _suppressEvents = true;
@@ -248,6 +292,10 @@ namespace CashFlowManagementModule.BoExtensions
             _suppressEvents = false;
         }
 
+        /// <summary>
+        /// Başlık ve detay satırlarında onay geri alma işlemleri için kullanıcı yetkisini doğrular.
+        /// </summary>
+        /// <returns>Yetki yeterliyse true, aksi halde false.</returns>
         bool ValidateApprovalChangeRights(DataRow headerRow)
         {
             if (headerRow != null
@@ -278,6 +326,9 @@ namespace CashFlowManagementModule.BoExtensions
             return true;
         }
 
+        /// <summary>
+        /// IsApproved alanında gerçek bir değişiklik olup olmadığını kontrol eder.
+        /// </summary>
         static bool IsApprovedValueChanging(DataRow row, object proposedValue)
         {
             byte currentValue = BankReceiptPaymentOrderHelper.GetApprovedValue(row);

@@ -25,14 +25,13 @@ namespace CashFlowManagementModule.Services
             var table = CreateAnalysisTableSchema();
             if (session?._dbInfo?.Connection == null) return table;
 
-            ProviderType provider = session._dbInfo.DBProvider;
-            DbConnection connection = session._dbInfo.Connection;
+            CashFlowDbContext context = CashFlowDbContext.FromSession(session);
             int companyId = session.ActiveCompany.RecId ?? 0;
             IList<long> bankAccountIds = bankAccountId.HasValue && bankAccountId.Value > 0
                 ? new List<long> { bankAccountId.Value }
-                : CreditCardStatementDataService.LoadCreditCardBankAccountIds(provider, connection, null, companyId);
+                : CreditCardStatementDataService.LoadCreditCardBankAccountIds(context, companyId);
 
-            var allocationTotals = LoadAllocationTotals(provider, connection, companyId, year, bankAccountId);
+            var allocationTotals = LoadAllocationTotals(context, companyId, year, bankAccountId);
             decimal[] grandMonthTotals = new decimal[12];
             decimal grandTotal = 0m;
             int cardIndex = 0;
@@ -42,9 +41,9 @@ namespace CashFlowManagementModule.Services
                 int colorGroup = cardIndex % CardColorGroupCount;
                 cardIndex++;
 
-                string displayName = CreditCardStatementDataService.GetBankAccountDisplayName(provider, connection, null, accountId);
+                string displayName = CreditCardStatementDataService.GetBankAccountDisplayName(context, accountId);
                 IList<CreditCardPeriodInfo> periods = CreditCardStatementDataService
-                    .LoadActivePeriods(provider, connection, null, accountId)
+                    .LoadActivePeriods(context, accountId)
                     .Where(p => p.PeriodYear == year)
                     .OrderBy(p => p.PeriodMonth)
                     .ToList();
@@ -155,8 +154,7 @@ namespace CashFlowManagementModule.Services
         }
 
         static IList<AllocationMonthTotal> LoadAllocationTotals(
-            ProviderType provider,
-            DbConnection connection,
+            CashFlowDbContext context,
             int companyId,
             short year,
             long? bankAccountId)
@@ -166,10 +164,8 @@ namespace CashFlowManagementModule.Services
                 ? $" and a.BankAccountId={bankAccountId.Value}"
                 : string.Empty;
 
-            DataTable table = UtilityFunctions.GetDataTableList(
-                provider,
-                connection,
-                null,
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                context,
                 "Erp_BankAccountCreditCardPeriodAllocation",
                 $@"select a.BankAccountId, p.PeriodMonth, sum(a.Amount) Amount
                    from Erp_BankAccountCreditCardPeriodAllocation a with (nolock)

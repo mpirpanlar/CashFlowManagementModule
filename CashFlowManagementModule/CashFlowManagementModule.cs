@@ -27,7 +27,9 @@ using Sentez.Data.BusinessObjects;
 using Sentez.FinanceModule.Models;
 using Sentez.Finance.PresentationModels;
 using CashFlowManagementModule.BoExtensions;
+using CashFlowManagementModule.Models;
 using CashFlowManagementModule.PresentationModels;
+using CashFlowManagementModule.WorkList;
 
 namespace Sentez.CashFlowManagementModule
 {
@@ -88,7 +90,9 @@ namespace Sentez.CashFlowManagementModule
             RegisterBankReceiptBoHooks();
             RegisterBankReceiptPmHooks();
             RegisterBankAccountHooks();
+            RegisterCurrentAccountHooks();
             RegisterCurrentAccountReceiptHooks();
+            RegisterCardPmHooks();
             CashFlowManagementModuleSecurity.RegisterSecurityDefinitions();
 
             MenuManager.Instance.RegisterMenu("CashFlowManagementModule", "CashFlowManagementModuleMenu", moduleID, true);
@@ -100,6 +104,7 @@ namespace Sentez.CashFlowManagementModule
             _container.Register<IPMBase, PaymentOrderBankReceiptPM>("BankReceiptPM");
             EnsureBankReceiptApprovedChangeCommandRegistered();
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
+            EnsureGlobalFixedPaymentTypeLookup();
         }
 
         public override void RegisterModuleCommands()
@@ -110,6 +115,13 @@ namespace Sentez.CashFlowManagementModule
         {
             EnsureBankReceiptApprovedChangeCommandRegistered();
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
+            EnsureGlobalFixedPaymentTypeLookup();
+        }
+
+        void EnsureGlobalFixedPaymentTypeLookup()
+        {
+            if (ActiveSession?.LookupList == null) return;
+            MetaFixedPaymentTypeHelper.EnsureLookupList(ActiveSession.LookupList);
         }
 
         public void Initialize()
@@ -120,6 +132,7 @@ namespace Sentez.CashFlowManagementModule
         {
             ParameterFactory.StaticFactory.RegisterParameterClass(typeof(CrsParameters), (int)Modules.ExternalModule16);
             _container.Register<IBusinessObject, AgingReportResultsListBO>("AgingReportResultsListBO");
+            _container.Register<IBusinessObject, MetaFixedPaymentTypeBO>("MetaFixedPaymentTypeBO");
         }
 
         private void RegisterBoExtensions()
@@ -142,6 +155,7 @@ namespace Sentez.CashFlowManagementModule
         private void RegisterList()
         {
             _container.Register<IReport, CurrentAccountDebitDistributionList>("CurrentAccountDebitDistributionList");
+            _container.Register<IReport, MetaFixedPaymentTypeList>(MetaFixedPaymentTypeHelper.ListName);
         }
 
         private void RegisterViews()
@@ -150,6 +164,8 @@ namespace Sentez.CashFlowManagementModule
             ResMng.AddRes("AgingReportResultsListManagementW", "/CashFlowManagementModule;component/Views/AgingReportResultsListManagementView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("BankAccountCreditCardViewW", "/CashFlowManagementModule;component/Views/BankAccountCreditCardView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("CreditCardDetailAnalysisViewW", "/CashFlowManagementModule;component/Views/CreditCardDetailAnalysisView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("CurrentAccountFixedPaymentViewW", "/CashFlowManagementModule;component/Views/CurrentAccountFixedPaymentView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("MetaFixedPaymentType", "/CashFlowManagementModule;component/Views/MetaFixedPaymentType.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
         }
 
         private void RegisterPM()
@@ -169,7 +185,7 @@ namespace Sentez.CashFlowManagementModule
         public void RegisterCoreDocuments()
         {
             Data.MetaData.Schema.ReadXml(Assembly.GetAssembly(typeof(CashFlowManagementModule)).GetManifestResourceStream("CashFlowManagementModule.CashFlowManagementModuleDataSchema.xml"));
-            DbCreator.AddRegistration(3014, CashFlowManagementModuleDbUpdateScript);
+            DbCreator.AddRegistration((int)Modules.ExternalModule16, CashFlowManagementModuleDbUpdateScript);
         }
 
         DbScripts CashFlowManagementModuleDbUpdateScript(DbCreator instance)

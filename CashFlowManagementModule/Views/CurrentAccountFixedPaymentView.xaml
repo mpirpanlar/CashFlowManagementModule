@@ -1,0 +1,41 @@
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
+    xmlns:sye="clr-namespace:Sentez.Common.Extension;assembly=LiveCore.Desktop"
+    xmlns:UtilCore="clr-namespace:Sentez.Common.Utilities;assembly=LiveCore"
+    xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
+    x:Name="CurrentAccountFixedPaymentView"
+    Tag="CurrentAccountFixedPaymentViewW">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <live:LiveCheckEdit Grid.Row="0"
+                            Margin="0,0,0,8"
+                            Content="{lange:TranslateExtension Tekrar Eden Ödeme Takibi}"
+                            IsChecked="{sye:SBinding Field=Erp_CurrentAccount.UD_IsFixedPayment}"/>
+
+        <live:LiveGridControl Grid.Row="1"
+                              x:Name="gridFixedPaymentSchedule"
+                              ShowBorder="False"
+                              BusinessObject="{Binding ActiveBO}"
+                              Lookups="{sye:SBinding Lists}"
+                              TableName="Erp_CurrentAccountFixedPaymentSchedule"
+                              ForeignKey="FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount">
+            <live:LiveGridControl.ColumnDefinitions>
+                <UtilCore:ReceiptColumn ColumnName="FixedPaymentTypeId" Caption="Ödeme Tipi" EditorType="ComboBox" ComboLookup="FixedPaymentTypeList" ComboDisplayMember="FixedPaymentTypeName" ComboValueMember="RecId" Width="220"/>
+                <UtilCore:ReceiptColumn ColumnName="PaymentDay" Caption="Gün" EditorType="TextEditor" Width="60"/>
+                <UtilCore:ReceiptColumn ColumnName="PaymentMonth" Caption="Ay" EditorType="ComboBox" ComboLookup="MonthNamesList" ComboDisplayMember="Display" ComboValueMember="Value" Width="80"/>
+                <UtilCore:ReceiptColumn ColumnName="Amount" Caption="Tutar" Width="120" UsageType="Amount" EditorType="MaskEditor" UdtType="UdtAmount"/>
+                <UtilCore:ReceiptColumn ColumnName="InUse" Caption="Aktif" EditorType="CheckBox" Width="50"/>
+                <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" EditorType="TextEditor" Width="200" UsageType="Name" UdtType="UdtTextLong"/>
+            </live:LiveGridControl.ColumnDefinitions>
+            <live:LiveGridControl.View>
+                <live:ReceiptView/>
+            </live:LiveGridControl.View>
+        </live:LiveGridControl>
+    </Grid>
+</UserControl>
