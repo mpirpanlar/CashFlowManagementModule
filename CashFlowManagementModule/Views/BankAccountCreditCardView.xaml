@@ -69,7 +69,6 @@
         <GroupBox Grid.Row="2" Header="{lange:TranslateExtension Hesap Kesim / Son Ödeme Dönemleri}">
             <live:LiveGridControl x:Name="gridCreditCardPeriods"
                                   ShowBorder="False"
-                                  AutoPopulateColumns="False"
                                   SelectionMode="Row"
                                   AllowNewRow="False"
                                   AllowDeleteRow="False"

@@ -279,6 +279,12 @@ namespace CashFlowManagementModule.Services
             if (date > periods[periods.Count - 1].StatementDate.Date)
                 return periods.Count - 1;
 
+            for (int i = 0; i < periods.Count; i++)
+            {
+                if (date <= periods[i].StatementDate.Date)
+                    return i;
+            }
+
             return -1;
         }
 

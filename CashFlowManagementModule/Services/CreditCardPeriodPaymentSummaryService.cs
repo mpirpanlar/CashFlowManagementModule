@@ -14,6 +14,8 @@ namespace CashFlowManagementModule.Services
 {
     public static class CreditCardPeriodPaymentSummaryService
     {
+        const int FinanceSourceModule = 3;
+
         public static void RefreshSummary(LiveSession session, DataSet data, long bankAccountId)
         {
             if (session?._dbInfo?.Connection == null || data == null || bankAccountId <= 0)
@@ -37,8 +39,10 @@ namespace CashFlowManagementModule.Services
             var paymentLines = LoadVirmanPaymentLines(
                 context, companyId, bankAccountId, bankAccountRow);
 
-            var spendingTotals = BuildPeriodTotals(periods, spendingLines);
-            var refundTotals = BuildPeriodTotals(periods, refundLines);
+            var spendingTotals = BuildCurrentAccountPeriodTotals(
+                context, companyId, bankAccountId, periods, 51, spendingLines, bankAccountRow);
+            var refundTotals = BuildCurrentAccountPeriodTotals(
+                context, companyId, bankAccountId, periods, 53, refundLines, bankAccountRow);
             var paymentTotals = BuildPeriodTotals(periods, paymentLines);
 
             int amountDec = session.ParamService?.GetParameterClass<GeneralParameters>()?.AmountDec ?? 2;
@@ -47,6 +51,40 @@ namespace CashFlowManagementModule.Services
             ApplyPeriodLimitColumns(periodTable, creditLimit, spendingTotals, refundTotals, paymentTotals, amountDec);
 
             ApplyHeaderLimitSummaryFromCurrentPeriod(data, periodTable, periods, amountDec);
+        }
+
+        public static decimal? TryGetPeriodSpendingTotal(
+            LiveSession session,
+            long bankAccountId,
+            DateTime referenceDate,
+            out CreditCardPeriodInfo matchedPeriod)
+        {
+            matchedPeriod = null;
+            if (session?._dbInfo?.Connection == null || bankAccountId <= 0)
+                return null;
+
+            int companyId = session.ActiveCompany.RecId ?? 0;
+            CashFlowDbContext context = CashFlowDbContext.FromSession(session);
+            IList<CreditCardPeriodInfo> periods = CreditCardStatementDataService.LoadActivePeriods(context, bankAccountId);
+            if (periods == null || periods.Count == 0)
+                return null;
+
+            int periodIndex = CreditCardStatementDataService.FindPeriodIndexByStatementCycle(periods, referenceDate);
+            if (periodIndex < 0 || periodIndex >= periods.Count)
+                return null;
+
+            matchedPeriod = periods[periodIndex];
+            DataRow bankAccountRow = LoadBankAccountRowForSummary(context, bankAccountId);
+            var spendingLines = LoadCurrentAccountReceiptLines(
+                context, companyId, bankAccountId, 51, preferDebit: true, bankAccountRow);
+            var spendingTotals = BuildCurrentAccountPeriodTotals(
+                context, companyId, bankAccountId, periods, 51, spendingLines, bankAccountRow);
+
+            int amountDec = session.ParamService?.GetParameterClass<GeneralParameters>()?.AmountDec ?? 2;
+            if (!spendingTotals.TryGetValue(periodIndex, out decimal total))
+                return 0m;
+
+            return RoundAmount(total, amountDec);
         }
 
         public static void ApplyHeaderLimitSummaryFromCurrentPeriod(
@@ -149,11 +187,15 @@ namespace CashFlowManagementModule.Services
                           {amountSql} TotalAmount
                    from Erp_CurrentAccountReceiptItem cri with (nolock)
                    inner join Erp_CurrentAccountReceipt cr with (nolock) on cr.RecId = cri.CurrentAccountReceiptId
-                   where cri.CompanyId = {companyId}
+                   inner join Erp_BankAccount ba with (nolock) on ba.RecId = cri.BankAccountId
+                   inner join Erp_Bank b with (nolock) on b.RecId = ba.BankId
+                   where b.CompanyId = {companyId}
                      and cri.BankAccountId = {bankAccountId}
                      and cr.ReceiptType = {receiptType}
                      and IsNull(cri.IsDeleted, 0) = 0
                      and IsNull(cr.IsDeleted, 0) = 0
+                     and IsNull(ba.IsDeleted, 0) = 0
+                     and IsNull(b.IsDeleted, 0) = 0
                      {dateFilter}
                    order by cri.ReceiptDate, cri.RecId");
 
@@ -309,6 +351,273 @@ namespace CashFlowManagementModule.Services
             }
 
             return totals;
+        }
+
+        static Dictionary<int, decimal> BuildCurrentAccountPeriodTotals(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            IList<CreditCardPeriodInfo> periods,
+            short receiptType,
+            IList<CreditCardPeriodMovementLine> movementLines,
+            DataRow bankAccountRow)
+        {
+            var totals = BuildPeriodTotalsFromAllocations(context, companyId, bankAccountId, periods, receiptType);
+
+            HashSet<long> allocatedCriIds = LoadAllocatedCurrentAccountReceiptItemIds(
+                context, companyId, bankAccountId, receiptType);
+            HashSet<long> criWithRpi = LoadCurrentAccountRecIdsWithReceiptPaymentItems(
+                context, companyId, bankAccountId, receiptType);
+
+            var excludedFromMovement = new HashSet<long>(allocatedCriIds);
+            foreach (long recId in criWithRpi)
+                excludedFromMovement.Add(recId);
+
+            MergePeriodTotals(totals, BuildPeriodTotals(periods, ExcludeMovementLines(movementLines, excludedFromMovement)));
+            MergePeriodTotals(
+                totals,
+                BuildPeriodTotalsFromReceiptPaymentItems(
+                    context, companyId, bankAccountId, periods, receiptType, bankAccountRow, allocatedCriIds));
+
+            return totals;
+        }
+
+        static Dictionary<int, decimal> BuildPeriodTotalsFromAllocations(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            IList<CreditCardPeriodInfo> periods,
+            short receiptType)
+        {
+            var totals = new Dictionary<int, decimal>();
+            if (periods == null || periods.Count == 0 || bankAccountId <= 0)
+                return totals;
+
+            var periodIndexByRecId = new Dictionary<long, int>();
+            for (int i = 0; i < periods.Count; i++)
+            {
+                if (periods[i].RecId > 0)
+                    periodIndexByRecId[periods[i].RecId] = i;
+            }
+
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                context,
+                BankReceiptCreditCardHelper.AllocationTableName,
+                $@"select a.CreditCardPeriodId,
+                          sum(a.Amount) TotalAmount
+                   from Erp_BankAccountCreditCardPeriodAllocation a with (nolock)
+                   inner join Erp_CurrentAccountReceiptItem cri with (nolock) on cri.RecId = a.CurrentAccountReceiptItemId
+                   inner join Erp_CurrentAccountReceipt cr with (nolock) on cr.RecId = cri.CurrentAccountReceiptId
+                   where a.CompanyId = {companyId}
+                     and a.BankAccountId = {bankAccountId}
+                     and cr.ReceiptType = {receiptType}
+                     and IsNull(a.IsDeleted, 0) = 0
+                     and IsNull(cri.IsDeleted, 0) = 0
+                     and IsNull(cr.IsDeleted, 0) = 0
+                   group by a.CreditCardPeriodId");
+
+            if (table == null)
+                return totals;
+
+            foreach (DataRow row in table.Rows)
+            {
+                if (row.IsNull("CreditCardPeriodId") || row.IsNull("TotalAmount"))
+                    continue;
+
+                long periodRecId = Convert.ToInt64(row["CreditCardPeriodId"]);
+                if (!periodIndexByRecId.TryGetValue(periodRecId, out int periodIndex))
+                    continue;
+
+                decimal amount = Convert.ToDecimal(row["TotalAmount"]);
+                if (amount == 0m)
+                    continue;
+
+                if (!totals.ContainsKey(periodIndex))
+                    totals[periodIndex] = 0m;
+
+                totals[periodIndex] += amount;
+            }
+
+            return totals;
+        }
+
+        static HashSet<long> LoadAllocatedCurrentAccountReceiptItemIds(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            short receiptType)
+        {
+            var recIds = new HashSet<long>();
+            if (bankAccountId <= 0)
+                return recIds;
+
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                context,
+                BankReceiptCreditCardHelper.AllocationTableName,
+                $@"select distinct a.CurrentAccountReceiptItemId
+                   from Erp_BankAccountCreditCardPeriodAllocation a with (nolock)
+                   inner join Erp_CurrentAccountReceiptItem cri with (nolock) on cri.RecId = a.CurrentAccountReceiptItemId
+                   inner join Erp_CurrentAccountReceipt cr with (nolock) on cr.RecId = cri.CurrentAccountReceiptId
+                   where a.CompanyId = {companyId}
+                     and a.BankAccountId = {bankAccountId}
+                     and cr.ReceiptType = {receiptType}
+                     and IsNull(a.IsDeleted, 0) = 0
+                     and IsNull(cri.IsDeleted, 0) = 0
+                     and IsNull(cr.IsDeleted, 0) = 0");
+
+            if (table == null)
+                return recIds;
+
+            foreach (DataRow row in table.Rows)
+            {
+                if (!row.IsNull("CurrentAccountReceiptItemId"))
+                    recIds.Add(Convert.ToInt64(row["CurrentAccountReceiptItemId"]));
+            }
+
+            return recIds;
+        }
+
+        static Dictionary<int, decimal> BuildPeriodTotalsFromReceiptPaymentItems(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            IList<CreditCardPeriodInfo> periods,
+            short receiptType,
+            DataRow bankAccountRow,
+            HashSet<long> excludedCriIds = null)
+        {
+            var totals = new Dictionary<int, decimal>();
+            if (periods == null || periods.Count == 0 || bankAccountId <= 0)
+                return totals;
+
+            string excludedCriFilter = excludedCriIds != null && excludedCriIds.Count > 0
+                ? $" and cri.RecId not in ({string.Join(",", excludedCriIds)})"
+                : string.Empty;
+
+            string dateFilter = BuildReceiptDateFilter(bankAccountRow, "rpi.TermDate");
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                context,
+                "Erp_ReceiptPaymentItem",
+                $@"select rpi.TermDate,
+                          rpi.Amount
+                   from Erp_ReceiptPaymentItem rpi with (nolock)
+                   inner join Erp_CurrentAccountReceiptItem cri with (nolock) on cri.RecId = rpi.SourceItemId
+                   inner join Erp_CurrentAccountReceipt cr with (nolock) on cr.RecId = cri.CurrentAccountReceiptId
+                   inner join Erp_BankAccount ba with (nolock) on ba.RecId = cri.BankAccountId
+                   inner join Erp_Bank b with (nolock) on b.RecId = ba.BankId
+                   where rpi.SourceModule = {FinanceSourceModule}
+                     and b.CompanyId = {companyId}
+                     and cri.BankAccountId = {bankAccountId}
+                     and cr.ReceiptType = {receiptType}
+                     and IsNull(rpi.IsDeleted, 0) = 0
+                     and IsNull(cri.IsDeleted, 0) = 0
+                     and IsNull(cr.IsDeleted, 0) = 0
+                     and IsNull(ba.IsDeleted, 0) = 0
+                     and IsNull(b.IsDeleted, 0) = 0
+                     {excludedCriFilter}
+                     {dateFilter}
+                   order by rpi.TermDate, rpi.RecId");
+
+            if (table == null)
+                return totals;
+
+            foreach (DataRow row in table.Rows)
+            {
+                if (row.IsNull("TermDate") || row.IsNull("Amount"))
+                    continue;
+
+                decimal amount = Convert.ToDecimal(row["Amount"]);
+                if (amount == 0m)
+                    continue;
+
+                int periodIndex = ResolvePeriodIndexByTermDate(periods, Convert.ToDateTime(row["TermDate"]).Date);
+                if (periodIndex < 0)
+                    continue;
+
+                if (!totals.ContainsKey(periodIndex))
+                    totals[periodIndex] = 0m;
+
+                totals[periodIndex] += amount;
+            }
+
+            return totals;
+        }
+
+        static HashSet<long> LoadCurrentAccountRecIdsWithReceiptPaymentItems(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            short receiptType)
+        {
+            var recIds = new HashSet<long>();
+            if (bankAccountId <= 0)
+                return recIds;
+
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                context,
+                "Erp_ReceiptPaymentItem",
+                $@"select distinct cri.RecId
+                   from Erp_ReceiptPaymentItem rpi with (nolock)
+                   inner join Erp_CurrentAccountReceiptItem cri with (nolock) on cri.RecId = rpi.SourceItemId
+                   inner join Erp_CurrentAccountReceipt cr with (nolock) on cr.RecId = cri.CurrentAccountReceiptId
+                   inner join Erp_BankAccount ba with (nolock) on ba.RecId = cri.BankAccountId
+                   inner join Erp_Bank b with (nolock) on b.RecId = ba.BankId
+                   where rpi.SourceModule = {FinanceSourceModule}
+                     and b.CompanyId = {companyId}
+                     and cri.BankAccountId = {bankAccountId}
+                     and cr.ReceiptType = {receiptType}
+                     and IsNull(rpi.IsDeleted, 0) = 0
+                     and IsNull(cri.IsDeleted, 0) = 0
+                     and IsNull(cr.IsDeleted, 0) = 0");
+
+            if (table == null)
+                return recIds;
+
+            foreach (DataRow row in table.Rows)
+            {
+                if (!row.IsNull("RecId"))
+                    recIds.Add(Convert.ToInt64(row["RecId"]));
+            }
+
+            return recIds;
+        }
+
+        static IList<CreditCardPeriodMovementLine> ExcludeMovementLines(
+            IList<CreditCardPeriodMovementLine> movementLines,
+            HashSet<long> excludedRecIds)
+        {
+            if (movementLines == null || movementLines.Count == 0 || excludedRecIds == null || excludedRecIds.Count == 0)
+                return movementLines;
+
+            return movementLines.Where(line => !excludedRecIds.Contains(line.RecId)).ToList();
+        }
+
+        static void MergePeriodTotals(IDictionary<int, decimal> target, IDictionary<int, decimal> source)
+        {
+            if (target == null || source == null)
+                return;
+
+            foreach (KeyValuePair<int, decimal> item in source)
+            {
+                if (!target.ContainsKey(item.Key))
+                    target[item.Key] = 0m;
+
+                target[item.Key] += item.Value;
+            }
+        }
+
+        static int ResolvePeriodIndexByTermDate(IList<CreditCardPeriodInfo> periods, DateTime termDate)
+        {
+            if (periods == null || periods.Count == 0)
+                return -1;
+
+            for (int i = 0; i < periods.Count; i++)
+            {
+                if (periods[i].PaymentDueDate.Date == termDate.Date)
+                    return i;
+            }
+
+            return CreditCardStatementDataService.FindPeriodIndexByStatementCycle(periods, termDate);
         }
 
         public static void ApplyPeriodAmountColumns(
@@ -506,6 +815,28 @@ namespace CashFlowManagementModule.Services
 
             var table = data.Tables["Erp_BankAccount"];
             return table.Rows.Count == 0 ? null : table.Rows[0];
+        }
+
+        static DataRow LoadBankAccountRowForSummary(CashFlowDbContext context, long bankAccountId)
+        {
+            if (bankAccountId <= 0 || !context.IsValid)
+                return null;
+
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                context,
+                "Erp_BankAccount",
+                $@"select RecId,
+                          ChequeCreditLimit,
+                          {BankAccountCreditCardHelper.FieldIssueDate},
+                          {BankAccountCreditCardHelper.FieldExpiryMonth},
+                          {BankAccountCreditCardHelper.FieldExpiryYear}
+                   from Erp_BankAccount with (nolock)
+                   where RecId = {bankAccountId} and IsNull(IsDeleted, 0) = 0");
+            if (table == null || table.Rows.Count == 0)
+                return null;
+
+            table.TableName = "Erp_BankAccount";
+            return table.Rows[0];
         }
 
         static string BuildReceiptDateFilter(DataRow bankAccountRow, string dateColumn)

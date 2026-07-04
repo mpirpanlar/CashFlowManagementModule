@@ -44,6 +44,20 @@ namespace Sentez.CashFlowManagementModule
                 (short)CashFlowManagementModuleSecuritySubItems.None,
                 Privileges.Update));
 
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Ekstre Harcamalarını Aktar"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.CreditCardStatementSpendingImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Yaşlandırma Tutarlarını Aktar"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.CurrentAccountAgingImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
             PrivilegeInfo.SecurityDefinitions.AddDefinition(mainSecurity);
         }
     }

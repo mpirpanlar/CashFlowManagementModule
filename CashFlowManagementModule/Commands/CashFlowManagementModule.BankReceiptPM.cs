@@ -478,6 +478,24 @@ namespace Sentez.CashFlowManagementModule
             btnImportFixedPayments.Command = _paymentOrderBankReceiptPm.CmdList["ImportFixedPaymentsCommand"];
             toolbar.Children.Add(btnImportFixedPayments);
 
+            var btnImportStatementSpending = new LiveButton
+            {
+                Content = SLanguage.GetString("Ekstre Harcamalarını Aktar"),
+                Margin = new Thickness(6, 0, 0, 0),
+                Padding = new Thickness(8, 2, 8, 2)
+            };
+            btnImportStatementSpending.Command = _paymentOrderBankReceiptPm.CmdList["ImportCreditCardStatementSpendingCommand"];
+            toolbar.Children.Add(btnImportStatementSpending);
+
+            var btnImportAging = new LiveButton
+            {
+                Content = SLanguage.GetString("Yaşlandırma Tutarlarını Aktar"),
+                Margin = new Thickness(6, 0, 0, 0),
+                Padding = new Thickness(8, 2, 8, 2)
+            };
+            btnImportAging.Command = _paymentOrderBankReceiptPm.CmdList["ImportCurrentAccountAgingCommand"];
+            toolbar.Children.Add(btnImportAging);
+
             var validationLabel = new TextBlock
             {
                 Name = PaymentOrderCreditCardValidationLabelName,
@@ -537,6 +555,121 @@ namespace Sentez.CashFlowManagementModule
                     ImportFixedPaymentsCommand,
                     CanImportFixedPaymentsCommand);
             }
+
+            if (pm.CmdList["ImportCreditCardStatementSpendingCommand"] == null)
+            {
+                pm.CmdList.AddCmd(
+                    323,
+                    "ImportCreditCardStatementSpendingCommand",
+                    SLanguage.GetString("Ekstre Harcamalarını Aktar"),
+                    ImportCreditCardStatementSpendingCommand,
+                    CanImportCreditCardStatementSpendingCommand);
+            }
+
+            if (pm.CmdList["ImportCurrentAccountAgingCommand"] == null)
+            {
+                pm.CmdList.AddCmd(
+                    324,
+                    "ImportCurrentAccountAgingCommand",
+                    SLanguage.GetString("Yaşlandırma Tutarlarını Aktar"),
+                    ImportCurrentAccountAgingCommand,
+                    CanImportCurrentAccountAgingCommand);
+            }
+        }
+
+        bool CanImportCurrentAccountAgingCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return false;
+            if (BankReceiptPaymentOrderHelper.ShouldLockPaymentOrder(_paymentOrderBankReceiptPm.ActiveBO)) return false;
+
+            return SysMng.Instance.CheckRights(
+                OperationType.Update,
+                (short)Modules.ExternalModule16,
+                (short)Modules.ExternalModule16,
+                (short)CashFlowManagementModuleSecurityItems.CurrentAccountAgingImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None);
+        }
+
+        void ImportCurrentAccountAgingCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+
+            var paymentOrderPm = _paymentOrderBankReceiptPm as PaymentOrderBankReceiptPM;
+            if (paymentOrderPm == null) return;
+
+            BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
+            if (businessObject?.CurrentRow?.Row == null) return;
+
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            if (session?.ActiveCompany?.RecId == null) return;
+
+            if (paymentOrderPm.DefaultBankAccountId <= 0
+                && !string.IsNullOrWhiteSpace(paymentOrderPm.DefaultBankAccountCode))
+            {
+                paymentOrderPm.ResolveDefaultBankAccount(0, paymentOrderPm.DefaultBankAccountCode);
+            }
+
+            DateTime receiptDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+                ? DateTime.Today
+                : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+
+            CurrentAccountAgingImportResult importResult = CurrentAccountAgingImportService.Import(
+                businessObject,
+                session,
+                _container,
+                receiptDate,
+                paymentOrderPm.DefaultBankAccountId);
+
+            if (!string.IsNullOrEmpty(importResult.Message))
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(
+                    importResult.Message,
+                    importResult.AddedCount > 0 || importResult.UpdatedCount > 0 ? null : ConstantStr.Warning);
+            }
+
+            RefreshPaymentOrderDetailGrid();
+        }
+
+        bool CanImportCreditCardStatementSpendingCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return false;
+            if (BankReceiptPaymentOrderHelper.ShouldLockPaymentOrder(_paymentOrderBankReceiptPm.ActiveBO)) return false;
+
+            return SysMng.Instance.CheckRights(
+                OperationType.Update,
+                (short)Modules.ExternalModule16,
+                (short)Modules.ExternalModule16,
+                (short)CashFlowManagementModuleSecurityItems.CreditCardStatementSpendingImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None);
+        }
+
+        void ImportCreditCardStatementSpendingCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+
+            BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
+            if (businessObject?.CurrentRow?.Row == null) return;
+
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            if (session?.ActiveCompany?.RecId == null) return;
+
+            DateTime receiptDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+                ? DateTime.Today
+                : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+
+            CreditCardStatementSpendingImportResult importResult = CreditCardStatementSpendingImportService.Import(
+                businessObject,
+                session,
+                receiptDate);
+
+            if (!string.IsNullOrEmpty(importResult.Message))
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(
+                    importResult.Message,
+                    importResult.AddedCount > 0 || importResult.UpdatedCount > 0 ? null : ConstantStr.Warning);
+            }
+
+            RefreshPaymentOrderDetailGrid();
         }
 
         bool CanImportFixedPaymentsCommand(ISysCommandParam obj)

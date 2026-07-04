@@ -15,7 +15,9 @@
         PaymentOrderLineApproval = 1,
         PaymentOrderHeaderApproval = 2,
         FixedPaymentType = 3,
-        FixedPaymentImport = 4
+        FixedPaymentImport = 4,
+        CreditCardStatementSpendingImport = 5,
+        CurrentAccountAgingImport = 6
     }
 
     public enum CashFlowManagementModuleSecuritySubItems : short

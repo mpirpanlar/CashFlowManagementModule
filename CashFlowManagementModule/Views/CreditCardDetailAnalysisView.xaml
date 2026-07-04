@@ -5,36 +5,106 @@
     xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
     xmlns:UtilCore="clr-namespace:Sentez.Common.Utilities;assembly=LiveCore"
     xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
-    xmlns:sye="clr-namespace:Sentez.Common.Extension;assembly=LiveCore.Desktop"
     x:Name="CreditCardDetailAnalysisView"
     Tag="CreditCardDetailAnalysisViewW">
-    <Grid Margin="8">
+    <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
-
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-            <live:LiveLabel VerticalContentAlignment="Center" Margin="0,0,8,0" Content="{lange:TranslateExtension Yıl}"/>
-            <live:LiveCalculatorEdit Width="80" Margin="0,0,12,0" EditValue="{Binding SelectedYear}"/>
-            <live:LiveButton MinWidth="100" Content="{lange:TranslateExtension Yenile}" Command="{Binding CmdList[RefreshCreditCardAnalysisCommand]}"/>
-        </StackPanel>
-
-        <TextBlock Grid.Row="1" Margin="0,0,0,8" Text="{Binding SummaryText}" FontWeight="SemiBold"/>
-
-        <GroupBox Grid.Row="2" Header="{lange:TranslateExtension KRD. KART DETAYI}">
-            <live:LiveGridControl x:Name="gridCreditCardAnalysis"
-                                  ShowBorder="False"
-                                  AutoPopulateColumns="False"
-                                  SelectionMode="Row"
-                                  AllowNewRow="False"
-                                  AllowDeleteRow="False"
-                                  ItemsSource="{Binding AnalysisData}">
-                <live:LiveGridControl.View>
-                    <live:ListView/>
-                </live:LiveGridControl.View>
-            </live:LiveGridControl>
-        </GroupBox>
+        <live:LiveDockLayoutManager x:Name="creditCardDockLayoutManager"
+                                    Grid.Row="0"
+                                    EnableSaveLayout="True">
+            <live:LiveLayoutGroup Orientation="Vertical">
+                <live:LiveLayoutGroup ItemHeight="*">
+                    <live:LiveLayoutPanel x:Name="PeriodPanel"
+                                          Caption="{lange:TranslateExtension KRD. KART DETAYI}"
+                                          ShowCaption="True"
+                                          AllowFloat="True"
+                                          AllowClose="False"
+                                          AllowHide="True">
+                        <live:LiveGridControl x:Name="gridCreditCardAnalysis"
+                                              ShowBorder="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding AnalysisDataView}"
+                                              TableName="CreditCardDetailAnalysis">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="BankCode" Caption="Banka Kodu" Width="90" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="BankName" Caption="Banka Adı" Width="140" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="AccountCode" Caption="Banka Hesap Kodu" Width="110" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="AccountName" Caption="Banka Hesap Adı" Width="160" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodNo" Caption="Dönem No" Width="70" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodYear" Caption="Yıl" Width="60" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16" MaskString="####"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodMonth" Caption="Ay" Width="50" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                                <UtilCore:ReceiptColumn ColumnName="StatementStartDate" Caption="Dönem Başlangıç" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
+                                <UtilCore:ReceiptColumn ColumnName="StatementDate" Caption="Hesap Kesim" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
+                                <UtilCore:ReceiptColumn ColumnName="PaymentDueDays" Caption="Gün" Width="60" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                                <UtilCore:ReceiptColumn ColumnName="PaymentDueDate" Caption="Son Ödeme" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodTotalCreditLimit" Caption="Toplam Limit" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodSpendingTotal" Caption="Harcama Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodRefundTotal" Caption="İade Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodCardPaymentTotal" Caption="Ödeme Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodRemainingCreditLimit" Caption="Kalan Limit" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="CardExpiryDate" Caption="Kart Son Kullanma" Width="180" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy dddd" MaskString="dd.MM.yyyy dddd"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+                <live:LiveLayoutGroup ItemHeight="*">
+                    <live:LiveLayoutPanel x:Name="MovementPanel"
+                                          Caption="{lange:TranslateExtension DÖNEM HAREKETLERİ}"
+                                          ShowCaption="True"
+                                          AllowFloat="True"
+                                          AllowClose="False"
+                                          AllowHide="True">
+                        <live:LiveGridControl x:Name="gridCreditCardMovement"
+                                              ShowBorder="False"
+                                              AutoGenerateColumns="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding MovementDataView}"
+                                              TableName="CreditCardDetailMovement">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="BankCode" Caption="Banka Kodu" Width="90" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="BankName" Caption="Banka Adı" Width="140" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="AccountCode" Caption="Banka Hesap Kodu" Width="110" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="AccountName" Caption="Banka Hesap Adı" Width="160" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="MovementCategory" Caption="Hareket Türü" Width="100" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="ReceiptTypeName" Caption="Fiş Tipi" Width="180" UsageType="None" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="ReceiptDate" Caption="Fiş Tarihi" Width="120" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy" MaskString="dd.MM.yyyy"/>
+                                <UtilCore:ReceiptColumn ColumnName="Explanation" Caption="Açıklama" Width="220" UsageType="Name" DataType="{x:Type system:String}" EditorType="ReadOnlyTextEditor" UdtType="UdtExpHuge"/>
+                                <UtilCore:ReceiptColumn ColumnName="InstallmentCount" Caption="Taksit Sayısı" Width="90" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                                <UtilCore:ReceiptColumn ColumnName="Amount" Caption="Tutar" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="StatementDate" Caption="Hesap Kesim" Width="120" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy" MaskString="dd.MM.yyyy"/>
+                                <UtilCore:ReceiptColumn ColumnName="PaymentDueDays" Caption="Gün" Width="60" UsageType="None" DataType="{x:Type system:Int16}" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                                <UtilCore:ReceiptColumn ColumnName="PaymentDueDate" Caption="Son Ödeme" Width="120" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy" MaskString="dd.MM.yyyy"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodTotalCreditLimit" Caption="Toplam Limit" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodSpendingTotal" Caption="Harcama Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodRefundTotal" Caption="İade Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodCardPaymentTotal" Caption="Ödeme Toplamı" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodRemainingCreditLimit" Caption="Kalan Limit" Width="120" UsageType="Amount" DataType="{x:Type system:Decimal}" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="CardExpiryDate" Caption="Kart Son Kullanma" Width="120" UsageType="Date" DataType="{x:Type system:DateTime}" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy" MaskString="dd.MM.yyyy"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+            </live:LiveLayoutGroup>
+        </live:LiveDockLayoutManager>
+        <Grid x:Name="ButtonPanel" Grid.Row="1" Height="50">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="8,0,0,0">
+                <live:LiveButton MinWidth="100" Content="{lange:TranslateExtension Yenile}" Command="{Binding CmdList[RefreshAnalysisCommand]}"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </UserControl>
