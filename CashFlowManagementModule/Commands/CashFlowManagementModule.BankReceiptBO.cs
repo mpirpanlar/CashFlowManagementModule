@@ -37,9 +37,11 @@ namespace Sentez.CashFlowManagementModule
 
         void PaymentOrderBankReceiptBo_Init(BusinessObjectBase bo, BoParam parameter)
         {
-            if (parameter?.Type != BankReceiptPaymentOrderHelper.ReceiptType) return;
+            if (parameter?.Type == BankReceiptPaymentOrderHelper.ReceiptType)
+                BankReceiptPaymentOrderHelper.DisableItemIsApprovedFkSync(bo);
 
-            BankReceiptPaymentOrderHelper.DisableItemIsApprovedFkSync(bo);
+            if (parameter?.Type == BankReceiptCollectionOrderHelper.ReceiptType)
+                BankReceiptCollectionOrderHelper.DisableItemIsApprovedFkSync(bo);
         }
     }
 }

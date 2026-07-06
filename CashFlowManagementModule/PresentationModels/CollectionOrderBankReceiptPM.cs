@@ -25,16 +25,16 @@ using System.Windows.Media;
 
 namespace CashFlowManagementModule.PresentationModels
 {
-    public class PaymentOrderBankReceiptPM : BankReceiptPM
+    public class CollectionOrderBankReceiptPM : BankReceiptPM
     {
-        const string DefaultBankAccountCodeFieldName = "TxtDefaultBankAccountCode";
-        const string AgingStartCurrentAccountCodeFieldName = "TxtAgingStartCurrentAccountCode";
-        const string AgingEndCurrentAccountCodeFieldName = "TxtAgingEndCurrentAccountCode";
-        const string AgingImportParamsPanelName = "PaymentOrderAgingImportParamsPanel";
-        const string AgingListFieldStart = "AgingStartCurrentAccountCode";
-        const string AgingListFieldEnd = "AgingEndCurrentAccountCode";
-        const string AgingImportSettingsPmName = "PaymentOrderBankReceiptPM";
-        const string AgingImportSettingsGroup = "AgingImportParams";
+        const string CollectionOrderDefaultBankAccountCodeFieldName = "TxtCollectionOrderDefaultBankAccountCode";
+        const string CollectionOrderAgingStartCurrentAccountCodeFieldName = "TxtCollectionOrderAgingStartCurrentAccountCode";
+        const string CollectionOrderAgingEndCurrentAccountCodeFieldName = "TxtCollectionOrderAgingEndCurrentAccountCode";
+        const string CollectionOrderAgingImportParamsPanelName = "CollectionOrderAgingImportParamsPanel";
+        const string CollectionOrderAgingListFieldStart = "CollectionOrderAgingStartCurrentAccountCode";
+        const string CollectionOrderAgingListFieldEnd = "CollectionOrderAgingEndCurrentAccountCode";
+        const string CollectionOrderAgingImportSettingsPmName = "CollectionOrderBankReceiptPM";
+        const string CollectionOrderAgingImportSettingsGroup = "AgingImportParams";
 
         public string DefaultBankAccountCode
         {
@@ -113,7 +113,7 @@ namespace CashFlowManagementModule.PresentationModels
         bool _agingImportSettingsLoaded;
         bool _loadingAgingImportSettings;
 
-        public PaymentOrderBankReceiptPM(IContainerExtension container) : base(container)
+        public CollectionOrderBankReceiptPM(IContainerExtension container) : base(container)
         {
         }
 
@@ -129,15 +129,15 @@ namespace CashFlowManagementModule.PresentationModels
             try
             {
                 string startCode = session.WindowSettings.GetValue(
-                    0, AgingImportSettingsPmName, AgingImportSettingsGroup, "AgingStartCurrentAccountCode");
+                    0, CollectionOrderAgingImportSettingsPmName, CollectionOrderAgingImportSettingsGroup, "AgingStartCurrentAccountCode");
                 string endCode = session.WindowSettings.GetValue(
-                    0, AgingImportSettingsPmName, AgingImportSettingsGroup, "AgingEndCurrentAccountCode");
+                    0, CollectionOrderAgingImportSettingsPmName, CollectionOrderAgingImportSettingsGroup, "AgingEndCurrentAccountCode");
                 string bankCode = session.WindowSettings.GetValue(
-                    0, AgingImportSettingsPmName, AgingImportSettingsGroup, "DefaultBankAccountCode");
+                    0, CollectionOrderAgingImportSettingsPmName, CollectionOrderAgingImportSettingsGroup, "DefaultBankAccountCode");
                 string bankIdValue = session.WindowSettings.GetValue(
-                    0, AgingImportSettingsPmName, AgingImportSettingsGroup, "DefaultBankAccountId");
+                    0, CollectionOrderAgingImportSettingsPmName, CollectionOrderAgingImportSettingsGroup, "DefaultBankAccountId");
                 string directImport = session.WindowSettings.GetValue(
-                    0, AgingImportSettingsPmName, AgingImportSettingsGroup, "ImportAgingDirectlyToReceipt");
+                    0, CollectionOrderAgingImportSettingsPmName, CollectionOrderAgingImportSettingsGroup, "ImportAgingDirectlyToReceipt");
 
                 if (!string.IsNullOrWhiteSpace(startCode))
                 {
@@ -182,8 +182,8 @@ namespace CashFlowManagementModule.PresentationModels
                 {
                     session.WindowSettings.SetValue(
                         0,
-                        AgingImportSettingsPmName,
-                        AgingImportSettingsGroup,
+                        CollectionOrderAgingImportSettingsPmName,
+                        CollectionOrderAgingImportSettingsGroup,
                         "DefaultBankAccountId",
                         _defaultBankAccountId.ToString(CultureInfo.InvariantCulture));
                 }
@@ -226,13 +226,13 @@ namespace CashFlowManagementModule.PresentationModels
 
         LiveLookUpEdit FindDefaultBankAccountLookup()
         {
-            if (ActiveViewControl?.FindName(DefaultBankAccountCodeFieldName) is LiveLookUpEdit lookup)
+            if (ActiveViewControl?.FindName(CollectionOrderDefaultBankAccountCodeFieldName) is LiveLookUpEdit lookup)
                 return lookup;
 
             var gridDetail = FCtrl("gridDetail") as FrameworkElement;
             if (gridDetail?.Parent is FrameworkElement parent
-                && parent.FindName(AgingImportParamsPanelName) is FrameworkElement panel
-                && panel.FindName(DefaultBankAccountCodeFieldName) is LiveLookUpEdit panelLookup)
+                && parent.FindName(CollectionOrderAgingImportParamsPanelName) is FrameworkElement panel
+                && panel.FindName(CollectionOrderDefaultBankAccountCodeFieldName) is LiveLookUpEdit panelLookup)
             {
                 return panelLookup;
             }
@@ -247,8 +247,8 @@ namespace CashFlowManagementModule.PresentationModels
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             session?.WindowSettings?.SetValue(
                 0,
-                AgingImportSettingsPmName,
-                AgingImportSettingsGroup,
+                CollectionOrderAgingImportSettingsPmName,
+                CollectionOrderAgingImportSettingsGroup,
                 key,
                 value ?? string.Empty);
         }
@@ -274,21 +274,21 @@ namespace CashFlowManagementModule.PresentationModels
 
             if (lookup != null)
             {
-                if (lookup.Name == DefaultBankAccountCodeFieldName)
+                if (lookup.Name == CollectionOrderDefaultBankAccountCodeFieldName)
                 {
                     ShowDefaultBankAccountList();
                     return;
                 }
 
-                if (lookup.Name == AgingStartCurrentAccountCodeFieldName)
+                if (lookup.Name == CollectionOrderAgingStartCurrentAccountCodeFieldName)
                 {
-                    ShowAgingCurrentAccountList(AgingListFieldStart);
+                    ShowAgingCurrentAccountList(CollectionOrderAgingListFieldStart);
                     return;
                 }
 
-                if (lookup.Name == AgingEndCurrentAccountCodeFieldName)
+                if (lookup.Name == CollectionOrderAgingEndCurrentAccountCodeFieldName)
                 {
-                    ShowAgingCurrentAccountList(AgingListFieldEnd);
+                    ShowAgingCurrentAccountList(CollectionOrderAgingListFieldEnd);
                     return;
                 }
             }
@@ -357,12 +357,12 @@ namespace CashFlowManagementModule.PresentationModels
 
         public void OnAgingStartCurrentAccountCodeKeyDown(object sender, KeyEventArgs e)
         {
-            HandleAgingCurrentAccountCodeKeyDown(sender, e, AgingListFieldStart, code => AgingStartCurrentAccountCode = code);
+            HandleAgingCurrentAccountCodeKeyDown(sender, e, CollectionOrderAgingListFieldStart, code => AgingStartCurrentAccountCode = code);
         }
 
         public void OnAgingEndCurrentAccountCodeKeyDown(object sender, KeyEventArgs e)
         {
-            HandleAgingCurrentAccountCodeKeyDown(sender, e, AgingListFieldEnd, code => AgingEndCurrentAccountCode = code);
+            HandleAgingCurrentAccountCodeKeyDown(sender, e, CollectionOrderAgingListFieldEnd, code => AgingEndCurrentAccountCode = code);
         }
 
         void HandleAgingCurrentAccountCodeKeyDown(object sender, KeyEventArgs e, string listField, Action<string> setCode)
@@ -485,7 +485,7 @@ namespace CashFlowManagementModule.PresentationModels
             if (accountTable != null && accountTable.Rows.Count > 0)
                 resolvedCode = accountTable.Rows[0]["CurrentAccountCode"].ToString();
 
-            if (_activeAgingListField == AgingListFieldEnd)
+            if (_activeAgingListField == CollectionOrderAgingListFieldEnd)
                 AgingEndCurrentAccountCode = resolvedCode;
             else
                 AgingStartCurrentAccountCode = resolvedCode;

@@ -38,12 +38,15 @@ namespace CashFlowManagementModule.Services
                 context, companyId, bankAccountId, 53, preferDebit: false, bankAccountRow);
             var paymentLines = LoadVirmanPaymentLines(
                 context, companyId, bankAccountId, bankAccountRow);
+            var bankReceiptSpendingLines = LoadBankReceiptSpendingLines(
+                context, companyId, bankAccountId, bankAccountRow);
 
             var spendingTotals = BuildCurrentAccountPeriodTotals(
                 context, companyId, bankAccountId, periods, 51, spendingLines, bankAccountRow);
             var refundTotals = BuildCurrentAccountPeriodTotals(
                 context, companyId, bankAccountId, periods, 53, refundLines, bankAccountRow);
             var paymentTotals = BuildPeriodTotals(periods, paymentLines);
+            MergePeriodTotals(spendingTotals, BuildPeriodTotals(periods, bankReceiptSpendingLines));
 
             int amountDec = session.ParamService?.GetParameterClass<GeneralParameters>()?.AmountDec ?? 2;
             var creditLimit = GetCreditLimit(data);
@@ -77,8 +80,11 @@ namespace CashFlowManagementModule.Services
             DataRow bankAccountRow = LoadBankAccountRowForSummary(context, bankAccountId);
             var spendingLines = LoadCurrentAccountReceiptLines(
                 context, companyId, bankAccountId, 51, preferDebit: true, bankAccountRow);
+            var bankReceiptSpendingLines = LoadBankReceiptSpendingLines(
+                context, companyId, bankAccountId, bankAccountRow);
             var spendingTotals = BuildCurrentAccountPeriodTotals(
                 context, companyId, bankAccountId, periods, 51, spendingLines, bankAccountRow);
+            MergePeriodTotals(spendingTotals, BuildPeriodTotals(periods, bankReceiptSpendingLines));
 
             int amountDec = session.ParamService?.GetParameterClass<GeneralParameters>()?.AmountDec ?? 2;
             if (!spendingTotals.TryGetValue(periodIndex, out decimal total))
@@ -245,6 +251,57 @@ namespace CashFlowManagementModule.Services
                    where br.CompanyId = {companyId}
                      and bri.BankAccountId = {bankAccountId}
                      and br.ReceiptType = 2
+                     and IsNull(bri.IsDeleted, 0) = 0
+                     and IsNull(br.IsDeleted, 0) = 0
+                     and IsNull(br.IsCancelled, 0) = 0
+                     {dateFilter}
+                   order by bri.ReceiptDate, bri.RecId");
+
+            return MapMovementLines(table);
+        }
+
+        public static IList<CreditCardPeriodMovementLine> LoadBankReceiptSpendingLines(
+            CashFlowDbContext context,
+            int companyId,
+            long bankAccountId,
+            DataRow bankAccountRow = null)
+        {
+            return LoadBankReceiptSpendingLines(
+                context.Provider,
+                context.Connection,
+                context.Transaction,
+                companyId,
+                bankAccountId,
+                bankAccountRow);
+        }
+
+        public static IList<CreditCardPeriodMovementLine> LoadBankReceiptSpendingLines(
+            ProviderType provider,
+            DbConnection connection,
+            DbTransaction transaction,
+            int companyId,
+            long bankAccountId,
+            DataRow bankAccountRow = null)
+        {
+            var lines = new List<CreditCardPeriodMovementLine>();
+            if (bankAccountId <= 0)
+                return lines;
+
+            string dateFilter = BuildReceiptDateFilter(bankAccountRow, "bri.ReceiptDate");
+
+            DataTable table = CashFlowDbAccess.GetDataTable(
+                CashFlowDbContext.From(connection, transaction, provider, keepConnectionOpen: true),
+                "Erp_BankReceiptItem",
+                $@"select bri.RecId,
+                          bri.ReceiptDate,
+                          1 InstallmentCount,
+                          IsNull(bri.Credit, 0) TotalAmount
+                   from Erp_BankReceiptItem bri with (nolock)
+                   inner join Erp_BankReceipt br with (nolock) on br.RecId = bri.BankReceiptId
+                   where br.CompanyId = {companyId}
+                     and bri.BankAccountId = {bankAccountId}
+                     and br.ReceiptType = 1
+                     and IsNull(bri.Credit, 0) <> 0
                      and IsNull(bri.IsDeleted, 0) = 0
                      and IsNull(br.IsDeleted, 0) = 0
                      and IsNull(br.IsCancelled, 0) = 0

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <SentezMetaData Application="3015" Version="1.0.5" >
   <Tables>
     <Table Id="288" Name="Erp_AgingReportResults" Description="Yaşlandırma Rapor Bilgileri" PrimaryKey="RecId" Caption="Yaşlandırma Rapor Bilgileri">
@@ -202,6 +202,7 @@
         <Field Id="9" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
         <Field Id="10" Name="DeletedAt" Description="Kaydı Silme Zamanı" DataType="DateTime" Ordinal="36" UdtType="UdtDateTime" Caption="Silme Zamanı" />
         <Field Id="11" Name="DeletedBy" Description="Kaydı Silen" DataType="Int32" Ordinal="37" UdtType="UdtInt32" Caption="Silen" Precision="10" />
+        <Field Id="12" Name="IsCollection" Description="Tahsilat Tipi" DataType="Boolean" Ordinal="12" UdtType="UdtBool" Caption="Tahsilat Tipi" Precision="3" IsFilterField="True" />
       </Fields>
       <Indexes>
         <Index Id="2" Name="Meta_FixedPaymentType_IX0" Ordinal="2" isUnique="True">

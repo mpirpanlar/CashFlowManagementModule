@@ -58,6 +58,34 @@ namespace Sentez.CashFlowManagementModule
                 (short)CashFlowManagementModuleSecuritySubItems.None,
                 Privileges.Update));
 
+            mainSecurity.AddChild(new SecurityDefinition(
+                CollectionOrderTerminology.LineApprovalSecurityName,
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.CollectionOrderLineApproval,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                CollectionOrderTerminology.HeaderApprovalSecurityName,
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.CollectionOrderHeaderApproval,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Tekrar Eden Tahsilatları Aktar"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.FixedCollectionImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Alacak Yaşlandırma Tutarlarını Aktar"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.CurrentAccountCollectionAgingImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
             PrivilegeInfo.SecurityDefinitions.AddDefinition(mainSecurity);
         }
     }

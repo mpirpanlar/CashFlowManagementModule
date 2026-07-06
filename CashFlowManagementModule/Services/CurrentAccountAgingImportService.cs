@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Text;
@@ -7,8 +8,11 @@ using CashFlowManagementModule.BoExtensions;
 
 using Prism.Ioc;
 
+using Sentez.Common;
+using Sentez.Common.Commands;
 using Sentez.Common.SystemServices;
 using Sentez.Data.BusinessObjects;
+using Sentez.Data.Tools;
 using Sentez.Localization;
 
 namespace CashFlowManagementModule.Services
@@ -29,8 +33,44 @@ namespace CashFlowManagementModule.Services
             BusinessObjectBase businessObject,
             LiveSession session,
             IContainerExtension container,
-            DateTime receiptDate,
+            DateTime reportDate,
             long defaultBankAccountId)
+        {
+            CurrentAccountAgingReportDataResult reportData = CurrentAccountAgingReportDataService.LoadAgingData(
+                container,
+                reportDate);
+            if (!reportData.IsSuccess)
+            {
+                return new CurrentAccountAgingImportResult
+                {
+                    Message = string.IsNullOrWhiteSpace(reportData.ErrorMessage)
+                        ? SLanguage.GetString("Yaşlandırma verisi alınamadı.")
+                        : reportData.ErrorMessage
+                };
+            }
+
+            var rows = new List<DataRow>();
+            foreach (DataRow row in reportData.Data.Rows)
+            {
+                if (row.RowState != DataRowState.Deleted)
+                    rows.Add(row);
+            }
+
+            return ImportSelectedRows(
+                businessObject,
+                reportDate,
+                defaultBankAccountId,
+                rows,
+                reportData.AmountColumnName);
+        }
+
+        public static CurrentAccountAgingImportResult ImportSelectedRows(
+            BusinessObjectBase businessObject,
+            DateTime reportDate,
+            long defaultBankAccountId,
+            IEnumerable<DataRow> selectedRows,
+            string amountColumnName,
+            string defaultBankAccountCode = null)
         {
             var result = new CurrentAccountAgingImportResult();
 
@@ -40,9 +80,15 @@ namespace CashFlowManagementModule.Services
                 return result;
             }
 
-            if (receiptDate == DateTime.MinValue)
+            if (reportDate == DateTime.MinValue)
             {
-                result.Message = SLanguage.GetString("Fiş tarihi geçersiz.");
+                result.Message = SLanguage.GetString("Rapor tarihi geçersiz.");
+                return result;
+            }
+
+            if (string.IsNullOrWhiteSpace(amountColumnName))
+            {
+                result.Message = SLanguage.GetString("<= 0 yaşlandırma kolonu bulunamadı.");
                 return result;
             }
 
@@ -53,28 +99,29 @@ namespace CashFlowManagementModule.Services
                 return result;
             }
 
-            CurrentAccountAgingReportDataResult reportData = CurrentAccountAgingReportDataService.LoadAgingData(
-                container,
-                receiptDate);
-            if (!reportData.IsSuccess)
+            if (selectedRows == null)
             {
-                result.Message = string.IsNullOrWhiteSpace(reportData.ErrorMessage)
-                    ? SLanguage.GetString("Yaşlandırma verisi alınamadı.")
-                    : reportData.ErrorMessage;
+                result.Message = SLanguage.GetString("Aktarılacak satır bulunamadı.");
                 return result;
             }
 
-            receiptDate = receiptDate.Date;
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            long bankAccountId = ResolveDefaultBankAccountId(
+                session,
+                defaultBankAccountId,
+                defaultBankAccountCode);
+
+            reportDate = reportDate.Date;
             DateTime paymentDate = new DateTime(
-                receiptDate.Year,
-                receiptDate.Month,
-                DateTime.DaysInMonth(receiptDate.Year, receiptDate.Month));
+                reportDate.Year,
+                reportDate.Month,
+                DateTime.DaysInMonth(reportDate.Year, reportDate.Month));
             DataRow headerRow = businessObject.CurrentRow.Row;
             bool needsDefaultBankAccount = false;
 
-            foreach (DataRow reportRow in reportData.Data.Rows)
+            foreach (DataRow reportRow in selectedRows)
             {
-                if (reportRow.RowState == DataRowState.Deleted)
+                if (reportRow == null || reportRow.RowState == DataRowState.Deleted)
                     continue;
 
                 if (!TryGetCurrentAccountId(reportRow, out long currentAccountId))
@@ -83,7 +130,7 @@ namespace CashFlowManagementModule.Services
                     continue;
                 }
 
-                decimal amount = GetDecimal(reportRow, reportData.AmountColumnName);
+                decimal amount = GetDecimal(reportRow, amountColumnName);
                 if (amount <= 0m)
                 {
                     result.SkippedZeroAmountCount++;
@@ -91,7 +138,7 @@ namespace CashFlowManagementModule.Services
                 }
 
                 string accountName = GetCurrentAccountDisplayName(reportRow);
-                string explanation = BuildExplanation(accountName, receiptDate);
+                string explanation = BuildExplanation(accountName, reportDate);
 
                 if (TryFindItemRow(itemTable, currentAccountId, out DataRow existingRow, out bool isApproved))
                 {
@@ -106,7 +153,7 @@ namespace CashFlowManagementModule.Services
                     continue;
                 }
 
-                if (defaultBankAccountId <= 0)
+                if (bankAccountId <= 0)
                 {
                     needsDefaultBankAccount = true;
                     continue;
@@ -116,7 +163,7 @@ namespace CashFlowManagementModule.Services
                 itemRow.SetParentRow(headerRow);
                 itemTable.Rows.Add(itemRow);
                 itemRow["CurrentAccountId"] = currentAccountId;
-                itemRow["BankAccountId"] = defaultBankAccountId;
+                itemRow["BankAccountId"] = bankAccountId;
                 itemRow["Credit"] = amount;
                 itemRow["IsApproved"] = (byte)0;
                 ApplyLineValues(itemRow, amount, paymentDate, explanation);
@@ -196,13 +243,13 @@ namespace CashFlowManagementModule.Services
             return Convert.ToDecimal(row[columnName], CultureInfo.InvariantCulture);
         }
 
-        static string BuildExplanation(string accountName, DateTime receiptDate)
+        static string BuildExplanation(string accountName, DateTime reportDate)
         {
             return string.Format(
                 SLanguage.GetString("{0} - {1}/{2} Yaşlandırma"),
                 accountName,
-                receiptDate.Month.ToString("00", CultureInfo.InvariantCulture),
-                receiptDate.Year.ToString(CultureInfo.InvariantCulture));
+                reportDate.Month.ToString("00", CultureInfo.InvariantCulture),
+                reportDate.Year.ToString(CultureInfo.InvariantCulture));
         }
 
         static bool TryFindItemRow(DataTable itemTable, long currentAccountId, out DataRow itemRow, out bool isApproved)
@@ -269,6 +316,17 @@ namespace CashFlowManagementModule.Services
             }
 
             return message.ToString().Trim();
+        }
+
+        public static long ResolveDefaultBankAccountId(
+            LiveSession session,
+            long defaultBankAccountId,
+            string defaultBankAccountCode)
+        {
+            return BankAccountDefaultResolver.ResolveBankAccountId(
+                session,
+                defaultBankAccountId,
+                defaultBankAccountCode);
         }
 
         static void AppendMessageLine(StringBuilder message, string line)

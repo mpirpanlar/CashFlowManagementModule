@@ -46,7 +46,8 @@ namespace Sentez.CashFlowManagementModule
         {
             DataRow headerRow = _currentAccountReceiptPm?.ActiveBO?.CurrentRow?.Row;
             if (headerRow == null || headerRow.IsNull("ReceiptType")) return false;
-            return Convert.ToInt16(headerRow["ReceiptType"]) == 51;
+            short receiptType = Convert.ToInt16(headerRow["ReceiptType"]);
+            return receiptType == 51 || receiptType == 50;
         }
 
         void CurrentAccountReceiptPm_Init(PMBase pm, PmParam parameter)

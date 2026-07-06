@@ -65,7 +65,6 @@
                                           AllowHide="True">
                         <live:LiveGridControl x:Name="gridCreditCardMovement"
                                               ShowBorder="False"
-                                              AutoGenerateColumns="False"
                                               SelectionMode="Row"
                                               AllowNewRow="False"
                                               AllowDeleteRow="False"

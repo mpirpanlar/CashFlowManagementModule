@@ -54,6 +54,7 @@ namespace CashFlowManagementModule.Services
             AppendAllocationMovements(table, context, periodContext, bankInfo, amountDec, allocatedCriIds);
             AppendReceiptPaymentItemMovements(table, context, companyId, periodContext, bankInfo, amountDec, allocatedCriIds);
             AppendCurrentAccountMovements(table, context, companyId, periodContext, bankInfo, amountDec, allocatedCriIds);
+            AppendBankReceiptSpendingMovements(table, context, companyId, periodContext, bankInfo, amountDec);
             AppendVirmanPaymentMovements(table, context, companyId, periodContext, bankInfo, amountDec);
 
             DataTable sorted = SortMovementTable(table);
@@ -369,6 +370,66 @@ namespace CashFlowManagementModule.Services
                     receiptDate,
                     explanation,
                     installmentCount,
+                    amount,
+                    amountDec);
+            }
+        }
+
+        static void AppendBankReceiptSpendingMovements(
+            DataTable table,
+            CashFlowDbContext context,
+            int companyId,
+            PeriodMovementContext periodContext,
+            BankAccountHeaderInfo bankInfo,
+            int amountDec)
+        {
+            DataTable briTable = CashFlowDbAccess.GetDataTable(
+                context,
+                SourceTableBankReceiptItem,
+                $@"select bri.RecId,
+                          bri.ReceiptDate,
+                          bri.Explanation,
+                          br.ReceiptType,
+                          br.ReceiptNo,
+                          IsNull(bri.Credit, 0) TotalAmount
+                   from Erp_BankReceiptItem bri with (nolock)
+                   inner join Erp_BankReceipt br with (nolock) on br.RecId = bri.BankReceiptId
+                   where br.CompanyId = {companyId}
+                     and bri.BankAccountId = {bankInfo.BankAccountId}
+                     and br.ReceiptType = 1
+                     and IsNull(bri.Credit, 0) <> 0
+                     and IsNull(bri.IsDeleted, 0) = 0
+                     and IsNull(br.IsDeleted, 0) = 0
+                     and IsNull(br.IsCancelled, 0) = 0
+                   order by bri.ReceiptDate, bri.RecId");
+
+            if (briTable == null)
+                return;
+
+            foreach (DataRow row in briTable.Rows)
+            {
+                decimal amount = Convert.ToDecimal(row["TotalAmount"]);
+                if (amount == 0m || row.IsNull("ReceiptDate"))
+                    continue;
+
+                DateTime receiptDate = Convert.ToDateTime(row["ReceiptDate"]).Date;
+                if (!MatchesPeriodByMovementDate(periodContext, receiptDate))
+                    continue;
+
+                short receiptType = Convert.ToInt16(row["ReceiptType"]);
+                string explanation = row.IsNull("Explanation") ? null : Convert.ToString(row["Explanation"]);
+
+                AddMovementRow(
+                    table,
+                    periodContext,
+                    bankInfo,
+                    Convert.ToInt64(row["RecId"]),
+                    SourceTableBankReceiptItem,
+                    MovementCategorySpending,
+                    GetBankReceiptTypeName(receiptType),
+                    receiptDate,
+                    explanation,
+                    1,
                     amount,
                     amountDec);
             }

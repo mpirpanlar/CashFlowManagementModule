@@ -63,7 +63,7 @@ namespace Sentez.CashFlowManagementModule
             bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "InUse", 1);
             bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "IsDeleted", 0);
             bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "BankAccountId", "Erp_BankAccount", "RecId", BankAccountCreditCardHelper.BankAccountFkName);
-            bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "CompanyId", "Erp_BankAccount", "CompanyId", BankAccountCreditCardHelper.BankAccountFkName);
+            bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "CompanyId", "Erp_Bank", "CompanyId", "FK_Erp_BankAccount_Erp_Bank");
             bo.ValueFiller.AddRule(BankAccountCreditCardHelper.PeriodTableName, "IsDeleted", "Erp_BankAccount", "IsDeleted", BankAccountCreditCardHelper.BankAccountFkName);
 
             bo.Lookups.AddLookUp(BankAccountCreditCardHelper.PeriodTableName, "BankAccountId", true, "Erp_BankAccount", "AccountCode", "AccountCode", "AccountName", "AccountName");

@@ -73,6 +73,7 @@ namespace Sentez.CashFlowManagementModule
         void _sLanguage_ActiveLanguageChanged(object sender, EventArgs e)
         {
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
+            CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
         }
 
         public override void OnRegister(IContainerRegistry containerRegistry)
@@ -101,9 +102,11 @@ namespace Sentez.CashFlowManagementModule
         public override void OnInitialize(IContainerProvider containerProvider)
         {
             _sysMng.AddApplication("CashFlowManagementModule");
-            _container.Register<IPMBase, PaymentOrderBankReceiptPM>("BankReceiptPM");
+            _container.Register<IPMBase, BankReceiptPmFactory>("BankReceiptPM");
             EnsureBankReceiptApprovedChangeCommandRegistered();
+            CollectionOrderReceiptTypeRegistration.RegisterCollectionOrderReceiptType();
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
+            CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             EnsureGlobalFixedPaymentTypeLookup();
         }
 
@@ -114,7 +117,9 @@ namespace Sentez.CashFlowManagementModule
         private void _sysMng_AfterDesktopLogin(object sender, EventArgs e)
         {
             EnsureBankReceiptApprovedChangeCommandRegistered();
+            CollectionOrderReceiptTypeRegistration.RegisterCollectionOrderReceiptType();
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
+            CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             EnsureGlobalFixedPaymentTypeLookup();
         }
 
@@ -139,6 +144,8 @@ namespace Sentez.CashFlowManagementModule
         {
             BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptPaymentOrderWorkPeriodExtension));
             BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptPaymentOrderControlExtension));
+            BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptCollectionOrderWorkPeriodExtension));
+            BusinessObjectBase.AddCustomExtension("BankReceiptBO", typeof(BankReceiptCollectionOrderControlExtension));
             BusinessObjectBase.AddCustomExtension("BankAccountBO", typeof(BankAccountCreditCardSyncExtension));
         }
 
@@ -164,16 +171,18 @@ namespace Sentez.CashFlowManagementModule
             ResMng.AddRes("AgingReportResultsListManagementW", "/CashFlowManagementModule;component/Views/AgingReportResultsListManagementView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("BankAccountCreditCardViewW", "/CashFlowManagementModule;component/Views/BankAccountCreditCardView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("CreditCardDetailAnalysisViewW", "/CashFlowManagementModule;component/Views/CreditCardDetailAnalysisView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("PaymentOrderAgingImportPreviewViewW", "/CashFlowManagementModule;component/Views/PaymentOrderAgingImportPreviewView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("CurrentAccountFixedPaymentViewW", "/CashFlowManagementModule;component/Views/CurrentAccountFixedPaymentView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("MetaFixedPaymentType", "/CashFlowManagementModule;component/Views/MetaFixedPaymentType.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
         }
 
         private void RegisterPM()
         {
-            _container.Register<IPMBase, PaymentOrderBankReceiptPM>("BankReceiptPM");
+            _container.Register<IPMBase, BankReceiptPmFactory>("BankReceiptPM");
             _container.Register<IPMBase, AgingReportResultsListPM>("AgingReportResultsListPM");
             _container.Register<IPMBase, AgingReportResultsManagementPM>("AgingReportResultsManagementPM");
             _container.Register<IPMBase, CreditCardDetailAnalysisPM>("CreditCardDetailAnalysisPM");
+            _container.Register<IPMBase, PaymentOrderAgingImportPreviewPM>("PaymentOrderAgingImportPreviewPM");
         }
 
         private void RegisterRpr()

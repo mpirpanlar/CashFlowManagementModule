@@ -16,7 +16,7 @@ namespace CashFlowManagementModule.Services
         public short InstallmentCount { get; set; } = 1;
         public string BankAccountDisplayName { get; set; }
 
-        public static CreditCardPaymentLineInput FromBankReceiptItem(DataRow row, DateTime? fallbackPaymentDate = null)
+        public static CreditCardPaymentLineInput FromBankReceiptItem(DataRow row, DateTime? fallbackPaymentDate = null, short planningReceiptType = 0)
         {
             if (row == null) return null;
 
@@ -25,12 +25,27 @@ namespace CashFlowManagementModule.Services
                 paymentDate = Convert.ToDateTime(row["UD_PaymentDate"]).Date;
 
             decimal amount = 0m;
-            if (!row.IsNull("Credit"))
-                amount = Convert.ToDecimal(row["Credit"]);
-
             decimal? forexAmount = null;
-            if (row.Table.Columns.Contains("ForexCredit") && !row.IsNull("ForexCredit"))
-                forexAmount = Convert.ToDecimal(row["ForexCredit"]);
+            if (planningReceiptType == BankReceiptCollectionOrderHelper.ReceiptType
+                || planningReceiptType == BankReceiptPaymentOrderHelper.ReceiptType)
+            {
+                amount = PlanningAmountSide.GetAmountFromRow(row, planningReceiptType);
+                string forexColumn = PlanningAmountSide.GetPlanningForexAmountColumn(planningReceiptType);
+                if (row.Table.Columns.Contains(forexColumn) && !row.IsNull(forexColumn))
+                    forexAmount = Convert.ToDecimal(row[forexColumn]);
+            }
+            else
+            {
+                if (!row.IsNull("Credit"))
+                    amount = Convert.ToDecimal(row["Credit"]);
+                else if (!row.IsNull("Debit"))
+                    amount = Convert.ToDecimal(row["Debit"]);
+
+                if (row.Table.Columns.Contains("ForexCredit") && !row.IsNull("ForexCredit"))
+                    forexAmount = Convert.ToDecimal(row["ForexCredit"]);
+                else if (row.Table.Columns.Contains("ForexDebit") && !row.IsNull("ForexDebit"))
+                    forexAmount = Convert.ToDecimal(row["ForexDebit"]);
+            }
 
             long bankAccountId = row.IsNull("BankAccountId") ? 0L : Convert.ToInt64(row["BankAccountId"]);
             long bankReceiptItemId = row.IsNull("RecId") ? 0L : Convert.ToInt64(row["RecId"]);

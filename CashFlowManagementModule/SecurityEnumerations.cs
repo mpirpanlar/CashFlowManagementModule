@@ -17,7 +17,11 @@
         FixedPaymentType = 3,
         FixedPaymentImport = 4,
         CreditCardStatementSpendingImport = 5,
-        CurrentAccountAgingImport = 6
+        CurrentAccountAgingImport = 6,
+        CollectionOrderLineApproval = 7,
+        CollectionOrderHeaderApproval = 8,
+        FixedCollectionImport = 9,
+        CurrentAccountCollectionAgingImport = 10
     }
 
     public enum CashFlowManagementModuleSecuritySubItems : short

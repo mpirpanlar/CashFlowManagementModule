@@ -92,6 +92,12 @@ namespace Sentez.FinanceModule.Reports
                 iTermInterestStatusOptions.WhereStr = "C.RecId = " + PolicyParam.RecordRecId;
 
             }
+            else if (PolicyParam?.FieldName != null
+                     && PolicyParam.FieldName.Contains("Aging")
+                     && !string.IsNullOrWhiteSpace(PolicyParam.WhereStr))
+            {
+                iTermInterestStatusOptions.WhereStr = PolicyParam.WhereStr;
+            }
 
             CurrentAccountParameters cp = activeSession.ParamService.GetParameterClass<CurrentAccountParameters>();
             if ((Aging && (cp.FirstRange != 0 || cp.SecondRange != 0)) || (!Aging && (cp.DebitFirstRange != 0 || cp.DebitSecondRange != 0)))

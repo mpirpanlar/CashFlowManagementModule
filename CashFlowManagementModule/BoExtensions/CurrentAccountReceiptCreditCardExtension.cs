@@ -58,6 +58,30 @@ namespace CashFlowManagementModule.BoExtensions
 
 
 
+        static bool IsCustomerCreditCardCollectionReceipt(BusinessObjectBase businessObject)
+
+        {
+
+            if (businessObject?.CurrentRow?.Row == null) return false;
+
+            if (businessObject.CurrentRow.Row.IsNull("ReceiptType")) return false;
+
+            return Convert.ToInt16(businessObject.CurrentRow.Row["ReceiptType"]) == 50;
+
+        }
+
+
+
+        static bool IsPlanningLinkedCreditCardReceipt(BusinessObjectBase businessObject)
+
+        {
+
+            return IsOwnCreditCardReceipt(businessObject) || IsCustomerCreditCardCollectionReceipt(businessObject);
+
+        }
+
+
+
         static bool IsCreditCardReceipt(BusinessObjectBase businessObject)
 
         {
@@ -94,7 +118,7 @@ namespace CashFlowManagementModule.BoExtensions
 
             base.OnAfterGet(sender, e);
 
-            if (!IsOwnCreditCardReceipt(BusinessObject)) return;
+            if (!IsPlanningLinkedCreditCardReceipt(BusinessObject)) return;
 
 
 
