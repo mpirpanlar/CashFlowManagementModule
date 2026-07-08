@@ -23,6 +23,7 @@ using CashFlowManagementModule.Services;
 using Sentez.FinanceModule.Reports;
 using Sentez.FinanceModule.WorkList;
 using Sentez.Common.Report;
+using Sentez.Common.Utilities;
 using Sentez.Data.BusinessObjects;
 using Sentez.FinanceModule.Models;
 using Sentez.Finance.PresentationModels;
@@ -74,6 +75,7 @@ namespace Sentez.CashFlowManagementModule
         {
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
+            EnsureBankAccountSubTypeLookup();
         }
 
         public override void OnRegister(IContainerRegistry containerRegistry)
@@ -97,6 +99,7 @@ namespace Sentez.CashFlowManagementModule
             CashFlowManagementModuleSecurity.RegisterSecurityDefinitions();
 
             MenuManager.Instance.RegisterMenu("CashFlowManagementModule", "CashFlowManagementModuleMenu", moduleID, true);
+            EnsureBankAccountSubTypeLookup();
         }
 
         public override void OnInitialize(IContainerProvider containerProvider)
@@ -108,6 +111,7 @@ namespace Sentez.CashFlowManagementModule
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             EnsureGlobalFixedPaymentTypeLookup();
+            EnsureBankAccountSubTypeLookup();
         }
 
         public override void RegisterModuleCommands()
@@ -121,12 +125,19 @@ namespace Sentez.CashFlowManagementModule
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             EnsureGlobalFixedPaymentTypeLookup();
+            EnsureBankAccountSubTypeLookup();
         }
 
         void EnsureGlobalFixedPaymentTypeLookup()
         {
             if (ActiveSession?.LookupList == null) return;
             MetaFixedPaymentTypeHelper.EnsureLookupList(ActiveSession.LookupList);
+        }
+
+        void EnsureBankAccountSubTypeLookup()
+        {
+            BankAccountSubTypeHelper.EnsureLookupList(LookupList.Instance);
+            BankAccountSubTypeHelper.EnsureLookupList(ActiveSession?.LookupList);
         }
 
         public void Initialize()
@@ -172,6 +183,7 @@ namespace Sentez.CashFlowManagementModule
             ResMng.AddRes("BankAccountCreditCardViewW", "/CashFlowManagementModule;component/Views/BankAccountCreditCardView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("CreditCardDetailAnalysisViewW", "/CashFlowManagementModule;component/Views/CreditCardDetailAnalysisView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("PaymentOrderAgingImportPreviewViewW", "/CashFlowManagementModule;component/Views/PaymentOrderAgingImportPreviewView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("CollectionOrderAgingImportPreviewViewW", "/CashFlowManagementModule;component/Views/CollectionOrderAgingImportPreviewView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("CurrentAccountFixedPaymentViewW", "/CashFlowManagementModule;component/Views/CurrentAccountFixedPaymentView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("MetaFixedPaymentType", "/CashFlowManagementModule;component/Views/MetaFixedPaymentType.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
         }
@@ -183,6 +195,7 @@ namespace Sentez.CashFlowManagementModule
             _container.Register<IPMBase, AgingReportResultsManagementPM>("AgingReportResultsManagementPM");
             _container.Register<IPMBase, CreditCardDetailAnalysisPM>("CreditCardDetailAnalysisPM");
             _container.Register<IPMBase, PaymentOrderAgingImportPreviewPM>("PaymentOrderAgingImportPreviewPM");
+            _container.Register<IPMBase, CollectionOrderAgingImportPreviewPM>("CollectionOrderAgingImportPreviewPM");
         }
 
         private void RegisterRpr()

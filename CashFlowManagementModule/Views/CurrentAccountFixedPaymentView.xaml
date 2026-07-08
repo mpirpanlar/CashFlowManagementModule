@@ -10,6 +10,7 @@
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
@@ -18,7 +19,12 @@
                             Content="{lange:TranslateExtension Tekrar Eden Ödeme Takibi}"
                             IsChecked="{sye:SBinding Field=Erp_CurrentAccount.UD_IsFixedPayment}"/>
 
-        <live:LiveGridControl Grid.Row="1"
+        <live:LiveCheckEdit Grid.Row="1"
+                            Margin="0,0,0,8"
+                            Content="{lange:TranslateExtension Tekrar Eden Tahsilat Takibi}"
+                            IsChecked="{sye:SBinding Field=Erp_CurrentAccount.UD_IsFixedCollection}"/>
+
+        <live:LiveGridControl Grid.Row="2"
                               x:Name="gridFixedPaymentSchedule"
                               ShowBorder="False"
                               BusinessObject="{Binding ActiveBO}"

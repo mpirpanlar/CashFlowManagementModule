@@ -374,6 +374,19 @@
       GO
     </Script>
   </Updates>
+  <Updates>
+    <Version>
+      <Build>7</Build>
+      <Major>1</Major>
+      <Minor>0</Minor>
+      <Revision>-1</Revision>
+    </Version>
+    <Script>
+      IF NOT EXISTS(SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME ='Erp_BankReceiptItem' AND COLUMN_NAME='AccessCode')
+      ALTER TABLE [Erp_BankReceiptItem] ADD [AccessCode] [dbo].[UdtSpecial] NULL
+      GO
+    </Script>
+  </Updates>
   <CreateScript>
     <DbVersion>
       <Build>6</Build>

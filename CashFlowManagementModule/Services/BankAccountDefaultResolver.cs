@@ -55,6 +55,101 @@ namespace CashFlowManagementModule.Services
             return table.Rows[0];
         }
 
+        public static DataRow LoadBankAccountInstructionRow(LiveSession session, long bankAccountId)
+        {
+            if (session?.ActiveCompany?.RecId == null || bankAccountId <= 0)
+                return null;
+
+            int companyId = session.ActiveCompany.RecId.Value;
+            DataTable table = UtilityFunctions.GetDataTableList(
+                session._dbInfo.DBProvider,
+                session._dbInfo.Connection,
+                null,
+                "Erp_BankAccount",
+                $@"select isnull(b.BankName,'') BankName,
+                          isnull(b.BranchName,'') BranchName,
+                          isnull(ba.IbanNo,'') IbanNo
+                   from Erp_BankAccount ba with (nolock)
+                   inner join Erp_Bank b with (nolock) on b.RecId = ba.BankId
+                   where isnull(ba.IsDeleted,0)=0
+                     and isnull(b.IsDeleted,0)=0
+                     and b.CompanyId = {companyId}
+                     and ba.RecId = {bankAccountId}");
+
+            if (table == null || table.Rows.Count == 0)
+                return null;
+
+            return table.Rows[0];
+        }
+
+        public static bool TryResolveBankAccountIdFromItemRow(LiveSession session, DataRow itemRow, out long bankAccountId)
+        {
+            bankAccountId = 0;
+            if (session == null || itemRow == null || itemRow.Table == null)
+                return false;
+
+            if (itemRow.Table.Columns.Contains("BankAccountId") && !itemRow.IsNull("BankAccountId"))
+            {
+                long itemBankAccountId = Convert.ToInt64(itemRow["BankAccountId"]);
+                if (itemBankAccountId > 0)
+                {
+                    bankAccountId = ResolveBankAccountId(session, itemBankAccountId, string.Empty);
+                    if (bankAccountId > 0)
+                        return true;
+                }
+            }
+
+            if (itemRow.Table.Columns.Contains("BankAccountCode") && !itemRow.IsNull("BankAccountCode"))
+            {
+                string accountCode = Convert.ToString(itemRow["BankAccountCode"]);
+                if (!string.IsNullOrWhiteSpace(accountCode))
+                {
+                    bankAccountId = ResolveBankAccountId(session, 0, accountCode.Trim());
+                    if (bankAccountId > 0)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static string LoadBankAccountIbanNo(LiveSession session, long bankAccountId)
+        {
+            DataRow bankRow = LoadBankAccountInstructionRow(session, bankAccountId);
+            if (bankRow == null || bankRow.IsNull("IbanNo"))
+                return string.Empty;
+
+            return Convert.ToString(bankRow["IbanNo"])?.Trim() ?? string.Empty;
+        }
+
+        public static bool TryResolveSourceIbanFromExportRows(
+            LiveSession session,
+            IEnumerable<DataRow> exportRows,
+            out string ibanNo)
+        {
+            ibanNo = string.Empty;
+            if (session == null || exportRows == null)
+                return false;
+
+            foreach (DataRow itemRow in exportRows)
+            {
+                if (itemRow == null || itemRow.RowState == DataRowState.Deleted || itemRow.RowState == DataRowState.Detached)
+                    continue;
+
+                if (!TryResolveBankAccountIdFromItemRow(session, itemRow, out long bankAccountId))
+                    continue;
+
+                string resolvedIban = LoadBankAccountIbanNo(session, bankAccountId);
+                if (string.IsNullOrWhiteSpace(resolvedIban))
+                    continue;
+
+                ibanNo = resolvedIban;
+                return true;
+            }
+
+            return false;
+        }
+
         public static string NormalizeDisplayCode(string code)
         {
             if (string.IsNullOrWhiteSpace(code))

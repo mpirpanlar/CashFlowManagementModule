@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<SentezMetaData Application="3015" Version="1.0.5" >
+<SentezMetaData Application="3015" Version="1.0.6" >
   <Tables>
     <Table Id="288" Name="Erp_AgingReportResults" Description="Yaşlandırma Rapor Bilgileri" PrimaryKey="RecId" Caption="Yaşlandırma Rapor Bilgileri">
       <Fields>
@@ -217,6 +217,7 @@
     <Table Id="32" Name="Erp_BankReceiptItem" Description="Banka Fişleri Detay Bilgileri" PrimaryKey="RecId" KeyField="DocumentNo" Caption="Banka Fişi Detay">
       <Fields>
         <Field Id="500" Name="FixedPaymentTypeId" Description="Tekrar Eden Ödeme Tipi" DataType="Int64" Ordinal="500" UdtType="UdtInt64" Caption="Ödeme Tipi" Precision="19" />
+        <Field Id="501" Name="AccessCode" Description="Erişim Kodu" DataType="String" Ordinal="501" UdtType="UdtSpecial" Caption="Erişim Kodu" Size="15" IsFilterField="True" ReportEditorType="ListSelector" ReportListName="AccessCodeList" ReportDefaultNullSelection="Yes" />
       </Fields>
       <Indexes>
       </Indexes>

@@ -1,0 +1,37 @@
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
+    xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
+    x:Name="CollectionOrderAgingImportPreviewView"
+    Tag="CollectionOrderAgingImportPreviewViewW">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <live:LiveGridControl x:Name="gridAgingPreview"
+                              Grid.Row="0"
+                              SelectionMode="Row"
+                              AllowNewRow="False"
+                              AllowDeleteRow="False"
+                              EnableSaveLayout="False"
+                              ItemsSource="{Binding AgingDataView}">
+            <live:LiveGridControl.View>
+                <live:ListSelectionView/>
+            </live:LiveGridControl.View>
+        </live:LiveGridControl>
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,8,0,0">
+            <live:LiveButton Content="{lange:Translate Aktar}"
+                             Margin="0,0,8,0"
+                             Padding="12,4,12,4"
+                             Command="{Binding CmdList[ImportSelectedCollectionAgingCommand]}"/>
+            <live:LiveButton Content="{lange:Translate Kapat}"
+                             Padding="12,4,12,4"
+                             Command="{Binding CmdList[CloseCommand]}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

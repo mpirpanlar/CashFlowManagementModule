@@ -40,7 +40,7 @@ namespace CashFlowManagementModule.BoExtensions
         }
 
         /// <summary>
-        /// Başlık satırı eklendiğinde tahsilat planlama kurulumunu ve onay sıfırlamayı tetikler.
+        /// Başlık veya detay satırı eklendiğinde kurulum ve yeni satır varsayılanlarını uygular.
         /// </summary>
         protected override void OnRowChanged(object sender, DataRowChangeEventArgs e)
         {
@@ -51,6 +51,12 @@ namespace CashFlowManagementModule.BoExtensions
             {
                 BankReceiptCollectionOrderHelper.EnsureCollectionOrderValueFillerSetup(BusinessObject);
                 EnsureHeaderUnapprovedOnNewRecord();
+            }
+            else if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Action == DataRowAction.Add)
+            {
+                _suppressEvents = true;
+                BankReceiptCollectionOrderHelper.ApplyNewItemDefaults(e.Row);
+                _suppressEvents = false;
             }
         }
 
@@ -78,11 +84,7 @@ namespace CashFlowManagementModule.BoExtensions
             if (_suppressEvents || !BankReceiptCollectionOrderHelper.IsCollectionOrderReceipt(BusinessObject)) return;
 
             if (e.Row.Table.TableName == "Erp_BankReceiptItem")
-            {
-                BankReceiptCollectionOrderHelper.SetDefaultPaymentDateForNewItem(e.Row);
-
-                BankReceiptCollectionOrderHelper.ResetApprovalFields(e.Row);
-            }
+                BankReceiptCollectionOrderHelper.ApplyNewItemDefaults(e.Row);
         }
 
         /// <summary>
@@ -96,7 +98,10 @@ namespace CashFlowManagementModule.BoExtensions
             if (e.Row?.Table == null) return;
 
             if (e.Row.Table.TableName == "Erp_BankReceipt" && e.Column.ColumnName == "ReceiptDate")
+            {
+                BankReceiptCollectionOrderHelper.BeginHeaderReceiptDateChange(BusinessObject);
                 return;
+            }
 
             if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == "ReceiptDate")
                 return;
@@ -171,7 +176,21 @@ namespace CashFlowManagementModule.BoExtensions
 
             try
             {
-                if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == "IsApproved")
+                if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == "ReceiptDate")
+                {
+                    _suppressEvents = true;
+                    BankReceiptCollectionOrderHelper.ProtectItemPaymentDateAfterReceiptDateChange(BusinessObject, e.Row);
+                    _suppressEvents = false;
+                }
+                else if (e.Row.Table.TableName == "Erp_BankReceipt" && e.Column.ColumnName == "ReceiptDate")
+                {
+                    _suppressEvents = true;
+                    BankReceiptCollectionOrderHelper.RestoreItemPaymentDates(
+                        BankReceiptCollectionOrderHelper.GetActivePaymentDateSnapshot(BusinessObject));
+                    BankReceiptCollectionOrderHelper.EndHeaderReceiptDateChange(BusinessObject);
+                    _suppressEvents = false;
+                }
+                else if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == "IsApproved")
                 {
                     _lineApprovalInProgress = true;
                     PreventHeaderAutoApprovalFromLines();
@@ -235,6 +254,8 @@ namespace CashFlowManagementModule.BoExtensions
                 headerRow["ApprovedAt"] = DBNull.Value;
                 _suppressEvents = false;
             }
+
+            BankReceiptItemAuditHelper.ApplyItemAuditMetadataBeforePost(BusinessObject);
         }
 
         /// <summary>

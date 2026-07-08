@@ -21,7 +21,6 @@ namespace CashFlowManagementModule.Services
 
     public static class FixedCollectionImportService
     {
-        const string FieldIsFixedCollection = "UD_IsFixedCollection";
         const string FieldIsCollection = "IsCollection";
 
         public static FixedCollectionImportResult Import(
@@ -62,7 +61,7 @@ namespace CashFlowManagementModule.Services
             int receiptYear = receiptDate.Year;
 
             string udIsFixedCollectionFilter = SchemaHasUdIsFixedCollection()
-                ? "and isnull(ca.UD_IsFixedCollection,0)=1"
+                ? $"and isnull(ca.{CurrentAccountFixedPaymentHelper.FieldIsFixedCollection},0)=1"
                 : string.Empty;
 
             string fixedPaymentTypeJoin = SchemaHasIsCollection()
@@ -166,7 +165,7 @@ order by ca.CurrentAccountCode, fps.PaymentDay";
         {
             try
             {
-                return Sentez.Data.MetaData.Schema.Tables["Erp_CurrentAccount"].Fields.Contains(FieldIsFixedCollection);
+                return Sentez.Data.MetaData.Schema.Tables["Erp_CurrentAccount"].Fields.Contains(CurrentAccountFixedPaymentHelper.FieldIsFixedCollection);
             }
             catch
             {

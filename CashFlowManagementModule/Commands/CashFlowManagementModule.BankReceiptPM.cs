@@ -1,4 +1,4 @@
-﻿using LiveCore.Desktop.SBase;
+using LiveCore.Desktop.SBase;
 using LiveCore.Desktop.UI.Controls;
 
 using CashFlowManagementModule.BoExtensions;
@@ -45,6 +45,9 @@ namespace Sentez.CashFlowManagementModule
 
         /// <summary>Ödeme planlama komut ve UI kancalarının yalnızca bir kez uygulanmasını sağlar.</summary>
         bool _paymentOrderHooksApplied;
+
+        /// <summary>Detay grid seçim değişiminde talimat export komutunun yenilenmesi için bağlandı mı.</summary>
+        bool _paymentOrderExportSelectionHooked;
 
         /// <summary>Detay grid üstüne eklenen ödeme planlama toolbar panelinin adı.</summary>
         const string PaymentOrderLineApprovalToolbarName = "PaymentOrderLineApprovalToolbar";
@@ -110,6 +113,7 @@ namespace Sentez.CashFlowManagementModule
             _paymentOrderBankReceiptPm.ActiveBO.ColumnChanged += PaymentOrderBankReceiptPm_ActiveBO_ColumnChanged;
             _paymentOrderBankReceiptPm.ActiveBO.AfterGet += PaymentOrderBankReceiptPm_ActiveBO_AfterGet;
             _paymentOrderBankReceiptPm.ActiveBO.PropertyChanged += PaymentOrderBankReceiptPm_ActiveBO_PropertyChanged;
+            _paymentOrderBankReceiptPm.PropertyChanged += PaymentOrderBankReceiptPm_PropertyChanged;
 
             TryApplyPaymentOrderHooks(_paymentOrderBankReceiptPm);
         }
@@ -122,6 +126,11 @@ namespace Sentez.CashFlowManagementModule
         void PaymentOrderBankReceiptPm_Dispose(PMBase pm, PmParam parameter)
         {
             BankReceiptPM bankReceiptPm = BankReceiptPmAccess.GetBankReceiptPm(pm);
+            if (bankReceiptPm != null)
+                bankReceiptPm.PropertyChanged -= PaymentOrderBankReceiptPm_PropertyChanged;
+
+            UnhookPaymentOrderExportSelectionChanged();
+
             if (bankReceiptPm?.ActiveBO != null)
             {
                 bankReceiptPm.ActiveBO.ColumnChanged -= PaymentOrderBankReceiptPm_ActiveBO_ColumnChanged;
@@ -131,6 +140,7 @@ namespace Sentez.CashFlowManagementModule
 
             _paymentOrderBankReceiptPm = null;
             _paymentOrderHooksApplied = false;
+            _paymentOrderExportSelectionHooked = false;
         }
 
         /// <summary>
@@ -155,14 +165,17 @@ namespace Sentez.CashFlowManagementModule
                         MetaFixedPaymentTypeHelper.RefreshLookupList(_paymentOrderBankReceiptPm.Lists);
                     }
 
+                    EnsurePaymentOrderImportSettingsLoaded();
                     AddPaymentOrderDetailColumns();
                     EnsurePaymentOrderLineApprovalToolbar();
                     EnsurePaymentOrderAgingImportParamsPanel();
+                    EnsurePaymentOrderExportSelectionHook();
                     SyncPaymentOrderAgingReportDate();
                     ApplyPaymentOrderCardLockState();
                     ApplyPaymentOrderApprovalColumnAccess();
                     ApplyPaymentOrderApprovalContextMenuAccess();
                     RefreshPaymentOrderApprovedChangeContextMenuCommand();
+                    RefreshPaymentOrderCommandStates();
                 }),
                 DispatcherPriority.Loaded);
         }
@@ -189,9 +202,11 @@ namespace Sentez.CashFlowManagementModule
                         MetaFixedPaymentTypeHelper.RefreshLookupList(_paymentOrderBankReceiptPm.Lists);
                     }
 
+                    EnsurePaymentOrderImportSettingsLoaded();
                     AddPaymentOrderDetailColumns();
                     EnsurePaymentOrderLineApprovalToolbar();
                     EnsurePaymentOrderAgingImportParamsPanel();
+                    EnsurePaymentOrderExportSelectionHook();
                     SyncPaymentOrderAgingReportDate();
                     ApplyPaymentOrderCardLockState();
                     ApplyPaymentOrderApprovalColumnAccess();
@@ -212,7 +227,22 @@ namespace Sentez.CashFlowManagementModule
             if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
 
             if (e.PropertyName == "IsNewRecord" || e.PropertyName == "CurrentRow")
+            {
                 ApplyPaymentOrderCardLockState();
+                if (e.PropertyName == "CurrentRow")
+                    BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_paymentOrderBankReceiptPm);
+            }
+        }
+
+        /// <summary>
+        /// Ön değer banka hesabı değiştiğinde talimat ve aktarım komutlarının CanExecute durumunu yeniler.
+        /// </summary>
+        void PaymentOrderBankReceiptPm_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+
+            if (e.PropertyName == nameof(PaymentOrderBankReceiptPM.DefaultBankAccountCode))
+                RefreshPaymentOrderCommandStates();
         }
 
         /// <summary>
@@ -228,6 +258,10 @@ namespace Sentez.CashFlowManagementModule
             {
                 RefreshPaymentOrderDetailGrid();
             }
+            else if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == BankReceiptItemAccessCodeHelper.FieldAccessCode)
+            {
+                BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_paymentOrderBankReceiptPm);
+            }
             else if (e.Row.Table.TableName == "Erp_BankReceipt" && e.Column.ColumnName == "IsApproved")
             {
                 ApplyPaymentOrderCardLockState();
@@ -237,6 +271,14 @@ namespace Sentez.CashFlowManagementModule
             {
                 SyncPaymentOrderAgingReportDate();
             }
+            else if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == "ReceiptDate")
+            {
+                if (IsPaymentOrderPm(_paymentOrderBankReceiptPm)
+                    && _paymentOrderBankReceiptPm.ActiveBO is BusinessObjectBase businessObject)
+                {
+                    BankReceiptPaymentOrderHelper.ProtectItemPaymentDateAfterReceiptDateChange(businessObject, e.Row);
+                }
+            }
             else if (e.Row.Table.TableName == "Erp_BankReceiptItem"
                      && (e.Column.ColumnName == "BankAccountId"
                          || e.Column.ColumnName == "UD_PaymentDate"
@@ -245,6 +287,9 @@ namespace Sentez.CashFlowManagementModule
             {
                 NormalizeInstallmentCount(e.Row);
                 RefreshPaymentOrderCreditCardValidationMessage(e.Row);
+
+                if (e.Column.ColumnName == "Credit")
+                    RefreshPaymentOrderCommandStates();
             }
         }
 
@@ -330,12 +375,33 @@ namespace Sentez.CashFlowManagementModule
 
             AddColumnIfMissing("IsApproved", SLanguage.GetString("Onay Durumu"), EditorType.ComboBox, FieldUsage.None, 90, "ApprovedList");
             AddColumnIfMissing(BankReceiptCreditCardHelper.FieldInstallmentCount, SLanguage.GetString("Taksit Sayısı"), EditorType.TextEditor, FieldUsage.None, 90);
+            BankReceiptItemAccessCodeHelper.EnsureDetailColumn(_paymentOrderBankReceiptPm.BankReceiptColumnCollection);
             EnsureFixedPaymentTypeDetailColumn();
+            BankReceiptItemAuditHelper.AddAuditDetailColumns(_paymentOrderBankReceiptPm.BankReceiptColumnCollection);
 
             ReceiptColumnCollection columns = _paymentOrderBankReceiptPm.BankReceiptColumnCollection;
             _paymentOrderBankReceiptPm.BankReceiptColumnCollection = columns;
 
             ApplyPaymentOrderApprovalColumnAccess();
+            RefreshPaymentOrderDetailGridColumns();
+        }
+
+        /// <summary>
+        /// Detay grid kolon tanımlarını audit kolonları dahil olacak şekilde yeniden uygular.
+        /// </summary>
+        void RefreshPaymentOrderDetailGridColumns()
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+            if (_paymentOrderBankReceiptPm.BankReceiptColumnCollection == null) return;
+
+            LiveGridControl gridDetail = _paymentOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
+            if (gridDetail == null) return;
+
+            gridDetail.SaveLayoutType = $"{BankReceiptPaymentOrderHelper.ReceiptType}-cfm-audit";
+            gridDetail.ColumnDefinitions = _paymentOrderBankReceiptPm.BankReceiptColumnCollection;
+            gridDetail.ApplyReceiptColumnDefinitions();
+            gridDetail.RefreshData();
+            BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_paymentOrderBankReceiptPm);
         }
 
         /// <summary>
@@ -421,6 +487,20 @@ namespace Sentez.CashFlowManagementModule
         }
 
         /// <summary>
+        /// Yaşlandırma aktarım ayarlarını ve ön değer banka hesabını yükler.
+        /// </summary>
+        void EnsurePaymentOrderImportSettingsLoaded()
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+
+            var paymentOrderPm = _paymentOrderBankReceiptPm as PaymentOrderBankReceiptPM;
+            if (paymentOrderPm == null) return;
+
+            paymentOrderPm.LoadAgingImportWindowSettings();
+            paymentOrderPm.EnsureDefaultBankAccountResolved();
+        }
+
+        /// <summary>
         /// Toolbar altına yaşlandırma aktarım parametrelerini içeren dikey panel ekler.
         /// </summary>
         void EnsurePaymentOrderAgingImportParamsPanel()
@@ -430,8 +510,7 @@ namespace Sentez.CashFlowManagementModule
             var paymentOrderPm = _paymentOrderBankReceiptPm as PaymentOrderBankReceiptPM;
             if (paymentOrderPm == null) return;
 
-            paymentOrderPm.LoadAgingImportWindowSettings();
-            paymentOrderPm.EnsureDefaultBankAccountResolved();
+            EnsurePaymentOrderImportSettingsLoaded();
 
             LiveGridControl gridDetail = _paymentOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
             if (gridDetail?.Parent is not Grid parentGrid) return;
@@ -690,6 +769,83 @@ namespace Sentez.CashFlowManagementModule
 
             LiveGridControl gridDetail = _paymentOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
             gridDetail?.RefreshData();
+            BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_paymentOrderBankReceiptPm);
+            RefreshPaymentOrderCommandStates();
+        }
+
+        /// <summary>
+        /// CanExecute koşulu olan ödeme planlama komutlarının buton durumunu yeniler.
+        /// </summary>
+        void RefreshPaymentOrderCommandStates()
+        {
+            if (_paymentOrderBankReceiptPm?.CmdList == null) return;
+
+            RaisePaymentOrderCommandCanExecuteChanged("ExportPaymentInstructionCommand");
+            RaisePaymentOrderCommandCanExecuteChanged("ImportFixedPaymentsCommand");
+            RaisePaymentOrderCommandCanExecuteChanged("ImportCreditCardStatementSpendingCommand");
+            RaisePaymentOrderCommandCanExecuteChanged("ImportCurrentAccountAgingCommand");
+            RaisePaymentOrderCommandCanExecuteChanged("ApprovedChangeCommand");
+        }
+
+        void RaisePaymentOrderCommandCanExecuteChanged(string commandName)
+        {
+            if (_paymentOrderBankReceiptPm?.CmdList?[commandName] is SysCommand command)
+                command.RaiseCanExecuteChanged();
+        }
+
+        /// <summary>
+        /// Talimat export komutunun seçim değişiminde güncellenmesi için detay grid olayını bağlar.
+        /// </summary>
+        void EnsurePaymentOrderExportSelectionHook()
+        {
+            if (_paymentOrderExportSelectionHooked || _paymentOrderBankReceiptPm == null) return;
+            if (!IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+
+            LiveGridControl gridDetail = _paymentOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
+            if (gridDetail == null) return;
+
+            gridDetail.SelectionChanged += PaymentOrderDetailGrid_SelectionChanged;
+            _paymentOrderExportSelectionHooked = true;
+        }
+
+        void UnhookPaymentOrderExportSelectionChanged()
+        {
+            if (!_paymentOrderExportSelectionHooked || _paymentOrderBankReceiptPm == null) return;
+
+            LiveGridControl gridDetail = _paymentOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
+            if (gridDetail != null)
+                gridDetail.SelectionChanged -= PaymentOrderDetailGrid_SelectionChanged;
+
+            _paymentOrderExportSelectionHooked = false;
+        }
+
+        void PaymentOrderDetailGrid_SelectionChanged(object sender, EventArgs e)
+        {
+            RefreshPaymentOrderCommandStates();
+        }
+
+        /// <summary>
+        /// Detay gridde seçili ve talimat için uygun satırları döndürür.
+        /// </summary>
+        List<DataRow> GetSelectedPaymentOrderExportRows()
+        {
+            var rows = new List<DataRow>();
+            if (_paymentOrderBankReceiptPm == null) return rows;
+
+            LiveGridControl gridDetail = _paymentOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
+            if (gridDetail?.SelectedItems == null || gridDetail.SelectedItems.Count == 0)
+                return rows;
+
+            foreach (object selectedItem in gridDetail.SelectedItems)
+            {
+                if (selectedItem is not DataRowView rowView) continue;
+                if (rowView.Row.RowState == DataRowState.Deleted || rowView.Row.RowState == DataRowState.Detached)
+                    continue;
+
+                rows.Add(rowView.Row);
+            }
+
+            return PaymentOrderInstructionExportService.NormalizeExportRows(rows);
         }
 
         /// <summary>
@@ -748,7 +904,7 @@ namespace Sentez.CashFlowManagementModule
 
             var btnImportStatementSpending = new LiveButton
             {
-                Content = SLanguage.GetString("Ekstre Harcamalarını Aktar"),
+                Content = SLanguage.GetString("Kredi Kartı Harcamalarını Aktar"),
                 Margin = new Thickness(6, 0, 0, 0),
                 Padding = new Thickness(8, 2, 8, 2)
             };
@@ -763,6 +919,15 @@ namespace Sentez.CashFlowManagementModule
             };
             btnImportAging.Command = _paymentOrderBankReceiptPm.CmdList["ImportCurrentAccountAgingCommand"];
             toolbar.Children.Add(btnImportAging);
+
+            var btnExportInstruction = new LiveButton
+            {
+                Content = SLanguage.GetString("Talimat Dosyası Oluştur"),
+                Margin = new Thickness(6, 0, 0, 0),
+                Padding = new Thickness(8, 2, 8, 2)
+            };
+            btnExportInstruction.Command = _paymentOrderBankReceiptPm.CmdList["ExportPaymentInstructionCommand"];
+            toolbar.Children.Add(btnExportInstruction);
 
             var validationLabel = new TextBlock
             {
@@ -846,6 +1011,16 @@ namespace Sentez.CashFlowManagementModule
                     SLanguage.GetString("Yaşlandırma Tutarlarını Aktar"),
                     ImportCurrentAccountAgingCommand,
                     CanImportCurrentAccountAgingCommand);
+            }
+
+            if (pm.CmdList["ExportPaymentInstructionCommand"] == null)
+            {
+                pm.CmdList.AddCmd(
+                    325,
+                    "ExportPaymentInstructionCommand",
+                    SLanguage.GetString("Talimat Dosyası Oluştur"),
+                    ExportPaymentInstructionCommand,
+                    CanExportPaymentInstructionCommand);
             }
         }
 
@@ -994,7 +1169,7 @@ namespace Sentez.CashFlowManagementModule
         }
 
         /// <summary>
-        /// Ekstre harcamalarını aktar komutunun çalıştırılabilir olup olmadığını kontrol eder.
+        /// Kredi kartı harcamalarını aktar komutunun çalıştırılabilir olup olmadığını kontrol eder.
         /// </summary>
         /// <param name="obj">Komut parametreleri.</param>
         /// <returns>Ödeme planlama bağlamında ve yetki varsa true.</returns>
@@ -1095,6 +1270,77 @@ namespace Sentez.CashFlowManagementModule
                 SysMng.Instance.ActWndMng.ShowMsg(importResult.Message, importResult.AddedCount > 0 ? null : ConstantStr.Warning);
 
             RefreshPaymentOrderDetailGrid();
+        }
+
+        /// <summary>
+        /// Talimat dosyası oluştur komutunun çalıştırılabilir olup olmadığını kontrol eder.
+        /// </summary>
+        bool CanExportPaymentInstructionCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return false;
+
+            var paymentOrderPm = _paymentOrderBankReceiptPm as PaymentOrderBankReceiptPM;
+            if (paymentOrderPm == null || !paymentOrderPm.EnsureDefaultBankAccountResolved()) return false;
+
+            return GetSelectedPaymentOrderExportRows().Count > 0;
+        }
+
+        /// <summary>
+        /// Ödeme planlama fişindeki seçili detay satırlarından banka talimat Excel dosyası üretir.
+        /// </summary>
+        void ExportPaymentInstructionCommand(ISysCommandParam obj)
+        {
+            if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
+
+            var paymentOrderPm = _paymentOrderBankReceiptPm as PaymentOrderBankReceiptPM;
+            if (paymentOrderPm == null) return;
+
+            BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
+            if (businessObject?.CurrentRow?.Row == null) return;
+
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            if (session?.ActiveCompany?.RecId == null) return;
+
+            if (!paymentOrderPm.EnsureDefaultBankAccountResolved())
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(
+                    SLanguage.GetString("Lütfen ön değer banka hesabını seçiniz."),
+                    ConstantStr.Warning);
+                return;
+            }
+
+            List<DataRow> selectedExportRows = GetSelectedPaymentOrderExportRows();
+            if (selectedExportRows.Count == 0)
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(
+                    SLanguage.GetString("Lütfen talimat dosyasına aktarılacak satırları seçiniz."),
+                    ConstantStr.Warning);
+                return;
+            }
+
+            var saveDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "Excel Dosyası (*.xlsx)|*.xlsx",
+                DefaultExt = ".xlsx",
+                FileName = PaymentOrderInstructionExportService.BuildSuggestedFileName(businessObject.CurrentRow.Row)
+            };
+
+            if (saveDialog.ShowDialog() != true)
+                return;
+
+            PaymentOrderInstructionExportResult exportResult = PaymentOrderInstructionExportService.Export(
+                businessObject,
+                session,
+                paymentOrderPm.DefaultBankAccountId,
+                selectedExportRows,
+                saveDialog.FileName);
+
+            if (!string.IsNullOrEmpty(exportResult.Message))
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(
+                    exportResult.Message,
+                    exportResult.Succeeded ? null : ConstantStr.Warning);
+            }
         }
 
         /// <summary>

@@ -168,13 +168,25 @@ namespace CashFlowManagementModule.Services
 
 
 
-            decimal amount = bankReceiptItemRow.IsNull("Credit") ? 0m : Convert.ToDecimal(bankReceiptItemRow["Credit"]);
+            decimal amount = 0m;
+            decimal? forexAmount = null;
+            if (bankReceiptItemRow.Table.Columns.Contains("Debit") && !bankReceiptItemRow.IsNull("Debit"))
+            {
+                decimal debitAmount = Convert.ToDecimal(bankReceiptItemRow["Debit"]);
+                if (debitAmount != 0m)
+                {
+                    amount = debitAmount;
+                    if (bankReceiptItemRow.Table.Columns.Contains("ForexDebit") && !bankReceiptItemRow.IsNull("ForexDebit"))
+                        forexAmount = Convert.ToDecimal(bankReceiptItemRow["ForexDebit"]);
+                }
+            }
 
-            decimal? forexAmount = bankReceiptItemRow.Table.Columns.Contains("ForexCredit") && !bankReceiptItemRow.IsNull("ForexCredit")
-
-                ? Convert.ToDecimal(bankReceiptItemRow["ForexCredit"])
-
-                : (decimal?)null;
+            if (amount == 0m && !bankReceiptItemRow.IsNull("Credit"))
+            {
+                amount = Convert.ToDecimal(bankReceiptItemRow["Credit"]);
+                if (bankReceiptItemRow.Table.Columns.Contains("ForexCredit") && !bankReceiptItemRow.IsNull("ForexCredit"))
+                    forexAmount = Convert.ToDecimal(bankReceiptItemRow["ForexCredit"]);
+            }
 
 
 

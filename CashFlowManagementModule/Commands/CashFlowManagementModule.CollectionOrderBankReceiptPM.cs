@@ -214,7 +214,11 @@ namespace Sentez.CashFlowManagementModule
             if (_collectionOrderBankReceiptPm == null || !IsCollectionOrderPm(_collectionOrderBankReceiptPm)) return;
 
             if (e.PropertyName == "IsNewRecord" || e.PropertyName == "CurrentRow")
+            {
                 ApplyCollectionOrderCardLockState();
+                if (e.PropertyName == "CurrentRow")
+                    BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_collectionOrderBankReceiptPm);
+            }
         }
 
         /// <summary>
@@ -230,6 +234,10 @@ namespace Sentez.CashFlowManagementModule
             {
                 RefreshCollectionOrderDetailGrid();
             }
+            else if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == BankReceiptItemAccessCodeHelper.FieldAccessCode)
+            {
+                BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_collectionOrderBankReceiptPm);
+            }
             else if (e.Row.Table.TableName == "Erp_BankReceipt" && e.Column.ColumnName == "IsApproved")
             {
                 ApplyCollectionOrderCardLockState();
@@ -238,6 +246,14 @@ namespace Sentez.CashFlowManagementModule
             else if (e.Row.Table.TableName == "Erp_BankReceipt" && e.Column.ColumnName == "ReceiptDate")
             {
                 SyncCollectionOrderAgingReportDate();
+            }
+            else if (e.Row.Table.TableName == "Erp_BankReceiptItem" && e.Column.ColumnName == "ReceiptDate")
+            {
+                if (BankReceiptCollectionOrderHelper.IsCollectionOrderContext(_collectionOrderBankReceiptPm)
+                    && _collectionOrderBankReceiptPm.ActiveBO is BusinessObjectBase businessObject)
+                {
+                    BankReceiptCollectionOrderHelper.ProtectItemPaymentDateAfterReceiptDateChange(businessObject, e.Row);
+                }
             }
             else if (e.Row.Table.TableName == "Erp_BankReceiptItem"
                      && (e.Column.ColumnName == "BankAccountId"
@@ -337,12 +353,33 @@ namespace Sentez.CashFlowManagementModule
 
             AddCollectionOrderColumnIfMissing("IsApproved", SLanguage.GetString("Onay Durumu"), EditorType.ComboBox, FieldUsage.None, 90, "ApprovedList");
             AddCollectionOrderColumnIfMissing(BankReceiptCreditCardHelper.FieldInstallmentCount, SLanguage.GetString("Taksit Sayısı"), EditorType.TextEditor, FieldUsage.None, 90);
+            BankReceiptItemAccessCodeHelper.EnsureDetailColumn(_collectionOrderBankReceiptPm.BankReceiptColumnCollection);
             EnsureFixedCollectionTypeDetailColumn();
+            BankReceiptItemAuditHelper.AddAuditDetailColumns(_collectionOrderBankReceiptPm.BankReceiptColumnCollection);
 
             ReceiptColumnCollection columns = _collectionOrderBankReceiptPm.BankReceiptColumnCollection;
             _collectionOrderBankReceiptPm.BankReceiptColumnCollection = columns;
 
             ApplyCollectionOrderApprovalColumnAccess();
+            RefreshCollectionOrderDetailGridColumns();
+        }
+
+        /// <summary>
+        /// Detay grid kolon tanımlarını audit kolonları dahil olacak şekilde yeniden uygular.
+        /// </summary>
+        void RefreshCollectionOrderDetailGridColumns()
+        {
+            if (_collectionOrderBankReceiptPm == null || !IsCollectionOrderPm(_collectionOrderBankReceiptPm)) return;
+            if (_collectionOrderBankReceiptPm.BankReceiptColumnCollection == null) return;
+
+            LiveGridControl gridDetail = _collectionOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
+            if (gridDetail == null) return;
+
+            gridDetail.SaveLayoutType = $"{BankReceiptCollectionOrderHelper.ReceiptType}-cfm-audit";
+            gridDetail.ColumnDefinitions = _collectionOrderBankReceiptPm.BankReceiptColumnCollection;
+            gridDetail.ApplyReceiptColumnDefinitions();
+            gridDetail.RefreshData();
+            BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_collectionOrderBankReceiptPm);
         }
 
         /// <summary>
@@ -687,6 +724,7 @@ namespace Sentez.CashFlowManagementModule
 
             LiveGridControl gridDetail = _collectionOrderBankReceiptPm.FCtrl("gridDetail") as LiveGridControl;
             gridDetail?.RefreshData();
+            BankReceiptItemAccessCodeHelper.ApplyDetailGridFilter(_collectionOrderBankReceiptPm);
         }
 
         /// <summary>
@@ -745,11 +783,11 @@ namespace Sentez.CashFlowManagementModule
 
             var btnImportAging = new LiveButton
             {
-                Content = SLanguage.GetString("Yaşlandırma Tutarlarını Aktar"),
+                Content = SLanguage.GetString("Alacak Yaşlandırma Tutarlarını Aktar"),
                 Margin = new Thickness(6, 0, 0, 0),
-                Padding = new Thickness(8, 2, 8, 2),
-                Visibility = Visibility.Collapsed
+                Padding = new Thickness(8, 2, 8, 2)
             };
+            btnImportAging.Command = _collectionOrderBankReceiptPm.CmdList["ImportCollectionAgingCommand"];
             toolbar.Children.Add(btnImportAging);
 
             var validationLabel = new TextBlock
@@ -814,6 +852,16 @@ namespace Sentez.CashFlowManagementModule
                     SLanguage.GetString("Tekrar Eden Tahsilatları Aktar"),
                     ImportFixedCollectionsCommand,
                     CanImportFixedCollectionsCommand);
+            }
+
+            if (pm.CmdList["ImportCollectionAgingCommand"] == null)
+            {
+                pm.CmdList.AddCmd(
+                    333,
+                    "ImportCollectionAgingCommand",
+                    SLanguage.GetString("Alacak Yaşlandırma Tutarlarını Aktar"),
+                    ImportCollectionAgingCommand,
+                    CanImportCollectionAgingCommand);
             }
         }
 
@@ -961,6 +1009,135 @@ namespace Sentez.CashFlowManagementModule
             }
 
             RefreshCollectionOrderDetailGrid();
+        }
+
+        bool CanImportCollectionAgingCommand(ISysCommandParam obj)
+        {
+            if (_collectionOrderBankReceiptPm == null || !IsCollectionOrderPm(_collectionOrderBankReceiptPm)) return false;
+            if (BankReceiptCollectionOrderHelper.ShouldLockCollectionOrder(_collectionOrderBankReceiptPm.ActiveBO)) return false;
+
+            return SysMng.Instance.CheckRights(
+                OperationType.Update,
+                (short)Modules.ExternalModule16,
+                (short)Modules.ExternalModule16,
+                (short)CashFlowManagementModuleSecurityItems.CurrentAccountCollectionAgingImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None);
+        }
+
+        void ImportCollectionAgingCommand(ISysCommandParam obj)
+        {
+            if (_collectionOrderBankReceiptPm == null || !IsCollectionOrderPm(_collectionOrderBankReceiptPm)) return;
+
+            var collectionOrderPm = BankReceiptPmAccess.GetCollectionOrderPm(_collectionOrderBankReceiptPm);
+            if (collectionOrderPm == null) return;
+
+            BusinessObjectBase businessObject = _collectionOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
+            if (businessObject?.CurrentRow?.Row == null) return;
+
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            if (session?.ActiveCompany?.RecId == null) return;
+
+            collectionOrderPm.EnsureDefaultBankAccountResolved();
+
+            DateTime reportDate = collectionOrderPm.AgingReportDate;
+            if (reportDate == DateTime.MinValue)
+            {
+                reportDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+                    ? DateTime.Today
+                    : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+            }
+
+            var context = new CollectionOrderAgingImportContext
+            {
+                ReportDate = reportDate.Date,
+                StartCurrentAccountCode = collectionOrderPm.AgingStartCurrentAccountCode,
+                EndCurrentAccountCode = collectionOrderPm.AgingEndCurrentAccountCode,
+                DefaultBankAccountId = collectionOrderPm.DefaultBankAccountId,
+                DefaultBankAccountCode = collectionOrderPm.DefaultBankAccountCode,
+                ImportDirectlyToReceipt = collectionOrderPm.ImportAgingDirectlyToReceipt
+            };
+            context.RefreshDefaultBankAccount = () =>
+            {
+                collectionOrderPm.RefreshDefaultBankAccountForImport();
+                context.DefaultBankAccountId = collectionOrderPm.DefaultBankAccountId;
+                context.DefaultBankAccountCode = collectionOrderPm.DefaultBankAccountCode;
+            };
+
+            if (collectionOrderPm.ImportAgingDirectlyToReceipt)
+            {
+                ExecuteDirectCollectionAgingImport(context, businessObject);
+                return;
+            }
+
+            var previewPm = new CollectionOrderAgingImportPreviewPM(_container);
+            previewPm.Init("CollectionOrderAgingImportPreviewViewW");
+            previewPm.Initialize(context, businessObject, session);
+
+            SysMng.Instance.ActWndMng.ShowWnd(
+                previewPm,
+                true,
+                SLanguage.GetString("Alacak Yaşlandırma Önizleme"),
+                Sentez.Common.InformationMessages.WindowStyle.SingleBorderWindow,
+                1100,
+                650,
+                Sentez.Common.InformationMessages.ResizeMode.CanResize,
+                9999,
+                9999,
+                false,
+                SizeToContent.Manual,
+                true);
+
+            if (previewPm.WasImported)
+                RefreshCollectionOrderDetailGrid();
+        }
+
+        void ExecuteDirectCollectionAgingImport(CollectionOrderAgingImportContext context, BusinessObjectBase businessObject)
+        {
+            CurrentAccountAgingReportDataResult reportData = CurrentAccountCollectionAgingReportDataService.LoadAgingData(
+                _container,
+                context.ReportDate,
+                context.StartCurrentAccountCode,
+                context.EndCurrentAccountCode);
+
+            if (!reportData.IsSuccess)
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(
+                    string.IsNullOrWhiteSpace(reportData.ErrorMessage)
+                        ? SLanguage.GetString("Alacak yaşlandırma verisi alınamadı.")
+                        : reportData.ErrorMessage,
+                    ConstantStr.Warning);
+                return;
+            }
+
+            var rows = new List<DataRow>();
+            if (reportData.Data != null)
+            {
+                foreach (DataRow row in reportData.Data.Rows)
+                {
+                    if (row.RowState != DataRowState.Deleted)
+                        rows.Add(row);
+                }
+            }
+
+            context.RefreshDefaultBankAccount?.Invoke();
+
+            CurrentAccountCollectionAgingImportResult importResult = CurrentAccountCollectionAgingImportService.ImportSelectedRows(
+                businessObject,
+                context.ReportDate,
+                context.DefaultBankAccountId,
+                rows,
+                reportData.AmountColumnName,
+                context.DefaultBankAccountCode);
+
+            if (!string.IsNullOrEmpty(importResult.Message))
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(
+                    importResult.Message,
+                    importResult.AddedCount > 0 || importResult.UpdatedCount > 0 ? null : ConstantStr.Warning);
+            }
+
+            if (importResult.AddedCount > 0 || importResult.UpdatedCount > 0)
+                RefreshCollectionOrderDetailGrid();
         }
     }
 }

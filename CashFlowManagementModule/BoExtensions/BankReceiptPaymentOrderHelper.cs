@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
@@ -27,6 +28,9 @@ namespace CashFlowManagementModule.BoExtensions
         public const short ReceiptType = 15;
         const short ModuleId = (short)Modules.ExternalModule16;
         const string IsApprovedColumn = "IsApproved";
+
+        static readonly Dictionary<BusinessObjectBase, Dictionary<DataRow, object>> ActivePaymentDateSnapshots
+            = new Dictionary<BusinessObjectBase, Dictionary<DataRow, object>>();
 
         static bool IsUsableDataRow(DataRow row)
         {
@@ -311,6 +315,7 @@ namespace CashFlowManagementModule.BoExtensions
             if (!IsPaymentOrderReceipt(businessObject)) return;
 
             DisableItemIsApprovedFkSync(businessObject);
+            BankReceiptItemAuditHelper.DisableItemAuditFkSync(businessObject);
             DisableCoreApprovedReceiptControl(businessObject);
         }
 
@@ -363,12 +368,118 @@ namespace CashFlowManagementModule.BoExtensions
             return table?.Columns.Contains(columnName) == true;
         }
 
+        public static void ApplyNewItemDefaults(DataRow itemRow)
+        {
+            SetDefaultPaymentDateForNewItem(itemRow);
+            ResetApprovalFields(itemRow);
+            BankReceiptItemAccessCodeHelper.SetDefaultAccessCodeForNewItem(itemRow);
+        }
+
         public static void SetDefaultPaymentDateForNewItem(DataRow itemRow)
         {
             if (!HasUdColumn(itemRow, PaymentOrderUdFields.PaymentDate) || !IsUsableDataRow(itemRow)) return;
             if (!itemRow.IsNull(PaymentOrderUdFields.PaymentDate)) return;
 
             itemRow[PaymentOrderUdFields.PaymentDate] = new DateHelper().GetToday();
+        }
+
+        public static void RestoreTodayPaymentDateIfSyncedFromReceiptDate(DataRow itemRow)
+        {
+            if (!HasUdColumn(itemRow, PaymentOrderUdFields.PaymentDate) || !IsUsableDataRow(itemRow)) return;
+            if (itemRow.RowState != DataRowState.Added) return;
+            if (!HasColumn(itemRow, "ReceiptDate") || itemRow.IsNull("ReceiptDate")) return;
+            if (itemRow.IsNull(PaymentOrderUdFields.PaymentDate)) return;
+
+            DateTime receiptDate = Convert.ToDateTime(itemRow["ReceiptDate"]).Date;
+            DateTime paymentDate = Convert.ToDateTime(itemRow[PaymentOrderUdFields.PaymentDate]).Date;
+            if (paymentDate != receiptDate) return;
+
+            itemRow[PaymentOrderUdFields.PaymentDate] = new DateHelper().GetToday();
+        }
+
+        public static Dictionary<DataRow, object> SnapshotItemPaymentDates(BusinessObjectBase businessObject)
+        {
+            var snapshot = new Dictionary<DataRow, object>();
+            if (businessObject?.Data?.Tables == null || !businessObject.Data.Tables.Contains("Erp_BankReceiptItem"))
+                return snapshot;
+
+            DataTable itemTable = businessObject.Data.Tables["Erp_BankReceiptItem"];
+            if (!HasUdColumn(itemTable, PaymentOrderUdFields.PaymentDate))
+                return snapshot;
+
+            foreach (DataRow itemRow in itemTable.Rows)
+            {
+                if (itemRow.RowState == DataRowState.Deleted) continue;
+                snapshot[itemRow] = itemRow.IsNull(PaymentOrderUdFields.PaymentDate)
+                    ? DBNull.Value
+                    : itemRow[PaymentOrderUdFields.PaymentDate];
+            }
+
+            return snapshot;
+        }
+
+        public static void BeginHeaderReceiptDateChange(BusinessObjectBase businessObject)
+        {
+            if (businessObject == null) return;
+            ActivePaymentDateSnapshots[businessObject] = SnapshotItemPaymentDates(businessObject);
+        }
+
+        public static Dictionary<DataRow, object> GetActivePaymentDateSnapshot(BusinessObjectBase businessObject)
+        {
+            if (businessObject == null) return null;
+            return ActivePaymentDateSnapshots.TryGetValue(businessObject, out Dictionary<DataRow, object> snapshot)
+                ? snapshot
+                : null;
+        }
+
+        public static void EndHeaderReceiptDateChange(BusinessObjectBase businessObject)
+        {
+            if (businessObject == null) return;
+            ActivePaymentDateSnapshots.Remove(businessObject);
+        }
+
+        public static void ProtectItemPaymentDateAfterReceiptDateChange(BusinessObjectBase businessObject, DataRow itemRow)
+        {
+            ProtectItemPaymentDateOnReceiptDateChange(itemRow, GetActivePaymentDateSnapshot(businessObject));
+        }
+
+        public static void RestoreItemPaymentDates(Dictionary<DataRow, object> snapshot)
+        {
+            if (snapshot == null) return;
+
+            foreach (KeyValuePair<DataRow, object> entry in snapshot)
+            {
+                if (!IsUsableDataRow(entry.Key) || !HasUdColumn(entry.Key, PaymentOrderUdFields.PaymentDate))
+                    continue;
+
+                entry.Key[PaymentOrderUdFields.PaymentDate] = entry.Value ?? DBNull.Value;
+            }
+        }
+
+        public static void ProtectItemPaymentDateOnReceiptDateChange(DataRow itemRow, Dictionary<DataRow, object> snapshot)
+        {
+            if (!HasUdColumn(itemRow, PaymentOrderUdFields.PaymentDate) || !IsUsableDataRow(itemRow))
+                return;
+
+            if (itemRow.RowState == DataRowState.Added)
+            {
+                RestoreTodayPaymentDateIfSyncedFromReceiptDate(itemRow);
+                return;
+            }
+
+            if (snapshot != null && snapshot.TryGetValue(itemRow, out object savedValue))
+            {
+                itemRow[PaymentOrderUdFields.PaymentDate] = savedValue ?? DBNull.Value;
+                return;
+            }
+
+            if (itemRow.HasVersion(DataRowVersion.Original))
+            {
+                object originalValue = itemRow[PaymentOrderUdFields.PaymentDate, DataRowVersion.Original];
+                itemRow[PaymentOrderUdFields.PaymentDate] = originalValue == null || originalValue == DBNull.Value
+                    ? DBNull.Value
+                    : originalValue;
+            }
         }
     }
 }

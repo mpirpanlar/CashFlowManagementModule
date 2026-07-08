@@ -75,6 +75,8 @@ namespace Sentez.CashFlowManagementModule
             if (_bankAccountPm == null)
                 return;
 
+            BankAccountSubTypeHelper.EnsureLookupList(_bankAccountPm.Lists);
+
             EnsureBankAccountCreditCardTab();
             UpdateBankAccountCreditCardTabVisibility();
             EnsureBankAccountCreditCardVisibilityHook();

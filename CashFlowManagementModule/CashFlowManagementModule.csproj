@@ -24,6 +24,7 @@
 	  <Page Remove="Views\BankAccountCreditCardView.xaml" />
 	  <Page Remove="Views\CreditCardDetailAnalysisView.xaml" />
 	  <Page Remove="Views\PaymentOrderAgingImportPreviewView.xaml" />
+	  <Page Remove="Views\CollectionOrderAgingImportPreviewView.xaml" />
 	  <Page Remove="Views\CurrentAccountFixedPaymentView.xaml" />
 	  <Page Remove="Views\MetaFixedPaymentType.xaml" />
 	</ItemGroup>
@@ -187,14 +188,17 @@
 		<Resource Include="Views\BankAccountCreditCardView.xaml" />
 		<Resource Include="Views\CreditCardDetailAnalysisView.xaml" />
 		<Resource Include="Views\PaymentOrderAgingImportPreviewView.xaml" />
+		<Resource Include="Views\CollectionOrderAgingImportPreviewView.xaml" />
 		<Resource Include="Views\CurrentAccountFixedPaymentView.xaml" />
 		<Resource Include="Views\MetaFixedPaymentType.xaml" />
 	</ItemGroup>
 	<ItemGroup>
 		<EmbeddedResource Include="CashFlowManagementModuleDataSchema.xml" />
 		<EmbeddedResource Include="CashFlowManagementModuleDbUpdateScripts.xml" />
+		<EmbeddedResource Include="Resources\TalimatSablon.xlsx" />
 	</ItemGroup>
 	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.96.0" />
 		<PackageReference Include="DevExpress.Wpf.Docking" Version="22.1.3" />
 		<PackageReference Include="DevExpress.Wpf.Grid" Version="22.1.3" />
 		<PackageReference Include="Prism.DryIoc" Version="8.1.97" />

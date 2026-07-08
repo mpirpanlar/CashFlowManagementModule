@@ -13,6 +13,7 @@ namespace CashFlowManagementModule.BoExtensions
         public const string CurrentAccountFkName = "FK_Erp_CurrentAccountFixedPaymentSchedule_Erp_CurrentAccount";
         public const string FixedPaymentTypeFkName = "FK_Erp_CurrentAccountFixedPaymentSchedule_Meta_FixedPaymentType";
         public const string FieldIsFixedPayment = "UD_IsFixedPayment";
+        public const string FieldIsFixedCollection = "UD_IsFixedCollection";
         public const string FieldFixedPaymentTypeId = "FixedPaymentTypeId";
 
         public static void EnsureCurrentAccountMetaDataFields()
@@ -22,6 +23,17 @@ namespace CashFlowManagementModule.BoExtensions
                     "Erp_CurrentAccount",
                     FieldIsFixedPayment,
                     SLanguage.GetString("Tekrar Eden Ödeme Takibi"),
+                    (byte)UdtType.UdtBool,
+                    (byte)FieldUsage.Bool,
+                    (byte)EditorType.CheckBox,
+                    (byte)ValueInputMethod.FreeType,
+                    0);
+
+            if (!Schema.Tables["Erp_CurrentAccount"].Fields.Contains(FieldIsFixedCollection))
+                CreatMetaDataFieldsService.CreatMetaDataFields(
+                    "Erp_CurrentAccount",
+                    FieldIsFixedCollection,
+                    SLanguage.GetString("Tekrar Eden Tahsilat Takibi"),
                     (byte)UdtType.UdtBool,
                     (byte)FieldUsage.Bool,
                     (byte)EditorType.CheckBox,

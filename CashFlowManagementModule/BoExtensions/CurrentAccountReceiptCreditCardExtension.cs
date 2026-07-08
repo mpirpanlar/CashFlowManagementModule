@@ -148,7 +148,7 @@ namespace CashFlowManagementModule.BoExtensions
 
             base.OnBeforePost(sender, e);
 
-            if (e.Cancel || !IsOwnCreditCardReceipt(BusinessObject)) return;
+            if (e.Cancel || !IsPlanningLinkedCreditCardReceipt(BusinessObject)) return;
 
 
 
@@ -198,7 +198,7 @@ namespace CashFlowManagementModule.BoExtensions
 
             base.OnAfterPost(sender, e);
 
-            if (!IsOwnCreditCardReceipt(BusinessObject)) return;
+            if (!IsPlanningLinkedCreditCardReceipt(BusinessObject)) return;
 
 
 
@@ -302,7 +302,7 @@ namespace CashFlowManagementModule.BoExtensions
 
             base.OnAfterDelete(sender, e);
 
-            if (!IsOwnCreditCardReceipt(BusinessObject)) return;
+            if (!IsPlanningLinkedCreditCardReceipt(BusinessObject)) return;
 
 
 

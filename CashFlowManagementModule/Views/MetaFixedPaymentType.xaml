@@ -18,6 +18,7 @@
                 <UtilCore:ReceiptColumn ColumnName="FixedPaymentTypeCode" Caption="Kod" EditorType="TextEditor" NewRowCheckColumn="True" Width="120"/>
                 <UtilCore:ReceiptColumn ColumnName="FixedPaymentTypeName" Caption="Adı" EditorType="TextEditor" Width="350"/>
                 <UtilCore:ReceiptColumn ColumnName="InUse" Caption="Kullanımda" EditorType="CheckBox" Width="80"/>
+                <UtilCore:ReceiptColumn ColumnName="IsCollection" Caption="Tahsilat Tipi" EditorType="CheckBox" Width="90"/>
             </live:LiveGridControl.ColumnDefinitions>
             <live:LiveGridControl.View>
                 <live:ReceiptView/>

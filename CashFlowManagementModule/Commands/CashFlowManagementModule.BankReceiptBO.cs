@@ -42,6 +42,13 @@ namespace Sentez.CashFlowManagementModule
 
             if (parameter?.Type == BankReceiptCollectionOrderHelper.ReceiptType)
                 BankReceiptCollectionOrderHelper.DisableItemIsApprovedFkSync(bo);
+
+            if (parameter?.Type == BankReceiptPaymentOrderHelper.ReceiptType
+                || parameter?.Type == BankReceiptCollectionOrderHelper.ReceiptType)
+            {
+                BankReceiptItemAuditHelper.EnsureAuditLookups(bo);
+                BankReceiptItemAccessCodeHelper.DisableItemAccessCodeConditionalKeyField(bo);
+            }
         }
     }
 }

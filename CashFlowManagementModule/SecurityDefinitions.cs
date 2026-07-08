@@ -1,4 +1,4 @@
-﻿using Sentez.Common.ModuleBase;
+using Sentez.Common.ModuleBase;
 using Sentez.Common.Security;
 using Sentez.Localization;
 using CashFlowManagementModule.BoExtensions;
@@ -45,7 +45,7 @@ namespace Sentez.CashFlowManagementModule
                 Privileges.Update));
 
             mainSecurity.AddChild(new SecurityDefinition(
-                SLanguage.GetString("Ekstre Harcamalarını Aktar"),
+                SLanguage.GetString("Kredi Kartı Harcamalarını Aktar"),
                 logicalModuleId, moduleId,
                 (short)CashFlowManagementModuleSecurityItems.CreditCardStatementSpendingImport,
                 (short)CashFlowManagementModuleSecuritySubItems.None,
