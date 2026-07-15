@@ -1,3 +1,6 @@
+using System;
+using System.Data;
+
 using Sentez.Common.Utilities;
 using Sentez.Localization;
 
@@ -18,10 +21,35 @@ namespace CashFlowManagementModule.BoExtensions
                     SLanguage.GetString("Kredi Hesabı"),
                     SLanguage.GetString("Kredi Kartı Hesabı"),
                     SLanguage.GetString("Vadeli Hesap"),
-                    SLanguage.GetString("Pos Hesabı")
+                    SLanguage.GetString("Üye İş Yeri Hesabı")
                 },
                 "Value", typeof(byte),
                 new object[] { (byte)1, (byte)2, (byte)3, (byte)4, PosAccountSubType });
+        }
+
+        static bool IsUsableDataRow(DataRow row)
+        {
+            return row != null
+                && row.Table != null
+                && row.RowState != DataRowState.Deleted
+                && row.RowState != DataRowState.Detached;
+        }
+
+        public static bool IsPosAccount(DataRow row)
+        {
+            if (!IsUsableDataRow(row) || row.IsNull("AccountSubType")) return false;
+            return Convert.ToByte(row["AccountSubType"]) == PosAccountSubType;
+        }
+
+        public static bool ShouldShowCreditCardDetailTab(DataRow row)
+        {
+            if (!IsUsableDataRow(row) || IsPosAccount(row)) return false;
+            return !row.IsNull("ForCreditCard") && Convert.ToBoolean(row["ForCreditCard"]);
+        }
+
+        public static bool ShouldShowPosDetailTab(DataRow row)
+        {
+            return IsPosAccount(row);
         }
     }
 }

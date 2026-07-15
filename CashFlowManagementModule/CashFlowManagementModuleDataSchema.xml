@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<SentezMetaData Application="3015" Version="1.0.6" >
+<SentezMetaData Application="3015" Version="1.0.8" >
   <Tables>
     <Table Id="288" Name="Erp_AgingReportResults" Description="Yaşlandırma Rapor Bilgileri" PrimaryKey="RecId" Caption="Yaşlandırma Rapor Bilgileri">
       <Fields>
@@ -212,6 +212,181 @@
         </Index>
       </Indexes>
       <Relations>
+      </Relations>
+    </Table>
+    <Table Id="293" Name="Meta_PosDeductionType" Description="Pos Kesinti Türü Tanımları" PrimaryKey="RecId" KeyField="PosDeductionTypeCode" Caption="Pos Kesinti Türleri">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="PosDeductionTypeCode" Description="Kesinti Türü Kodu" DataType="String" Ordinal="2" UdtType="UdtCode" Caption="Kod" Size="25" IsFilterField="True" IsDefaultFilterField="True" />
+        <Field Id="3" Name="PosDeductionTypeName" Description="Kesinti Türü Adı" DataType="String" Ordinal="3" UdtType="UdtExpHuge" Caption="Adı" Size="1000" IsFilterField="True" />
+        <Field Id="4" Name="InUse" Description="Kullanımda" DataType="Boolean" Ordinal="4" UdtType="UdtBool" Caption="Kullanımda" Precision="3" IsFilterField="True" />
+        <Field Id="5" Name="InsertedAt" Description="Kaydı Ekleme Zamanı" DataType="DateTime" Ordinal="31" UdtType="UdtDateTime" Caption="Kayıt Zamanı" />
+        <Field Id="6" Name="InsertedBy" Description="Kaydı Ekleyen" DataType="Int32" Ordinal="32" UdtType="UdtInt32" Caption="Kayıt Eden" Precision="10" />
+        <Field Id="7" Name="UpdatedAt" Description="Kaydı Değiştirme Zamanı" DataType="DateTime" Ordinal="34" UdtType="UdtDateTime" Caption="Değişiklik Zamanı" />
+        <Field Id="8" Name="UpdatedBy" Description="Güncelleyen" DataType="Int32" Ordinal="35" UdtType="UdtInt32" Caption="Güncelleyen" Precision="10" />
+        <Field Id="9" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+        <Field Id="10" Name="DeletedAt" Description="Kaydı Silme Zamanı" DataType="DateTime" Ordinal="36" UdtType="UdtDateTime" Caption="Silme Zamanı" />
+        <Field Id="11" Name="DeletedBy" Description="Kaydı Silen" DataType="Int32" Ordinal="37" UdtType="UdtInt32" Caption="Silen" Precision="10" />
+      </Fields>
+      <Indexes>
+        <Index Id="2" Name="Meta_PosDeductionType_IX0" Ordinal="2" isUnique="True">
+          <IndexFields>
+            <IndexField Id="1" Name="PosDeductionTypeCode" Ordinal="1" />
+          </IndexFields>
+        </Index>
+      </Indexes>
+      <Relations>
+      </Relations>
+    </Table>
+    <Table Id="294" Name="Erp_BankAccountPosDeductionProfile" Description="Üye İş Yeri Hesabı Kesinti Oran Profili" PrimaryKey="RecId" Caption="Üye İş Yeri Kesinti Oran Profili">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="CompanyId" Description="Şirket No" DataType="Int32" Ordinal="2" UdtType="UdtInt32" Caption="Şirket No" Precision="10" />
+        <Field Id="3" Name="BankAccountId" Description="Banka Hesap Kartı Kayıt Numarası" DataType="Int32" Ordinal="3" UdtType="UdtInt32" Caption="Banka Hesap Kartı" Precision="19" />
+        <Field Id="4" Name="DeductionTypeId" Description="Kesinti Türü" DataType="Int64" Ordinal="4" UdtType="UdtInt64" Caption="Kesinti Türü" Precision="19" />
+        <Field Id="5" Name="RatePercent" Description="Oran (%)" DataType="Decimal" Ordinal="5" UdtType="UdtAmount" FieldUsage="Amount" Caption="Oran (%)" Precision="28" Scale="8" />
+        <Field Id="6" Name="FixedAmount" Description="Sabit Tutar" DataType="Decimal" Ordinal="6" UdtType="UdtAmount" FieldUsage="Amount" Caption="Sabit Tutar" Precision="28" Scale="8" />
+        <Field Id="7" Name="CalculationBase" Description="Hesaplama Tabanı" DataType="Byte" Ordinal="7" UdtType="UdtInt8" Caption="Hesaplama Tabanı" Precision="3" />
+        <Field Id="8" Name="ValidFrom" Description="Geçerlilik Başlangıcı" DataType="DateTime" Ordinal="8" UdtType="UdtDate" FieldUsage="Date" Caption="Geçerlilik Başlangıcı" />
+        <Field Id="9" Name="ValidTo" Description="Geçerlilik Bitişi" DataType="DateTime" Ordinal="9" UdtType="UdtDate" FieldUsage="Date" Caption="Geçerlilik Bitişi" />
+        <Field Id="10" Name="InUse" Description="Kullanımda" DataType="Boolean" Ordinal="10" UdtType="UdtBool" Caption="Kullanımda" Precision="3" />
+        <Field Id="18" Name="CardCategory" Description="Kart Kategorisi" DataType="Int16" Ordinal="11" UdtType="UdtInt16" Caption="Kart Kategorisi" Precision="5" />
+        <Field Id="19" Name="InstallmentCount" Description="Taksit Sayısı" DataType="Int16" Ordinal="12" UdtType="UdtInt16" Caption="Taksit Sayısı" Precision="5" />
+        <Field Id="20" Name="BlockDays" Description="Bloke / Valör Günü" DataType="Int16" Ordinal="13" UdtType="UdtInt16" Caption="Bloke / Valör Günü" Precision="5" />
+        <Field Id="11" Name="InsertedAt" Description="Kaydı Ekleme Zamanı" DataType="DateTime" Ordinal="31" UdtType="UdtDateTime" Caption="Kayıt Zamanı" />
+        <Field Id="12" Name="InsertedBy" Description="Kaydı Ekleyen" DataType="Int32" Ordinal="32" UdtType="UdtInt32" Caption="Kayıt Eden" Precision="10" />
+        <Field Id="13" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+        <Field Id="14" Name="UpdatedAt" Description="Kaydı Değiştirme Zamanı" DataType="DateTime" Ordinal="34" UdtType="UdtDateTime" Caption="Değişiklik Zamanı" />
+        <Field Id="15" Name="UpdatedBy" Description="Güncelleyen" DataType="Int32" Ordinal="35" UdtType="UdtInt32" Caption="Güncelleyen" Precision="10" />
+        <Field Id="16" Name="DeletedAt" Description="Kaydı Silme Zamanı" DataType="DateTime" Ordinal="36" UdtType="UdtDateTime" Caption="Silme Zamanı" />
+        <Field Id="17" Name="DeletedBy" Description="Kaydı Silen" DataType="Int32" Ordinal="37" UdtType="UdtInt32" Caption="Silen" Precision="10" />
+      </Fields>
+      <Indexes>
+      </Indexes>
+      <Relations>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosDeductionProfile_Erp_Company" DestinationTable="Erp_Company" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="CompanyId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount" DestinationTable="Erp_BankAccount" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="BankAccountId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType" DestinationTable="Meta_PosDeductionType" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="DeductionTypeId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+      </Relations>
+    </Table>
+    <Table Id="295" Name="Erp_BankAccountPosPeriodSummary" Description="Pos Ekstre Dönem Özet Snapshot" PrimaryKey="RecId" Caption="Pos Ekstre Dönem Özeti">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="CompanyId" Description="Şirket No" DataType="Int32" Ordinal="2" UdtType="UdtInt32" Caption="Şirket No" Precision="10" />
+        <Field Id="3" Name="BankAccountId" Description="Banka Hesap Kartı" DataType="Int32" Ordinal="3" UdtType="UdtInt32" Caption="Banka Hesap Kartı" Precision="19" />
+        <Field Id="4" Name="PeriodYear" Description="Dönem Yılı" DataType="Int16" Ordinal="4" UdtType="UdtInt16" Caption="Yıl" Precision="5" />
+        <Field Id="5" Name="PeriodMonth" Description="Dönem Ayı" DataType="Int16" Ordinal="5" UdtType="UdtInt16" Caption="Ay" Precision="5" />
+        <Field Id="6" Name="TotalGross" Description="Toplam Brüt" DataType="Decimal" Ordinal="6" UdtType="UdtAmount" FieldUsage="Amount" Caption="Toplam Brüt" Precision="28" Scale="8" />
+        <Field Id="7" Name="TotalDeduction" Description="Toplam Kesinti" DataType="Decimal" Ordinal="7" UdtType="UdtAmount" FieldUsage="Amount" Caption="Toplam Kesinti" Precision="28" Scale="8" />
+        <Field Id="8" Name="TotalRefund" Description="Toplam İade" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Toplam İade" Precision="28" Scale="8" />
+        <Field Id="9" Name="TotalNet" Description="Toplam Net" DataType="Decimal" Ordinal="9" UdtType="UdtAmount" FieldUsage="Amount" Caption="Toplam Net" Precision="28" Scale="8" />
+        <Field Id="10" Name="CurrentMonthSettlementNet" Description="Hesaba Geçiş Net" DataType="Decimal" Ordinal="10" UdtType="UdtAmount" FieldUsage="Amount" Caption="Hesaba Geçiş Net" Precision="28" Scale="8" />
+        <Field Id="11" Name="NextMonthReceivableNet" Description="Sonraki Ay Alacağı Net" DataType="Decimal" Ordinal="11" UdtType="UdtAmount" FieldUsage="Amount" Caption="Sonraki Ay Alacağı Net" Precision="28" Scale="8" />
+        <Field Id="12" Name="FutureReceivableNet" Description="Gelecek Aylar Alacağı Net" DataType="Decimal" Ordinal="12" UdtType="UdtAmount" FieldUsage="Amount" Caption="Gelecek Aylar Alacağı Net" Precision="28" Scale="8" />
+        <Field Id="13" Name="HasDeductionProfile" Description="Kesinti Profili Var" DataType="Boolean" Ordinal="13" UdtType="UdtBool" Caption="Kesinti Profili Var" Precision="3" />
+        <Field Id="14" Name="WarningMessage" Description="Uyarı Mesajı" DataType="String" Ordinal="14" UdtType="UdtTextLong" Caption="Uyarı" Size="4000" />
+        <Field Id="15" Name="CalculatedAt" Description="Hesaplama Zamanı" DataType="DateTime" Ordinal="15" UdtType="UdtDateTime" Caption="Hesaplama Zamanı" />
+        <Field Id="16" Name="InUse" Description="Kullanımda" DataType="Boolean" Ordinal="16" UdtType="UdtBool" Caption="Kullanımda" Precision="3" />
+        <Field Id="17" Name="InsertedAt" Description="Kaydı Ekleme Zamanı" DataType="DateTime" Ordinal="31" UdtType="UdtDateTime" Caption="Kayıt Zamanı" />
+        <Field Id="18" Name="InsertedBy" Description="Kaydı Ekleyen" DataType="Int32" Ordinal="32" UdtType="UdtInt32" Caption="Kayıt Eden" Precision="10" />
+        <Field Id="19" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+        <Field Id="20" Name="UpdatedAt" Description="Kaydı Değiştirme Zamanı" DataType="DateTime" Ordinal="34" UdtType="UdtDateTime" Caption="Değişiklik Zamanı" />
+        <Field Id="21" Name="UpdatedBy" Description="Güncelleyen" DataType="Int32" Ordinal="35" UdtType="UdtInt32" Caption="Güncelleyen" Precision="10" />
+        <Field Id="22" Name="DeletedAt" Description="Kaydı Silme Zamanı" DataType="DateTime" Ordinal="36" UdtType="UdtDateTime" Caption="Silme Zamanı" />
+        <Field Id="23" Name="DeletedBy" Description="Kaydı Silen" DataType="Int32" Ordinal="37" UdtType="UdtInt32" Caption="Silen" Precision="10" />
+      </Fields>
+      <Indexes>
+      </Indexes>
+      <Relations>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosPeriodSummary_Erp_Company" DestinationTable="Erp_Company" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="CompanyId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount" DestinationTable="Erp_BankAccount" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="BankAccountId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+      </Relations>
+    </Table>
+    <Table Id="296" Name="Erp_BankAccountPosPeriodDaily" Description="Pos Ekstre Günlük Özet Snapshot" PrimaryKey="RecId" Caption="Pos Ekstre Günlük Özet">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="SummaryId" Description="Dönem Özet Kayıt No" DataType="Int64" Ordinal="2" UdtType="UdtInt64" Caption="Dönem Özeti" Precision="19" />
+        <Field Id="3" Name="Day" Description="Gün" DataType="DateTime" Ordinal="3" UdtType="UdtDate" FieldUsage="Date" Caption="Gün" />
+        <Field Id="4" Name="CollectionCount" Description="Tahsilat Adedi" DataType="Int32" Ordinal="4" UdtType="UdtInt32" Caption="Tahsilat Adedi" Precision="10" />
+        <Field Id="5" Name="RefundCount" Description="İade Adedi" DataType="Int32" Ordinal="5" UdtType="UdtInt32" Caption="İade Adedi" Precision="10" />
+        <Field Id="6" Name="GrossAmount" Description="Brüt Tutar" DataType="Decimal" Ordinal="6" UdtType="UdtAmount" FieldUsage="Amount" Caption="Brüt" Precision="28" Scale="8" />
+        <Field Id="7" Name="MerchantFeeAmount" Description="Üye İşyeri Ücreti" DataType="Decimal" Ordinal="7" UdtType="UdtAmount" FieldUsage="Amount" Caption="Üye İşyeri Ücreti" Precision="28" Scale="8" />
+        <Field Id="8" Name="RewardExpenseAmount" Description="İşyeri Ödül Gideri" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="İşyeri Ödül Gideri" Precision="28" Scale="8" />
+        <Field Id="9" Name="ServiceCommissionAmount" Description="Servis Komisyonu" DataType="Decimal" Ordinal="9" UdtType="UdtAmount" FieldUsage="Amount" Caption="Servis Komisyonu" Precision="28" Scale="8" />
+        <Field Id="10" Name="RefundAmount" Description="İade Tutarı" DataType="Decimal" Ordinal="10" UdtType="UdtAmount" FieldUsage="Amount" Caption="İade" Precision="28" Scale="8" />
+        <Field Id="11" Name="NetAmount" Description="Net Tutar" DataType="Decimal" Ordinal="11" UdtType="UdtAmount" FieldUsage="Amount" Caption="Net" Precision="28" Scale="8" />
+        <Field Id="12" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+      </Fields>
+      <Indexes>
+      </Indexes>
+      <Relations>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary" DestinationTable="Erp_BankAccountPosPeriodSummary" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="SummaryId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+      </Relations>
+    </Table>
+    <Table Id="297" Name="Erp_BankAccountPosPeriodSettlement" Description="Pos Hesaba Geçiş Snapshot" PrimaryKey="RecId" Caption="Pos Hesaba Geçiş">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="SummaryId" Description="Dönem Özet Kayıt No" DataType="Int64" Ordinal="2" UdtType="UdtInt64" Caption="Dönem Özeti" Precision="19" />
+        <Field Id="3" Name="SettlementDate" Description="Hesaba Geçiş Tarihi" DataType="DateTime" Ordinal="3" UdtType="UdtDate" FieldUsage="Date" Caption="Hesaba Geçiş Tarihi" />
+        <Field Id="4" Name="SettlementKind" Description="Geçiş Türü" DataType="Byte" Ordinal="4" UdtType="UdtInt8" Caption="Geçiş Türü" Precision="3" />
+        <Field Id="5" Name="GrossAmount" Description="Brüt Tutar" DataType="Decimal" Ordinal="5" UdtType="UdtAmount" FieldUsage="Amount" Caption="Brüt" Precision="28" Scale="8" />
+        <Field Id="6" Name="DeductionAmount" Description="Kesinti Tutarı" DataType="Decimal" Ordinal="6" UdtType="UdtAmount" FieldUsage="Amount" Caption="Kesinti" Precision="28" Scale="8" />
+        <Field Id="7" Name="RefundAmount" Description="İade Tutarı" DataType="Decimal" Ordinal="7" UdtType="UdtAmount" FieldUsage="Amount" Caption="İade" Precision="28" Scale="8" />
+        <Field Id="8" Name="NetAmount" Description="Net Tutar" DataType="Decimal" Ordinal="8" UdtType="UdtAmount" FieldUsage="Amount" Caption="Net" Precision="28" Scale="8" />
+        <Field Id="9" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+      </Fields>
+      <Indexes>
+      </Indexes>
+      <Relations>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary" DestinationTable="Erp_BankAccountPosPeriodSummary" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="SummaryId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
+      </Relations>
+    </Table>
+    <Table Id="298" Name="Erp_BankAccountPosPeriodFutureReceivable" Description="Pos Gelecek Alacak Snapshot" PrimaryKey="RecId" Caption="Pos Gelecek Alacak">
+      <Fields>
+        <Field Id="1" Name="RecId" Description="Kayıt No" DataType="Int64" Ordinal="1" UdtType="UdtRecId" Caption="Kayıt No" IsNullable="False" Precision="19" />
+        <Field Id="2" Name="SummaryId" Description="Dönem Özet Kayıt No" DataType="Int64" Ordinal="2" UdtType="UdtInt64" Caption="Dönem Özeti" Precision="19" />
+        <Field Id="3" Name="PeriodYear" Description="Dönem Yılı" DataType="Int16" Ordinal="3" UdtType="UdtInt16" Caption="Yıl" Precision="5" />
+        <Field Id="4" Name="PeriodMonth" Description="Dönem Ayı" DataType="Int16" Ordinal="4" UdtType="UdtInt16" Caption="Ay" Precision="5" />
+        <Field Id="5" Name="GrossAmount" Description="Brüt Tutar" DataType="Decimal" Ordinal="5" UdtType="UdtAmount" FieldUsage="Amount" Caption="Brüt" Precision="28" Scale="8" />
+        <Field Id="6" Name="NetAmount" Description="Net Tutar" DataType="Decimal" Ordinal="6" UdtType="UdtAmount" FieldUsage="Amount" Caption="Net" Precision="28" Scale="8" />
+        <Field Id="7" Name="IsDeleted" Description="Silindi Bilgisi" DataType="Boolean" Ordinal="33" UdtType="UdtBool" Caption="Silindi" Precision="3" />
+      </Fields>
+      <Indexes>
+      </Indexes>
+      <Relations>
+        <Relation Id="0" Name="FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary" DestinationTable="Erp_BankAccountPosPeriodSummary" CheckExistingData="False" EnforceForReplication="False">
+          <RelationFields>
+            <RelationField Id="1" Name="SummaryId" DestinationField="RecId" />
+          </RelationFields>
+        </Relation>
       </Relations>
     </Table>
     <Table Id="32" Name="Erp_BankReceiptItem" Description="Banka Fişleri Detay Bilgileri" PrimaryKey="RecId" KeyField="DocumentNo" Caption="Banka Fişi Detay">

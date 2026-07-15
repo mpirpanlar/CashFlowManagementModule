@@ -43,6 +43,7 @@ namespace Sentez.CashFlowManagementModule
             PMBase.AddCustomInit("BankAccountPM", BankAccountPm_Init);
             PMBase.AddCustomDispose("BankAccountPM", BankAccountPm_Dispose);
             PMBase.AddCustomViewLoaded("BankAccountPM", BankAccountPm_ViewLoaded);
+            RegisterBankAccountPosHooks();
         }
 
         void BankAccountBo_CustomCons(ref short itemId, ref string keyColumn, ref string typeField, ref string[] tables)
@@ -50,12 +51,14 @@ namespace Sentez.CashFlowManagementModule
             var tableList = new List<string>(tables);
             if (!tableList.Contains(BankAccountCreditCardHelper.PeriodTableName))
                 tableList.Add(BankAccountCreditCardHelper.PeriodTableName);
+            ExtendBankAccountBoForPos(ref tableList);
             tables = tableList.ToArray();
         }
 
         void BankAccountBo_Init(BusinessObjectBase bo, BoParam parameter)
         {
             BankAccountCreditCardHelper.EnsureBankAccountMetaDataFields();
+            ConfigureBankAccountBoForPos(bo);
 
             if (bo?.Data != null)
                 CreditCardPaymentDueDaysSyncService.EnsureVirtualColumns(bo.Data);
@@ -207,13 +210,13 @@ namespace Sentez.CashFlowManagementModule
             if (bo == null)
                 return;
 
-            bo.ColumnChanged -= BankAccountPm_ForCreditCard_ColumnChanged;
-            bo.ColumnChanged += BankAccountPm_ForCreditCard_ColumnChanged;
+            bo.ColumnChanged -= BankAccountPm_CreditCardTabVisibility_ColumnChanged;
+            bo.ColumnChanged += BankAccountPm_CreditCardTabVisibility_ColumnChanged;
         }
 
-        void BankAccountPm_ForCreditCard_ColumnChanged(object sender, DataColumnChangeEventArgs e)
+        void BankAccountPm_CreditCardTabVisibility_ColumnChanged(object sender, DataColumnChangeEventArgs e)
         {
-            if (e.Column?.ColumnName == "ForCreditCard")
+            if (e.Column?.ColumnName == "ForCreditCard" || e.Column?.ColumnName == "AccountSubType")
                 UpdateBankAccountCreditCardTabVisibility();
         }
 
@@ -238,8 +241,8 @@ namespace Sentez.CashFlowManagementModule
             {
                 _suppressCreditCardPaymentDueSync = true;
 
-                if (bo.CurrentRow?.Row != null)
-                    CreditCardPaymentDueDaysSyncService.RecalculateHeaderDays(bo.CurrentRow.Row);
+                if (DataRowSafety.TryGetCurrentRow(bo, out DataRow headerRow))
+                    CreditCardPaymentDueDaysSyncService.RecalculateHeaderDays(headerRow);
 
                 if (bo.Data.Tables.Contains(BankAccountCreditCardHelper.PeriodTableName))
                     CreditCardPaymentDueDaysSyncService.RecalculateAllPeriodRows(
@@ -253,14 +256,14 @@ namespace Sentez.CashFlowManagementModule
 
         void UpdateBankAccountCreditCardTabVisibility()
         {
-            if (_ltiBankAccountCreditCard == null || _bankAccountPm?.ActiveBO?.CurrentRow?.Row == null)
+            if (_ltiBankAccountCreditCard == null
+                || !DataRowSafety.TryGetCurrentRow(_bankAccountPm?.ActiveBO, out DataRow headerRow))
                 return;
 
-            var isCreditCard = ! _bankAccountPm.ActiveBO.CurrentRow.Row.IsNull("ForCreditCard") &&
-                               Convert.ToBoolean(_bankAccountPm.ActiveBO.CurrentRow.Row["ForCreditCard"]);
-            _ltiBankAccountCreditCard.Visibility = isCreditCard ? Visibility.Visible : Visibility.Collapsed;
+            var showTab = BankAccountSubTypeHelper.ShouldShowCreditCardDetailTab(headerRow);
+            _ltiBankAccountCreditCard.Visibility = showTab ? Visibility.Visible : Visibility.Collapsed;
 
-            if (isCreditCard)
+            if (showTab)
                 RefreshCreditCardPeriodPaymentSummary();
         }
 
@@ -276,10 +279,8 @@ namespace Sentez.CashFlowManagementModule
 
         void OnGenerateCreditCardPeriodsCommand(ISysCommandParam param)
         {
-            if (_bankAccountPm?.ActiveBO?.CurrentRow?.Row == null)
+            if (!DataRowSafety.TryGetCurrentRow(_bankAccountPm?.ActiveBO, out DataRow bankAccountRow))
                 return;
-
-            var bankAccountRow = _bankAccountPm.ActiveBO.CurrentRow.Row;
             if (!CreditCardStatementPeriodGeneratorService.TryParseInputs(
                     bankAccountRow,
                     out var expiryMonth,
@@ -353,11 +354,10 @@ namespace Sentez.CashFlowManagementModule
                 return;
             }
 
-            if (bo.CurrentRow?.Row == null)
+            if (!DataRowSafety.TryGetCurrentRow(bo, out DataRow bankAccountRow))
                 return;
 
-            var bankAccountRow = bo.CurrentRow.Row;
-            if (bankAccountRow.IsNull("ForCreditCard") || !Convert.ToBoolean(bankAccountRow["ForCreditCard"]))
+            if (!BankAccountSubTypeHelper.ShouldShowCreditCardDetailTab(bankAccountRow))
                 return;
 
             if (bankAccountRow.IsNull("RecId"))

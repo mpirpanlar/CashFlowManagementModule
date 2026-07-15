@@ -13,6 +13,14 @@ namespace CashFlowManagementModule.BoExtensions
 
     public static class PlanningAmountSide
     {
+        static bool IsUsableDataRow(DataRow row)
+        {
+            return row != null
+                && row.Table != null
+                && row.RowState != DataRowState.Deleted
+                && row.RowState != DataRowState.Detached;
+        }
+
         public static string GetPlanningAmountColumn(short planningType)
         {
             return planningType == BankReceiptCollectionOrderHelper.ReceiptType ? "Debit" : "Credit";
@@ -25,7 +33,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static void ApplyAmountToRow(DataRow row, short planningType, decimal amount, decimal? forexAmount)
         {
-            if (row?.Table == null) return;
+            if (!IsUsableDataRow(row)) return;
 
             string amountColumn = GetPlanningAmountColumn(planningType);
             string forexColumn = GetPlanningForexAmountColumn(planningType);
@@ -58,7 +66,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static decimal GetAmountFromRow(DataRow row, short planningType)
         {
-            if (row?.Table == null) return 0m;
+            if (!IsUsableDataRow(row)) return 0m;
 
             string column = GetPlanningAmountColumn(planningType);
             if (!row.Table.Columns.Contains(column) || row.IsNull(column))
@@ -69,7 +77,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         public static DownstreamAmountMapping GetAmountForDownstream(DataRow planningRow, short planningType, short targetReceiptType)
         {
-            if (planningRow == null)
+            if (!IsUsableDataRow(planningRow))
                 return new DownstreamAmountMapping();
 
             decimal amount = GetAmountFromRow(planningRow, planningType);
@@ -87,7 +95,7 @@ namespace CashFlowManagementModule.BoExtensions
 
         static decimal? GetForexAmountFromRow(DataRow row, short planningType)
         {
-            if (row?.Table == null) return null;
+            if (!IsUsableDataRow(row)) return null;
 
             string column = GetPlanningForexAmountColumn(planningType);
             if (!row.Table.Columns.Contains(column) || row.IsNull(column))

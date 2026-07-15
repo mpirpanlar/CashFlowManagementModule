@@ -1,4 +1,4 @@
-using LiveCore.Desktop.SBase;
+﻿using LiveCore.Desktop.SBase;
 using LiveCore.Desktop.UI.Controls;
 
 using CashFlowManagementModule.BoExtensions;
@@ -325,11 +325,11 @@ namespace Sentez.CashFlowManagementModule
             if (businessObject?.Connection == null) return;
 
             DateTime? fallbackDate = null;
-            if (_paymentOrderBankReceiptPm.ActiveBO?.CurrentRow?.Row != null
-                && _paymentOrderBankReceiptPm.ActiveBO.CurrentRow.Row.Table.Columns.Contains("UD_PaymentDate")
-                && !_paymentOrderBankReceiptPm.ActiveBO.CurrentRow.Row.IsNull("UD_PaymentDate"))
+            if (DataRowSafety.TryGetCurrentRow(_paymentOrderBankReceiptPm.ActiveBO, out DataRow headerRow)
+                && headerRow.Table.Columns.Contains("UD_PaymentDate")
+                && !headerRow.IsNull("UD_PaymentDate"))
             {
-                fallbackDate = Convert.ToDateTime(_paymentOrderBankReceiptPm.ActiveBO.CurrentRow.Row["UD_PaymentDate"]);
+                fallbackDate = Convert.ToDateTime(headerRow["UD_PaymentDate"]);
             }
 
             CreditCardPaymentLineInput line = CreditCardPaymentLineInput.FromBankReceiptItem(itemRow, fallbackDate);
@@ -375,6 +375,8 @@ namespace Sentez.CashFlowManagementModule
 
             AddColumnIfMissing("IsApproved", SLanguage.GetString("Onay Durumu"), EditorType.ComboBox, FieldUsage.None, 90, "ApprovedList");
             AddColumnIfMissing(BankReceiptCreditCardHelper.FieldInstallmentCount, SLanguage.GetString("Taksit Sayısı"), EditorType.TextEditor, FieldUsage.None, 90);
+            AddColumnIfMissing(PosCardClassificationHelper.FieldCardSource, SLanguage.GetString("Kart Kaynağı"), EditorType.ComboBox, FieldUsage.None, 150, PosCardClassificationHelper.CardSourceLookupName);
+            AddColumnIfMissing(PosCardClassificationHelper.FieldCardCategory, SLanguage.GetString("Kart Kategorisi"), EditorType.ComboBox, FieldUsage.None, 170, PosCardClassificationHelper.CardCategoryLookupName);
             BankReceiptItemAccessCodeHelper.EnsureDetailColumn(_paymentOrderBankReceiptPm.BankReceiptColumnCollection);
             EnsureFixedPaymentTypeDetailColumn();
             BankReceiptItemAuditHelper.AddAuditDetailColumns(_paymentOrderBankReceiptPm.BankReceiptColumnCollection);
@@ -752,7 +754,7 @@ namespace Sentez.CashFlowManagementModule
         /// </summary>
         void ApplyPaymentOrderCardLockState()
         {
-            if (_paymentOrderBankReceiptPm?.ActiveBO?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(_paymentOrderBankReceiptPm?.ActiveBO, out _)) return;
 
             bool isLocked = BankReceiptPaymentOrderHelper.ShouldLockPaymentOrder(_paymentOrderBankReceiptPm.ActiveBO);
 
@@ -825,9 +827,9 @@ namespace Sentez.CashFlowManagementModule
         }
 
         /// <summary>
-        /// Detay gridde seçili ve talimat için uygun satırları döndürür.
+        /// Detay gridde seçili satırları kullanıcı seçim sırasıyla döndürür.
         /// </summary>
-        List<DataRow> GetSelectedPaymentOrderExportRows()
+        List<DataRow> GetRawSelectedPaymentOrderExportRows()
         {
             var rows = new List<DataRow>();
             if (_paymentOrderBankReceiptPm == null) return rows;
@@ -845,7 +847,15 @@ namespace Sentez.CashFlowManagementModule
                 rows.Add(rowView.Row);
             }
 
-            return PaymentOrderInstructionExportService.NormalizeExportRows(rows);
+            return rows;
+        }
+
+        /// <summary>
+        /// Detay gridde seçili ve talimat için uygun satırları döndürür.
+        /// </summary>
+        List<DataRow> GetSelectedPaymentOrderExportRows()
+        {
+            return PaymentOrderInstructionExportService.NormalizeExportRows(GetRawSelectedPaymentOrderExportRows());
         }
 
         /// <summary>
@@ -1054,7 +1064,7 @@ namespace Sentez.CashFlowManagementModule
             if (paymentOrderPm == null) return;
 
             BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
-            if (businessObject?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow)) return;
 
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             if (session?.ActiveCompany?.RecId == null) return;
@@ -1064,9 +1074,9 @@ namespace Sentez.CashFlowManagementModule
             DateTime reportDate = paymentOrderPm.AgingReportDate;
             if (reportDate == DateTime.MinValue)
             {
-                reportDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+                reportDate = headerRow.IsNull("ReceiptDate")
                     ? DateTime.Today
-                    : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+                    : Convert.ToDateTime(headerRow["ReceiptDate"]);
             }
 
             var context = new PaymentOrderAgingImportContext
@@ -1142,7 +1152,7 @@ namespace Sentez.CashFlowManagementModule
             {
                 foreach (DataRow row in reportData.Data.Rows)
                 {
-                    if (row.RowState != DataRowState.Deleted)
+                    if (DataRowSafety.IsUsable(row))
                         rows.Add(row);
                 }
             }
@@ -1195,14 +1205,14 @@ namespace Sentez.CashFlowManagementModule
             if (_paymentOrderBankReceiptPm == null || !IsPaymentOrderPm(_paymentOrderBankReceiptPm)) return;
 
             BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
-            if (businessObject?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow)) return;
 
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             if (session?.ActiveCompany?.RecId == null) return;
 
-            DateTime receiptDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+            DateTime receiptDate = headerRow.IsNull("ReceiptDate")
                 ? DateTime.Today
-                : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+                : Convert.ToDateTime(headerRow["ReceiptDate"]);
 
             CreditCardStatementSpendingImportResult importResult = CreditCardStatementSpendingImportService.Import(
                 businessObject,
@@ -1249,16 +1259,16 @@ namespace Sentez.CashFlowManagementModule
             if (paymentOrderPm == null) return;
 
             BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
-            if (businessObject?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow)) return;
 
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             if (session?.ActiveCompany?.RecId == null) return;
 
             paymentOrderPm.EnsureDefaultBankAccountResolved();
 
-            DateTime receiptDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+            DateTime receiptDate = headerRow.IsNull("ReceiptDate")
                 ? DateTime.Today
-                : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+                : Convert.ToDateTime(headerRow["ReceiptDate"]);
 
             FixedPaymentImportResult importResult = FixedPaymentImportService.Import(
                 businessObject,
@@ -1296,7 +1306,7 @@ namespace Sentez.CashFlowManagementModule
             if (paymentOrderPm == null) return;
 
             BusinessObjectBase businessObject = _paymentOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
-            if (businessObject?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow)) return;
 
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             if (session?.ActiveCompany?.RecId == null) return;
@@ -1309,7 +1319,8 @@ namespace Sentez.CashFlowManagementModule
                 return;
             }
 
-            List<DataRow> selectedExportRows = GetSelectedPaymentOrderExportRows();
+            List<DataRow> rawSelectedRows = GetRawSelectedPaymentOrderExportRows();
+            List<DataRow> selectedExportRows = PaymentOrderInstructionExportService.NormalizeExportRows(rawSelectedRows);
             if (selectedExportRows.Count == 0)
             {
                 SysMng.Instance.ActWndMng.ShowMsg(
@@ -1318,11 +1329,22 @@ namespace Sentez.CashFlowManagementModule
                 return;
             }
 
+            if (!PaymentOrderInstructionExportService.TryValidateUniformBankAccount(
+                    session,
+                    selectedExportRows,
+                    out string bankAccountValidationMessage))
+            {
+                SysMng.Instance.ActWndMng.ShowMsg(bankAccountValidationMessage, ConstantStr.Warning);
+                return;
+            }
+
             var saveDialog = new Microsoft.Win32.SaveFileDialog
             {
                 Filter = "Excel Dosyası (*.xlsx)|*.xlsx",
                 DefaultExt = ".xlsx",
-                FileName = PaymentOrderInstructionExportService.BuildSuggestedFileName(businessObject.CurrentRow.Row)
+                FileName = PaymentOrderInstructionExportService.BuildSuggestedFileName(
+                    headerRow,
+                    rawSelectedRows.FirstOrDefault())
             };
 
             if (saveDialog.ShowDialog() != true)
@@ -1332,7 +1354,7 @@ namespace Sentez.CashFlowManagementModule
                 businessObject,
                 session,
                 paymentOrderPm.DefaultBankAccountId,
-                selectedExportRows,
+                rawSelectedRows,
                 saveDialog.FileName);
 
             if (!string.IsNullOrEmpty(exportResult.Message))
@@ -1389,7 +1411,7 @@ namespace Sentez.CashFlowManagementModule
             foreach (object selectedItem in gridDetail.SelectedItems)
             {
                 if (selectedItem is not DataRowView rowView) continue;
-                if (rowView.Row.RowState == DataRowState.Deleted) continue;
+                if (DataRowSafety.IsDeletedOrDetached(rowView.Row)) continue;
 
                 DataRow itemRow = rowView.Row;
                 itemRow["IsApproved"] = (byte)1;
@@ -1422,7 +1444,7 @@ namespace Sentez.CashFlowManagementModule
             foreach (object selectedItem in gridDetail.SelectedItems)
             {
                 if (selectedItem is not DataRowView rowView) continue;
-                if (rowView.Row.RowState == DataRowState.Deleted) continue;
+                if (DataRowSafety.IsDeletedOrDetached(rowView.Row)) continue;
 
                 DataRow itemRow = rowView.Row;
                 if (BankReceiptPaymentOrderHelper.GetApprovedValue(itemRow) == 0

@@ -14,11 +14,17 @@ namespace Sentez.CashFlowManagementModule
 
         void CurrentAccountReceiptBo_Init(BusinessObjectBase bo, BoParam parameter)
         {
-            if (bo == null || parameter == null || parameter.Type != 51)
+            if (bo == null || parameter == null)
+                return;
+
+            PosCardClassificationHelper.EnsureCurrentAccountReceiptItemMetaDataFields();
+
+            if (parameter.Type != 51 && parameter.Type != 50)
                 return;
 
             CurrentAccountReceiptCreditCardHelper.EnsureCurrentAccountReceiptItemColumns(bo.Data);
-            bo.ValueFiller.AddRule("Erp_CurrentAccountReceiptItem", CurrentAccountReceiptCreditCardHelper.FieldInstallmentCount, (short)1);
+            if (parameter.Type == 51)
+                bo.ValueFiller.AddRule("Erp_CurrentAccountReceiptItem", CurrentAccountReceiptCreditCardHelper.FieldInstallmentCount, (short)1);
         }
     }
 }

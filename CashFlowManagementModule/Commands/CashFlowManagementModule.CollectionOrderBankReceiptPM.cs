@@ -282,11 +282,11 @@ namespace Sentez.CashFlowManagementModule
             if (businessObject?.Connection == null) return;
 
             DateTime? fallbackDate = null;
-            if (_collectionOrderBankReceiptPm.ActiveBO?.CurrentRow?.Row != null
-                && _collectionOrderBankReceiptPm.ActiveBO.CurrentRow.Row.Table.Columns.Contains("UD_PaymentDate")
-                && !_collectionOrderBankReceiptPm.ActiveBO.CurrentRow.Row.IsNull("UD_PaymentDate"))
+            if (DataRowSafety.TryGetCurrentRow(_collectionOrderBankReceiptPm.ActiveBO, out DataRow headerRow)
+                && headerRow.Table.Columns.Contains("UD_PaymentDate")
+                && !headerRow.IsNull("UD_PaymentDate"))
             {
-                fallbackDate = Convert.ToDateTime(_collectionOrderBankReceiptPm.ActiveBO.CurrentRow.Row["UD_PaymentDate"]);
+                fallbackDate = Convert.ToDateTime(headerRow["UD_PaymentDate"]);
             }
 
             DateTime paymentDate = fallbackDate ?? DateTime.Today;
@@ -353,6 +353,8 @@ namespace Sentez.CashFlowManagementModule
 
             AddCollectionOrderColumnIfMissing("IsApproved", SLanguage.GetString("Onay Durumu"), EditorType.ComboBox, FieldUsage.None, 90, "ApprovedList");
             AddCollectionOrderColumnIfMissing(BankReceiptCreditCardHelper.FieldInstallmentCount, SLanguage.GetString("Taksit Sayısı"), EditorType.TextEditor, FieldUsage.None, 90);
+            AddCollectionOrderColumnIfMissing(PosCardClassificationHelper.FieldCardSource, SLanguage.GetString("Kart Kaynağı"), EditorType.ComboBox, FieldUsage.None, 150, PosCardClassificationHelper.CardSourceLookupName);
+            AddCollectionOrderColumnIfMissing(PosCardClassificationHelper.FieldCardCategory, SLanguage.GetString("Kart Kategorisi"), EditorType.ComboBox, FieldUsage.None, 170, PosCardClassificationHelper.CardCategoryLookupName);
             BankReceiptItemAccessCodeHelper.EnsureDetailColumn(_collectionOrderBankReceiptPm.BankReceiptColumnCollection);
             EnsureFixedCollectionTypeDetailColumn();
             BankReceiptItemAuditHelper.AddAuditDetailColumns(_collectionOrderBankReceiptPm.BankReceiptColumnCollection);
@@ -707,7 +709,7 @@ namespace Sentez.CashFlowManagementModule
         /// </summary>
         void ApplyCollectionOrderCardLockState()
         {
-            if (_collectionOrderBankReceiptPm?.ActiveBO?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(_collectionOrderBankReceiptPm?.ActiveBO, out _)) return;
 
             bool isLocked = BankReceiptCollectionOrderHelper.ShouldLockCollectionOrder(_collectionOrderBankReceiptPm.ActiveBO);
 
@@ -780,6 +782,15 @@ namespace Sentez.CashFlowManagementModule
             };
             btnImportFixedCollections.Command = _collectionOrderBankReceiptPm.CmdList["ImportFixedCollectionsCommand"];
             toolbar.Children.Add(btnImportFixedCollections);
+
+            var btnImportPosSettlement = new LiveButton
+            {
+                Content = SLanguage.GetString("Pos Hesaba Geçişleri Aktar"),
+                Margin = new Thickness(6, 0, 0, 0),
+                Padding = new Thickness(8, 2, 8, 2)
+            };
+            btnImportPosSettlement.Command = _collectionOrderBankReceiptPm.CmdList["ImportPosSettlementToCollectionCommand"];
+            toolbar.Children.Add(btnImportPosSettlement);
 
             var btnImportAging = new LiveButton
             {
@@ -863,6 +874,16 @@ namespace Sentez.CashFlowManagementModule
                     ImportCollectionAgingCommand,
                     CanImportCollectionAgingCommand);
             }
+
+            if (pm.CmdList["ImportPosSettlementToCollectionCommand"] == null)
+            {
+                pm.CmdList.AddCmd(
+                    334,
+                    "ImportPosSettlementToCollectionCommand",
+                    SLanguage.GetString("Pos Hesaba Geçişleri Aktar"),
+                    ImportPosSettlementToCollectionCommand,
+                    CanImportPosSettlementToCollectionCommand);
+            }
         }
 
         /// <summary>
@@ -895,16 +916,16 @@ namespace Sentez.CashFlowManagementModule
             if (collectionOrderPm == null) return;
 
             BusinessObjectBase businessObject = _collectionOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
-            if (businessObject?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow)) return;
 
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             if (session?.ActiveCompany?.RecId == null) return;
 
             collectionOrderPm.EnsureDefaultBankAccountResolved();
 
-            DateTime receiptDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+            DateTime receiptDate = headerRow.IsNull("ReceiptDate")
                 ? DateTime.Today
-                : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+                : Convert.ToDateTime(headerRow["ReceiptDate"]);
 
             FixedCollectionImportResult importResult = FixedCollectionImportService.Import(
                 businessObject,
@@ -914,6 +935,44 @@ namespace Sentez.CashFlowManagementModule
 
             if (!string.IsNullOrEmpty(importResult.Message))
                 SysMng.Instance.ActWndMng.ShowMsg(importResult.Message, importResult.AddedCount > 0 ? null : ConstantStr.Warning);
+
+            RefreshCollectionOrderDetailGrid();
+        }
+
+        bool CanImportPosSettlementToCollectionCommand(ISysCommandParam obj)
+        {
+            if (_collectionOrderBankReceiptPm == null || !IsCollectionOrderPm(_collectionOrderBankReceiptPm)) return false;
+            if (BankReceiptCollectionOrderHelper.ShouldLockCollectionOrder(_collectionOrderBankReceiptPm.ActiveBO)) return false;
+
+            return SysMng.Instance.CheckRights(
+                OperationType.Update,
+                (short)Modules.ExternalModule16,
+                (short)Modules.ExternalModule16,
+                (short)CashFlowManagementModuleSecurityItems.PosSettlementCollectionImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None);
+        }
+
+        void ImportPosSettlementToCollectionCommand(ISysCommandParam obj)
+        {
+            if (_collectionOrderBankReceiptPm == null || !IsCollectionOrderPm(_collectionOrderBankReceiptPm)) return;
+
+            BusinessObjectBase businessObject = _collectionOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
+            if (!DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow)) return;
+
+            LiveSession session = SysMng.Instance.getSession() as LiveSession;
+            if (session?.ActiveCompany?.RecId == null) return;
+
+            DateTime receiptDate = headerRow.IsNull("ReceiptDate")
+                ? DateTime.Today
+                : Convert.ToDateTime(headerRow["ReceiptDate"]);
+
+            PosSettlementCollectionImportResult importResult = PosSettlementCollectionImportService.Import(
+                businessObject,
+                session,
+                receiptDate);
+
+            if (!string.IsNullOrEmpty(importResult.Message))
+                SysMng.Instance.ActWndMng.ShowMsg(importResult.Message, importResult.AddedCount > 0 || importResult.UpdatedCount > 0 ? null : ConstantStr.Warning);
 
             RefreshCollectionOrderDetailGrid();
         }
@@ -964,7 +1023,7 @@ namespace Sentez.CashFlowManagementModule
             foreach (object selectedItem in gridDetail.SelectedItems)
             {
                 if (selectedItem is not DataRowView rowView) continue;
-                if (rowView.Row.RowState == DataRowState.Deleted) continue;
+                if (DataRowSafety.IsDeletedOrDetached(rowView.Row)) continue;
 
                 DataRow itemRow = rowView.Row;
                 itemRow["IsApproved"] = (byte)1;
@@ -997,7 +1056,7 @@ namespace Sentez.CashFlowManagementModule
             foreach (object selectedItem in gridDetail.SelectedItems)
             {
                 if (selectedItem is not DataRowView rowView) continue;
-                if (rowView.Row.RowState == DataRowState.Deleted) continue;
+                if (DataRowSafety.IsDeletedOrDetached(rowView.Row)) continue;
 
                 DataRow itemRow = rowView.Row;
                 if (BankReceiptCollectionOrderHelper.GetApprovedValue(itemRow) == 0
@@ -1032,7 +1091,7 @@ namespace Sentez.CashFlowManagementModule
             if (collectionOrderPm == null) return;
 
             BusinessObjectBase businessObject = _collectionOrderBankReceiptPm.ActiveBO as BusinessObjectBase;
-            if (businessObject?.CurrentRow?.Row == null) return;
+            if (!DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow)) return;
 
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             if (session?.ActiveCompany?.RecId == null) return;
@@ -1042,9 +1101,9 @@ namespace Sentez.CashFlowManagementModule
             DateTime reportDate = collectionOrderPm.AgingReportDate;
             if (reportDate == DateTime.MinValue)
             {
-                reportDate = businessObject.CurrentRow.Row.IsNull("ReceiptDate")
+                reportDate = headerRow.IsNull("ReceiptDate")
                     ? DateTime.Today
-                    : Convert.ToDateTime(businessObject.CurrentRow.Row["ReceiptDate"]);
+                    : Convert.ToDateTime(headerRow["ReceiptDate"]);
             }
 
             var context = new CollectionOrderAgingImportContext
@@ -1114,7 +1173,7 @@ namespace Sentez.CashFlowManagementModule
             {
                 foreach (DataRow row in reportData.Data.Rows)
                 {
-                    if (row.RowState != DataRowState.Deleted)
+                    if (DataRowSafety.IsUsable(row))
                         rows.Add(row);
                 }
             }

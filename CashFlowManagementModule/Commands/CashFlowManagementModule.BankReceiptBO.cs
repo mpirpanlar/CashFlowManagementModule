@@ -32,6 +32,7 @@ namespace Sentez.CashFlowManagementModule
         void BankReceiptBo_CreditCardInit(BusinessObjectBase bo, BoParam parameter)
         {
             BankReceiptCreditCardHelper.EnsureBankReceiptItemMetaDataFields();
+            PosCardClassificationHelper.EnsureBankReceiptItemMetaDataFields();
             bo.ValueFiller.AddRule("Erp_BankReceiptItem", BankReceiptCreditCardHelper.FieldInstallmentCount, (short)1);
         }
 

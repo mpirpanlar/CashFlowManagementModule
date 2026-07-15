@@ -86,6 +86,27 @@ namespace Sentez.CashFlowManagementModule
                 (short)CashFlowManagementModuleSecuritySubItems.None,
                 Privileges.Update));
 
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Pos Kesinti Türleri"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.PosDeductionType,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Select | Privileges.Insert | Privileges.Update | Privileges.Delete));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Pos Ekstre Analizi"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.PosStatementAnalysis,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Select | Privileges.Update));
+
+            mainSecurity.AddChild(new SecurityDefinition(
+                SLanguage.GetString("Pos Hesaba Geçişleri Aktar"),
+                logicalModuleId, moduleId,
+                (short)CashFlowManagementModuleSecurityItems.PosSettlementCollectionImport,
+                (short)CashFlowManagementModuleSecuritySubItems.None,
+                Privileges.Update));
+
             PrivilegeInfo.SecurityDefinitions.AddDefinition(mainSecurity);
         }
     }

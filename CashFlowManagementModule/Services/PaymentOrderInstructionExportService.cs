@@ -71,6 +71,12 @@ namespace CashFlowManagementModule.Services
                 return result;
             }
 
+            if (!TryValidateUniformBankAccount(session, exportRows, out string bankAccountValidationMessage))
+            {
+                result.Message = bankAccountValidationMessage;
+                return result;
+            }
+
             DataRow bankRow = BankAccountDefaultResolver.LoadBankAccountInstructionRow(session, defaultBankAccountId);
             if (bankRow == null)
             {
@@ -169,6 +175,39 @@ namespace CashFlowManagementModule.Services
                     && PlanningAmountSide.GetAmountFromRow(row, BankReceiptPaymentOrderHelper.ReceiptType) > 0m)
                 .OrderBy(row => row.IsNull("ItemOrderNo") ? int.MaxValue : Convert.ToInt32(row["ItemOrderNo"]))
                 .ToList();
+        }
+
+        public static bool TryValidateUniformBankAccount(
+            LiveSession session,
+            IReadOnlyList<DataRow> exportRows,
+            out string message)
+        {
+            message = null;
+            if (session == null || exportRows == null || exportRows.Count == 0)
+                return true;
+
+            var bankAccountIds = new HashSet<long>();
+            foreach (DataRow itemRow in exportRows)
+            {
+                if (itemRow == null || itemRow.RowState == DataRowState.Deleted || itemRow.RowState == DataRowState.Detached)
+                    continue;
+
+                if (!BankAccountDefaultResolver.TryGetRowBankAccountIdForValidation(session, itemRow, out long bankAccountId))
+                {
+                    message = SLanguage.GetString("Seçili satırlarda banka hesabı tanımsız kayıtlar bulunuyor.");
+                    return false;
+                }
+
+                bankAccountIds.Add(bankAccountId);
+            }
+
+            if (bankAccountIds.Count > 1)
+            {
+                message = SLanguage.GetString("Seçili satırlarda farklı banka hesapları bulunuyor. Talimat dosyası yalnızca aynı banka hesabına ait satırlardan oluşturulabilir.");
+                return false;
+            }
+
+            return true;
         }
 
         static string GetCurrentAccountName(DataRow itemRow)
@@ -317,21 +356,24 @@ namespace CashFlowManagementModule.Services
             }
         }
 
-        public static string BuildSuggestedFileName(DataRow headerRow)
+        public static string BuildSuggestedFileName(DataRow headerRow, DataRow firstSelectedRow = null)
         {
             string receiptNo = headerRow?.Table?.Columns.Contains("ReceiptNo") == true && !headerRow.IsNull("ReceiptNo")
                 ? Convert.ToString(headerRow["ReceiptNo"])?.Trim()
                 : string.Empty;
 
-            DateTime receiptDate = headerRow?.Table?.Columns.Contains("ReceiptDate") == true && !headerRow.IsNull("ReceiptDate")
-                ? Convert.ToDateTime(headerRow["ReceiptDate"]).Date
-                : DateTime.Today;
+            DateTime paymentDate = DateTime.Today;
+            if (firstSelectedRow?.Table?.Columns.Contains(PaymentOrderUdFields.PaymentDate) == true
+                && !firstSelectedRow.IsNull(PaymentOrderUdFields.PaymentDate))
+            {
+                paymentDate = Convert.ToDateTime(firstSelectedRow[PaymentOrderUdFields.PaymentDate]).Date;
+            }
 
             string safeReceiptNo = string.IsNullOrWhiteSpace(receiptNo)
                 ? "Talimat"
                 : receiptNo.Replace('\\', '_').Replace('/', '_').Replace(':', '_');
 
-            return $"Talimat_{safeReceiptNo}_{receiptDate:yyyyMMdd}.xlsx";
+            return $"Talimat_{safeReceiptNo}_{paymentDate:yyyy-MM-dd}.xlsx";
         }
 
         sealed class CurrentAccountInstructionInfo

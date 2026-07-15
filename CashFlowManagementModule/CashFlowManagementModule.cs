@@ -111,6 +111,7 @@ namespace Sentez.CashFlowManagementModule
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             EnsureGlobalFixedPaymentTypeLookup();
+            EnsureGlobalPosDeductionTypeLookup();
             EnsureBankAccountSubTypeLookup();
         }
 
@@ -125,7 +126,21 @@ namespace Sentez.CashFlowManagementModule
             PaymentOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             CollectionOrderTerminology.ApplyBankReceiptTypeDisplayNameAndRefreshMenus();
             EnsureGlobalFixedPaymentTypeLookup();
+            EnsureGlobalPosDeductionTypeLookup();
             EnsureBankAccountSubTypeLookup();
+        }
+
+        void EnsureGlobalPosDeductionTypeLookup()
+        {
+            if (ActiveSession?.LookupList == null)
+                return;
+
+            MetaPosDeductionTypeHelper.EnsureLookupList(ActiveSession.LookupList);
+            BankAccountPosHelper.EnsureStatementViewProfileLookup(ActiveSession.LookupList);
+            BankAccountPosHelper.EnsureCalculationBaseLookup(ActiveSession.LookupList);
+            PosCardClassificationHelper.EnsureLookups(ActiveSession.LookupList);
+            PosCardClassificationHelper.EnsureCurrentAccountReceiptItemMetaDataFields();
+            PosCardClassificationHelper.EnsureBankReceiptItemMetaDataFields();
         }
 
         void EnsureGlobalFixedPaymentTypeLookup()
@@ -149,6 +164,7 @@ namespace Sentez.CashFlowManagementModule
             ParameterFactory.StaticFactory.RegisterParameterClass(typeof(CrsParameters), (int)Modules.ExternalModule16);
             _container.Register<IBusinessObject, AgingReportResultsListBO>("AgingReportResultsListBO");
             _container.Register<IBusinessObject, MetaFixedPaymentTypeBO>("MetaFixedPaymentTypeBO");
+            _container.Register<IBusinessObject, MetaPosDeductionTypeBO>("MetaPosDeductionTypeBO");
         }
 
         private void RegisterBoExtensions()
@@ -174,6 +190,7 @@ namespace Sentez.CashFlowManagementModule
         {
             _container.Register<IReport, CurrentAccountDebitDistributionList>("CurrentAccountDebitDistributionList");
             _container.Register<IReport, MetaFixedPaymentTypeList>(MetaFixedPaymentTypeHelper.ListName);
+            _container.Register<IReport, MetaPosDeductionTypeList>(MetaPosDeductionTypeHelper.ListName);
         }
 
         private void RegisterViews()
@@ -186,6 +203,9 @@ namespace Sentez.CashFlowManagementModule
             ResMng.AddRes("CollectionOrderAgingImportPreviewViewW", "/CashFlowManagementModule;component/Views/CollectionOrderAgingImportPreviewView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("CurrentAccountFixedPaymentViewW", "/CashFlowManagementModule;component/Views/CurrentAccountFixedPaymentView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
             ResMng.AddRes("MetaFixedPaymentType", "/CashFlowManagementModule;component/Views/MetaFixedPaymentType.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("BankAccountPosViewW", "/CashFlowManagementModule;component/Views/BankAccountPosView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("MetaPosDeductionType", "/CashFlowManagementModule;component/Views/MetaPosDeductionType.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
+            ResMng.AddRes("PosStatementAnalysisViewW", "/CashFlowManagementModule;component/Views/PosStatementAnalysisView.xaml", ResSource.Resource, ResourceType.View, Modules.ExternalModule16, 0, 0);
         }
 
         private void RegisterPM()
@@ -196,6 +216,7 @@ namespace Sentez.CashFlowManagementModule
             _container.Register<IPMBase, CreditCardDetailAnalysisPM>("CreditCardDetailAnalysisPM");
             _container.Register<IPMBase, PaymentOrderAgingImportPreviewPM>("PaymentOrderAgingImportPreviewPM");
             _container.Register<IPMBase, CollectionOrderAgingImportPreviewPM>("CollectionOrderAgingImportPreviewPM");
+            _container.Register<IPMBase, PosStatementAnalysisPM>("PosStatementAnalysisPM");
         }
 
         private void RegisterRpr()

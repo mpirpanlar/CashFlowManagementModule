@@ -1,0 +1,183 @@
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:system="clr-namespace:System;assembly=mscorlib"
+    xmlns:lange="clr-namespace:Sentez.Common.Localization;assembly=LiveCore.Desktop"
+    xmlns:UtilCore="clr-namespace:Sentez.Common.Utilities;assembly=LiveCore"
+    xmlns:live="clr-namespace:LiveCore.Desktop.UI.Controls;assembly=LiveCore.Desktop"
+    x:Name="PosStatementAnalysisView"
+    Tag="PosStatementAnalysisViewW">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="50"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="5">
+            <live:LiveLabel VerticalAlignment="Center" Margin="0,0,6,0" Content="{lange:TranslateExtension Referans Tarihi}"/>
+            <live:LiveDateEdit Width="150" Margin="0,0,12,0" DateTime="{Binding ReferenceDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            <live:LiveButton MinWidth="100" Margin="0,0,6,0" Content="{lange:TranslateExtension Yenile}" Command="{Binding CmdList[RefreshPosStatementAnalysisCommand]}"/>
+            <live:LiveButton MinWidth="120" Margin="0,0,6,0" Content="{lange:TranslateExtension Özet Kaydet}" Command="{Binding CmdList[RecalculatePosSnapshotCommand]}"/>
+            <live:LiveButton MinWidth="140" Content="{lange:TranslateExtension Toplu Özet Kaydet}" Command="{Binding CmdList[BackfillPosSnapshotsCommand]}"/>
+        </StackPanel>
+
+        <live:LiveDockLayoutManager x:Name="posStatementDockLayoutManager"
+                                    Grid.Row="1"
+                                    EnableSaveLayout="True">
+            <live:LiveLayoutGroup Orientation="Vertical">
+                <live:LiveLayoutGroup ItemHeight="220">
+                    <live:LiveLayoutPanel Caption="{lange:TranslateExtension POS HESAPLARI}" ShowCaption="True" AllowFloat="True" AllowClose="False" AllowHide="True">
+                        <live:LiveGridControl x:Name="gridPosAccountList"
+                                              ShowBorder="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding AccountDataView}"
+                                              TableName="PosStatementAccountList">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="BankCode" Caption="Banka Kodu" Width="90" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="BankName" Caption="Banka Adı" Width="140" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="AccountCode" Caption="Hesap Kodu" Width="110" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="AccountName" Caption="Hesap Adı" Width="160" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodYear" Caption="Yıl" Width="60" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodMonth" Caption="Ay" Width="50" EditorType="ReadOnlyTextEditor" UdtType="UdtInt16"/>
+                                <UtilCore:ReceiptColumn ColumnName="TotalGross" Caption="Brüt" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="TotalDeduction" Caption="Kesinti" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="TotalRefund" Caption="İade" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="TotalNet" Caption="Net" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="CurrentMonthSettlementNet" Caption="Hesaba Geçiş Net" Width="130" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="WarningMessage" Caption="Uyarı" Width="220" EditorType="ReadOnlyTextEditor" UdtType="UdtTextLong"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+                <live:LiveLayoutGroup ItemHeight="*">
+                    <live:LiveLayoutPanel Caption="{lange:TranslateExtension GÜNLÜK HAREKET ÖZETİ}" ShowCaption="True" AllowFloat="True" AllowClose="False" AllowHide="True">
+                        <live:LiveGridControl x:Name="gridPosDaily"
+                                              ShowBorder="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding DailyDataView}"
+                                              TableName="PosStatementDaily">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="Day" Caption="Gün" Width="120" UsageType="Date" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy" MaskString="dd.MM.yyyy"/>
+                                <UtilCore:ReceiptColumn ColumnName="CollectionCount" Caption="Tahsilat Adedi" Width="100" EditorType="ReadOnlyTextEditor" UdtType="UdtInt32"/>
+                                <UtilCore:ReceiptColumn ColumnName="RefundCount" Caption="İade Adedi" Width="90" EditorType="ReadOnlyTextEditor" UdtType="UdtInt32"/>
+                                <UtilCore:ReceiptColumn ColumnName="GrossAmount" Caption="Brüt" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="MerchantFeeAmount" Caption="Üye İşyeri Ücreti" Width="120" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="RewardExpenseAmount" Caption="İşyeri Ödül Gideri" Width="120" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="ServiceCommissionAmount" Caption="Servis Komisyonu" Width="120" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="RefundAmount" Caption="İade" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="NetAmount" Caption="Net" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+                <live:LiveLayoutGroup ItemHeight="*">
+                    <live:LiveLayoutPanel Caption="{lange:TranslateExtension KESİNTİ DÖKÜMÜ}" ShowCaption="True" AllowFloat="True" AllowClose="False" AllowHide="True">
+                        <live:LiveGridControl x:Name="gridPosDeduction"
+                                              ShowBorder="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding DeductionDataView}"
+                                              TableName="PosStatementDeduction">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="DeductionTypeCode" Caption="Kod" Width="90" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="DeductionTypeName" Caption="Kesinti Türü" Width="220" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="Amount" Caption="Tutar" Width="120" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+                <live:LiveLayoutGroup ItemHeight="*">
+                    <live:LiveLayoutPanel Caption="{lange:TranslateExtension HESABA GEÇİŞLER}" ShowCaption="True" AllowFloat="True" AllowClose="False" AllowHide="True">
+                        <live:LiveGridControl x:Name="gridPosSettlement"
+                                              ShowBorder="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding SettlementDataView}"
+                                              TableName="PosStatementSettlement">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="SettlementDate" Caption="Hesaba Geçiş Tarihi" Width="140" UsageType="Date" EditorType="ReadOnlyTextEditor" UdtType="UdtDate" FormatString="dd.MM.yyyy" MaskString="dd.MM.yyyy"/>
+                                <UtilCore:ReceiptColumn ColumnName="SettlementKindName" Caption="Tür" Width="180" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="GrossAmount" Caption="Brüt" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="DeductionAmount" Caption="Kesinti" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="RefundAmount" Caption="İade" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="NetAmount" Caption="Net" Width="110" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+                <live:LiveLayoutGroup ItemHeight="*">
+                    <live:LiveLayoutPanel Caption="{lange:TranslateExtension GELECEK AYLAR ALACAKLARI}" ShowCaption="True" AllowFloat="True" AllowClose="False" AllowHide="True">
+                        <live:LiveGridControl x:Name="gridPosFutureReceivable"
+                                              ShowBorder="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding FutureReceivableDataView}"
+                                              TableName="PosStatementFutureReceivable">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="PeriodLabel" Caption="Dönem" Width="90" EditorType="ReadOnlyTextEditor" UdtType="UdtCode"/>
+                                <UtilCore:ReceiptColumn ColumnName="GrossAmount" Caption="Brüt" Width="120" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="NetAmount" Caption="Net" Width="120" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+                <live:LiveLayoutGroup ItemHeight="180">
+                    <live:LiveLayoutPanel Caption="{lange:TranslateExtension YÖNETİCİ ÖZETİ}" ShowCaption="True" AllowFloat="True" AllowClose="False" AllowHide="True">
+                        <live:LiveGridControl x:Name="gridPosSummary"
+                                              ShowBorder="False"
+                                              SelectionMode="Row"
+                                              AllowNewRow="False"
+                                              AllowDeleteRow="False"
+                                              EnableSaveLayout="True"
+                                              ItemsSource="{Binding SummaryDataView}"
+                                              TableName="PosStatementSummary">
+                            <live:LiveGridControl.View>
+                                <live:ReceiptView/>
+                            </live:LiveGridControl.View>
+                            <live:LiveGridControl.ColumnDefinitions>
+                                <UtilCore:ReceiptColumn ColumnName="MetricName" Caption="Gösterge" Width="260" EditorType="ReadOnlyTextEditor" UdtType="UdtName"/>
+                                <UtilCore:ReceiptColumn ColumnName="MetricValue" Caption="Tutar" Width="140" UsageType="Amount" EditorType="ReadOnlyTextEditor" UdtType="UdtAmount"/>
+                                <UtilCore:ReceiptColumn ColumnName="MetricText" Caption="Açıklama" Width="320" EditorType="ReadOnlyTextEditor" UdtType="UdtTextLong"/>
+                            </live:LiveGridControl.ColumnDefinitions>
+                        </live:LiveGridControl>
+                    </live:LiveLayoutPanel>
+                </live:LiveLayoutGroup>
+            </live:LiveLayoutGroup>
+        </live:LiveDockLayoutManager>
+
+        <TextBlock Grid.Row="2" Margin="8,4,8,0" TextWrapping="Wrap" Text="{Binding ReconciliationMessage}"/>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+            <live:LiveButton MinWidth="100" Margin="2" Content="{lange:TranslateExtension Yenile}" Command="{Binding CmdList[RefreshPosStatementAnalysisCommand]}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

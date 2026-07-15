@@ -14,8 +14,14 @@
 					<MenuItem CommandName="CmdGeneralOpen" Caption="Kredi Kartı Detay Analizi" WebLink="" Visible="true">
 						<CommandParam viewname="CreditCardDetailAnalysisViewW" pmname="CreditCardDetailAnalysisPM" modulename="FinanceModule" secname="FinanceSecurityItems.CurrentAccount" subsecname="CurrentAccountSubItems.None"/>
 					</MenuItem>
+					<MenuItem CommandName="CmdGeneralOpen" Caption="Pos Ekstre Analizi" WebLink="" Visible="true">
+						<CommandParam viewname="PosStatementAnalysisViewW" pmname="PosStatementAnalysisPM" modulename="FinanceModule" secname="CashFlowManagementModuleSecurityItems.PosStatementAnalysis" subsecname="CashFlowManagementModuleSecuritySubItems.None"/>
+					</MenuItem>
 					<MenuItem CommandName="CmdGeneralOpen" Caption="Tekrar Eden Ödeme Tipleri" WebLink="" Visible="true">
 						<CommandParam viewname="MetaFixedPaymentType" boname="MetaFixedPaymentTypeBO" pmparam="MetaFixedPaymentTypeListEditScreen,BOMetaContext" logicalmoduleid="2" modulename="ExternalModule16" secname="CashFlowManagementModuleSecurityItems.FixedPaymentType" subsecname="CashFlowManagementModuleSecuritySubItems.None"/>
+					</MenuItem>
+					<MenuItem CommandName="CmdGeneralOpen" Caption="Pos Kesinti Türleri" WebLink="" Visible="true">
+						<CommandParam viewname="MetaPosDeductionType" boname="MetaPosDeductionTypeBO" pmparam="MetaPosDeductionTypeListEditScreen,BOMetaContext" logicalmoduleid="2" modulename="ExternalModule16" secname="CashFlowManagementModuleSecurityItems.PosDeductionType" subsecname="CashFlowManagementModuleSecuritySubItems.None"/>
 					</MenuItem>
 				</MenuItem>
 			</MenuItem>

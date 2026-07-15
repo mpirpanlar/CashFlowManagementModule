@@ -241,7 +241,7 @@ namespace CashFlowManagementModule.BoExtensions
 
             foreach (DataRow itemRow in businessObject.Data.Tables["Erp_BankReceiptItem"].Rows)
             {
-                if (itemRow.RowState == DataRowState.Deleted) continue;
+                if (!IsUsableDataRow(itemRow)) continue;
                 ResetApprovalFields(itemRow);
             }
         }
@@ -409,7 +409,7 @@ namespace CashFlowManagementModule.BoExtensions
 
             foreach (DataRow itemRow in itemTable.Rows)
             {
-                if (itemRow.RowState == DataRowState.Deleted) continue;
+                if (!IsUsableDataRow(itemRow)) continue;
                 snapshot[itemRow] = itemRow.IsNull(CollectionOrderUdFields.PaymentDate)
                     ? DBNull.Value
                     : itemRow[CollectionOrderUdFields.PaymentDate];

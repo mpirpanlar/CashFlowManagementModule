@@ -120,7 +120,8 @@ namespace Sentez.CashFlowManagementModule
 
                         expText = PromptApprovalExplanationIfRequired(expText);
 
-                        if (!BankReceiptPaymentOrderHelper.CanToggleHeaderApproval(bankReceiptBo.CurrentRow.Row))
+                        if (!DataRowSafety.TryGetCurrentRow(bankReceiptBo, out DataRow headerRow)
+                            || !BankReceiptPaymentOrderHelper.CanToggleHeaderApproval(headerRow))
                         {
                             LiveWaitIndicator.Instance.Close();
                             throw new LiveCommandItemException(PaymentOrderTerminology.HeaderApprovalDeniedMessage);
@@ -129,7 +130,7 @@ namespace Sentez.CashFlowManagementModule
                         byte newApproved = 0;
                         byte.TryParse(obj.Tag?.ToString(), out newApproved);
                         BankReceiptPaymentOrderHelper.ApplyHeaderApprovalChange(
-                            bankReceiptBo.CurrentRow.Row,
+                            headerRow,
                             newApproved,
                             expText);
                     }

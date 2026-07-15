@@ -29,10 +29,9 @@ namespace CashFlowManagementModule.BoExtensions
 
         public void RefreshPeriodPaymentSummary()
         {
-            if (BusinessObject?.Data == null || BusinessObject.CurrentRow?.Row == null)
+            if (BusinessObject?.Data == null || !IsUsableCurrentRow(out DataRow bankAccountRow))
                 return;
 
-            var bankAccountRow = BusinessObject.CurrentRow.Row;
             if (bankAccountRow.IsNull("ForCreditCard") || !Convert.ToBoolean(bankAccountRow["ForCreditCard"]))
                 return;
 
@@ -138,8 +137,8 @@ namespace CashFlowManagementModule.BoExtensions
             {
                 _suppressEvents = true;
 
-                if (BusinessObject.CurrentRow?.Row != null)
-                    CreditCardPaymentDueDaysSyncService.RecalculateHeaderDays(BusinessObject.CurrentRow.Row);
+                if (IsUsableCurrentRow(out DataRow headerRow))
+                    CreditCardPaymentDueDaysSyncService.RecalculateHeaderDays(headerRow);
 
                 if (BusinessObject.Data.Tables.Contains(BankAccountCreditCardHelper.PeriodTableName))
                     CreditCardPaymentDueDaysSyncService.RecalculateAllPeriodRows(
@@ -149,6 +148,15 @@ namespace CashFlowManagementModule.BoExtensions
             {
                 _suppressEvents = false;
             }
+        }
+
+        bool IsUsableCurrentRow(out DataRow row)
+        {
+            row = BusinessObject?.CurrentRow?.Row;
+            return row != null
+                && row.Table != null
+                && row.RowState != DataRowState.Deleted
+                && row.RowState != DataRowState.Detached;
         }
 
         void ExecuteSync(Action syncAction)

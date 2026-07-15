@@ -113,6 +113,29 @@ namespace CashFlowManagementModule.Services
             return false;
         }
 
+        /// <summary>
+        /// Talimat export doğrulaması için satır banka hesabını döndürür.
+        /// Satırda BankAccountId doluysa doğrudan kullanılır; aksi halde kod üzerinden çözülür.
+        /// </summary>
+        public static bool TryGetRowBankAccountIdForValidation(LiveSession session, DataRow itemRow, out long bankAccountId)
+        {
+            bankAccountId = 0;
+            if (itemRow == null || itemRow.Table == null)
+                return false;
+
+            if (itemRow.Table.Columns.Contains("BankAccountId") && !itemRow.IsNull("BankAccountId"))
+            {
+                long rawBankAccountId = Convert.ToInt64(itemRow["BankAccountId"]);
+                if (rawBankAccountId > 0)
+                {
+                    bankAccountId = rawBankAccountId;
+                    return true;
+                }
+            }
+
+            return TryResolveBankAccountIdFromItemRow(session, itemRow, out bankAccountId) && bankAccountId > 0;
+        }
+
         public static string LoadBankAccountIbanNo(LiveSession session, long bankAccountId)
         {
             DataRow bankRow = LoadBankAccountInstructionRow(session, bankAccountId);

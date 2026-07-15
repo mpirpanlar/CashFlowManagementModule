@@ -10,6 +10,8 @@ namespace Sentez.CashFlowManagementModule
         {
             RegisterCurrentAccountReceiptBoHooks();
             BusinessObjectBase.AddCustomExtension("CurrentAccountReceiptBO", typeof(CurrentAccountReceiptCreditCardExtension));
+            BusinessObjectBase.AddCustomExtension("CurrentAccountReceiptBO", typeof(CurrentAccountReceiptPosMerchantExtension));
+            BusinessObjectBase.AddCustomExtension("CurrentAccountReceiptBO", typeof(CurrentAccountReceiptPosTariffExtension));
             RegisterCurrentAccountReceiptPmHooks();
         }
     }

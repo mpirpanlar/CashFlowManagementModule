@@ -44,8 +44,10 @@ namespace Sentez.CashFlowManagementModule
 
         bool IsOwnCreditCardReceiptContext()
         {
-            DataRow headerRow = _currentAccountReceiptPm?.ActiveBO?.CurrentRow?.Row;
-            if (headerRow == null || headerRow.IsNull("ReceiptType")) return false;
+            if (!DataRowSafety.TryGetCurrentRow(_currentAccountReceiptPm?.ActiveBO, out DataRow headerRow)
+                || headerRow.IsNull("ReceiptType"))
+                return false;
+
             short receiptType = Convert.ToInt16(headerRow["ReceiptType"]);
             return receiptType == 51 || receiptType == 50;
         }
@@ -55,6 +57,7 @@ namespace Sentez.CashFlowManagementModule
             _currentAccountReceiptPm = pm as CurrentAccountReceiptPM;
             if (_currentAccountReceiptPm?.ActiveBO == null) return;
 
+            PosCardClassificationHelper.EnsureLookups(_currentAccountReceiptPm.Lists ?? ActiveSession?.LookupList);
             _currentAccountReceiptPm.ActiveBO.ColumnChanged += CurrentAccountReceiptPm_ActiveBO_ColumnChanged;
             _currentAccountReceiptPm.ActiveBO.BeforePost += CurrentAccountReceiptPm_ActiveBO_BeforePost;
             _currentAccountReceiptPm.ActiveBO.AfterGet += CurrentAccountReceiptPm_ActiveBO_AfterGet;
@@ -175,7 +178,7 @@ namespace Sentez.CashFlowManagementModule
             DataTable itemTable = _currentAccountReceiptPm.ActiveBO.Data.Tables["Erp_CurrentAccountReceiptItem"];
             if (itemTable == null) return;
 
-            foreach (DataRow itemRow in itemTable.Rows.Cast<DataRow>().Where(r => r.RowState != DataRowState.Deleted))
+            foreach (DataRow itemRow in itemTable.Rows.Cast<DataRow>().Where(DataRowSafety.IsUsable))
                 CurrentAccountReceiptCreditCardHelper.NormalizeInstallmentCount(itemRow);
         }
 
@@ -188,7 +191,7 @@ namespace Sentez.CashFlowManagementModule
             for (int listIndex = 0; listIndex < dataView.Count; listIndex++)
             {
                 DataRowView rowView = dataView[listIndex];
-                if (rowView?.Row == null || rowView.Row.RowState == DataRowState.Deleted)
+                if (rowView?.Row == null || DataRowSafety.IsDeletedOrDetached(rowView.Row))
                     continue;
 
                 SyncCreditCardInstallmentFieldFromGrid(gridDetail, listIndex, rowView, CurrentAccountReceiptCreditCardHelper.FieldInstallmentCount);
@@ -208,7 +211,7 @@ namespace Sentez.CashFlowManagementModule
         void RefreshCurrentAccountCreditCardValidationMessage(DataRow itemRow)
         {
             if (_currentAccountReceiptPm == null || itemRow == null || !IsOwnCreditCardReceiptContext()) return;
-            if (itemRow.IsNull("BankAccountId")) return;
+            if (!DataRowSafety.IsUsable(itemRow) || itemRow.IsNull("BankAccountId")) return;
 
             BusinessObjectBase businessObject = _currentAccountReceiptPm.ActiveBO as BusinessObjectBase;
             if (businessObject?.Connection == null) return;
@@ -216,7 +219,7 @@ namespace Sentez.CashFlowManagementModule
             LiveSession session = SysMng.Instance.getSession() as LiveSession;
             int companyId = session?.ActiveCompany?.RecId ?? 0;
 
-            DataRow headerRow = businessObject.CurrentRow?.Row;
+            DataRowSafety.TryGetCurrentRow(businessObject, out DataRow headerRow);
             CreditCardPaymentLineInput line = CreditCardPaymentLineInput.FromCurrentAccountReceiptItem(itemRow, headerRow);
             CreditCardPaymentValidationResult result = CreditCardPaymentWarningService.ValidateLinePreview(
                 businessObject.Provider,
@@ -232,12 +235,13 @@ namespace Sentez.CashFlowManagementModule
             var lines = new List<CreditCardPaymentLineInput>();
             if (_currentAccountReceiptPm?.ActiveBO?.Data == null) return lines;
 
-            DataRow headerRow = _currentAccountReceiptPm.ActiveBO.CurrentRow?.Row;
+            DataRowSafety.TryGetCurrentRow(_currentAccountReceiptPm.ActiveBO, out DataRow headerRow);
             DataTable itemTable = _currentAccountReceiptPm.ActiveBO.Data.Tables["Erp_CurrentAccountReceiptItem"];
             if (itemTable == null) return lines;
 
             foreach (DataRow itemRow in itemTable.Rows.Cast<DataRow>()
-                         .Where(r => r.RowState != DataRowState.Deleted && !r.IsNull("BankAccountId")))
+                         .Where(DataRowSafety.IsUsable)
+                         .Where(r => !r.IsNull("BankAccountId")))
             {
                 CreditCardPaymentLineInput line = CreditCardPaymentLineInput.FromCurrentAccountReceiptItem(itemRow, headerRow);
                 if (line != null && line.BankAccountId > 0)
@@ -322,6 +326,20 @@ namespace Sentez.CashFlowManagementModule
 
             EnsureCurrentAccountColumnVisible(columns, CurrentAccountReceiptCreditCardHelper.FieldInstallmentCount, SLanguage.GetString("Taksit Sayısı"), EditorType.TextEditor, 80);
             EnsureCurrentAccountColumnVisible(columns, CurrentAccountReceiptCreditCardHelper.FieldInstalmentStartDate, SLanguage.GetString("Taksit Başlangıç Tarihi"), EditorType.DateEditor, 110);
+            EnsureCurrentAccountColumnVisible(
+                columns,
+                PosCardClassificationHelper.FieldCardSource,
+                SLanguage.GetString("Kart Kaynağı"),
+                EditorType.ComboBox,
+                150,
+                PosCardClassificationHelper.CardSourceLookupName);
+            EnsureCurrentAccountColumnVisible(
+                columns,
+                PosCardClassificationHelper.FieldCardCategory,
+                SLanguage.GetString("Kart Kategorisi"),
+                EditorType.ComboBox,
+                170,
+                PosCardClassificationHelper.CardCategoryLookupName);
 
             HookCreditCardInstallmentGridSync();
         }
@@ -366,25 +384,39 @@ namespace Sentez.CashFlowManagementModule
             string columnName,
             string caption,
             EditorType editorType,
-            int width)
+            int width,
+            string comboLookup = null)
         {
             ReceiptColumn column = columns.FirstOrDefault(c => c.ColumnName == columnName);
             if (column == null)
             {
-                columns.Add(new ReceiptColumn
+                column = new ReceiptColumn
                 {
                     ColumnName = columnName,
                     Caption = caption,
                     EditorType = editorType,
                     Width = width,
                     IsVisible = true
-                });
+                };
+                if (!string.IsNullOrEmpty(comboLookup))
+                {
+                    column.ComboLookup = comboLookup;
+                    column.ComboDisplayMember = "Display";
+                    column.ComboValueMember = "Value";
+                }
+                columns.Add(column);
                 return;
             }
 
             column.IsVisible = true;
             if (string.IsNullOrWhiteSpace(column.Caption))
                 column.Caption = caption;
+            if (!string.IsNullOrEmpty(comboLookup))
+            {
+                column.ComboLookup = comboLookup;
+                column.ComboDisplayMember = "Display";
+                column.ComboValueMember = "Value";
+            }
         }
     }
 }

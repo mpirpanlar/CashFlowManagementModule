@@ -332,7 +332,7 @@ namespace CashFlowManagementModule.BoExtensions
             {
                 foreach (DataRow itemRow in BusinessObject.Data.Tables["Erp_BankReceiptItem"].Rows)
                 {
-                    if (itemRow.RowState == DataRowState.Deleted) continue;
+                    if (itemRow.RowState == DataRowState.Deleted || itemRow.RowState == DataRowState.Detached) continue;
                     if (BankReceiptCollectionOrderHelper.IsApprovedValueChanged(itemRow)
                         && BankReceiptCollectionOrderHelper.GetPersistedApprovedValue(itemRow) == 1
                         && BankReceiptCollectionOrderHelper.GetApprovedValue(itemRow) == 0

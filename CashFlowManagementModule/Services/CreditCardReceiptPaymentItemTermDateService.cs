@@ -36,7 +36,7 @@ namespace CashFlowManagementModule.Services
             DataTable itemTable = businessObject.Data.Tables["Erp_CurrentAccountReceiptItem"];
 
             foreach (DataRow itemRow in itemTable.Rows.Cast<DataRow>()
-                         .Where(r => r.RowState != DataRowState.Deleted))
+                         .Where(r => r.RowState != DataRowState.Deleted && r.RowState != DataRowState.Detached))
             {
                 ReviseTermDatesForItem(context, itemRow, headerRow);
             }

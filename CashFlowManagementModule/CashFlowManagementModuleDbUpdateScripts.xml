@@ -387,9 +387,232 @@
       GO
     </Script>
   </Updates>
+  <Updates>
+    <Version>
+      <Build>8</Build>
+      <Major>1</Major>
+      <Minor>0</Minor>
+      <Revision>-1</Revision>
+    </Version>
+    <Script>
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Meta_PosDeductionType]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Meta_PosDeductionType] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[PosDeductionTypeCode] [dbo].[UdtCode] NULL
+      ,[PosDeductionTypeName] [dbo].[UdtExpHuge] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Meta_PosDeductionType] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_PosDeductionType]') AND name = N'Meta_PosDeductionType_IX0')
+      CREATE UNIQUE INDEX [Meta_PosDeductionType_IX0] ON [Meta_PosDeductionType] ([PosDeductionTypeCode] ASC)
+      GO
+
+      IF NOT EXISTS (SELECT 1 FROM [Meta_PosDeductionType] WHERE [PosDeductionTypeCode] = 'UYEIS')
+      INSERT INTO [Meta_PosDeductionType] ([PosDeductionTypeCode],[PosDeductionTypeName],[InUse],[IsDeleted]) VALUES ('UYEIS', N'Üye İşyeri Ücreti', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_PosDeductionType] WHERE [PosDeductionTypeCode] = 'ODULG')
+      INSERT INTO [Meta_PosDeductionType] ([PosDeductionTypeCode],[PosDeductionTypeName],[InUse],[IsDeleted]) VALUES ('ODULG', N'İşyeri Ödül Gideri', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_PosDeductionType] WHERE [PosDeductionTypeCode] = 'SERVK')
+      INSERT INTO [Meta_PosDeductionType] ([PosDeductionTypeCode],[PosDeductionTypeName],[InUse],[IsDeleted]) VALUES ('SERVK', N'Servis Komisyonu', 1, 0)
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosDeductionProfile] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[CompanyId] [dbo].[UdtInt32] NULL
+      ,[BankAccountId] [dbo].[UdtInt32] NULL
+      ,[DeductionTypeId] [dbo].[UdtInt64] NULL
+      ,[RatePercent] [dbo].[UdtAmount] NULL
+      ,[FixedAmount] [dbo].[UdtAmount] NULL
+      ,[CalculationBase] [dbo].[UdtInt8] NULL
+      ,[CardCategory] [dbo].[UdtInt16] NULL
+      ,[InstallmentCount] [dbo].[UdtInt16] NULL
+      ,[BlockDays] [dbo].[UdtInt16] NULL
+      ,[ValidFrom] [dbo].[UdtDate] NULL
+      ,[ValidTo] [dbo].[UdtDate] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosDeductionProfile] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_Company] FOREIGN KEY ([CompanyId])
+      REFERENCES [Erp_Company] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] CHECK CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_Company]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount] FOREIGN KEY ([BankAccountId])
+      REFERENCES [Erp_BankAccount] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] CHECK CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType] FOREIGN KEY ([DeductionTypeId])
+      REFERENCES [Meta_PosDeductionType] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] CHECK CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodSummary] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[CompanyId] [dbo].[UdtInt32] NULL
+      ,[BankAccountId] [dbo].[UdtInt32] NULL
+      ,[PeriodYear] [dbo].[UdtInt16] NULL
+      ,[PeriodMonth] [dbo].[UdtInt16] NULL
+      ,[TotalGross] [dbo].[UdtAmount] NULL
+      ,[TotalDeduction] [dbo].[UdtAmount] NULL
+      ,[TotalRefund] [dbo].[UdtAmount] NULL
+      ,[TotalNet] [dbo].[UdtAmount] NULL
+      ,[CurrentMonthSettlementNet] [dbo].[UdtAmount] NULL
+      ,[NextMonthReceivableNet] [dbo].[UdtAmount] NULL
+      ,[FutureReceivableNet] [dbo].[UdtAmount] NULL
+      ,[HasDeductionProfile] [dbo].[UdtBool] NULL
+      ,[WarningMessage] [dbo].[UdtTextLong] NULL
+      ,[CalculatedAt] [dbo].[UdtDateTime] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodSummary] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_Company] FOREIGN KEY ([CompanyId])
+      REFERENCES [Erp_Company] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_Company]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount] FOREIGN KEY ([BankAccountId])
+      REFERENCES [Erp_BankAccount] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodDaily]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodDaily] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[SummaryId] [dbo].[UdtInt64] NULL
+      ,[Day] [dbo].[UdtDate] NULL
+      ,[CollectionCount] [dbo].[UdtInt32] NULL
+      ,[RefundCount] [dbo].[UdtInt32] NULL
+      ,[GrossAmount] [dbo].[UdtAmount] NULL
+      ,[MerchantFeeAmount] [dbo].[UdtAmount] NULL
+      ,[RewardExpenseAmount] [dbo].[UdtAmount] NULL
+      ,[ServiceCommissionAmount] [dbo].[UdtAmount] NULL
+      ,[RefundAmount] [dbo].[UdtAmount] NULL
+      ,[NetAmount] [dbo].[UdtAmount] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodDaily] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodDaily]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodDaily] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary] FOREIGN KEY ([SummaryId])
+      REFERENCES [Erp_BankAccountPosPeriodSummary] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodDaily]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodDaily] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSettlement]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodSettlement] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[SummaryId] [dbo].[UdtInt64] NULL
+      ,[SettlementDate] [dbo].[UdtDate] NULL
+      ,[SettlementKind] [dbo].[UdtInt8] NULL
+      ,[GrossAmount] [dbo].[UdtAmount] NULL
+      ,[DeductionAmount] [dbo].[UdtAmount] NULL
+      ,[RefundAmount] [dbo].[UdtAmount] NULL
+      ,[NetAmount] [dbo].[UdtAmount] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodSettlement] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSettlement]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSettlement] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary] FOREIGN KEY ([SummaryId])
+      REFERENCES [Erp_BankAccountPosPeriodSummary] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSettlement]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSettlement] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodFutureReceivable]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodFutureReceivable] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[SummaryId] [dbo].[UdtInt64] NULL
+      ,[PeriodYear] [dbo].[UdtInt16] NULL
+      ,[PeriodMonth] [dbo].[UdtInt16] NULL
+      ,[GrossAmount] [dbo].[UdtAmount] NULL
+      ,[NetAmount] [dbo].[UdtAmount] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodFutureReceivable] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodFutureReceivable]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodFutureReceivable] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary] FOREIGN KEY ([SummaryId])
+      REFERENCES [Erp_BankAccountPosPeriodSummary] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodFutureReceivable]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodFutureReceivable] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary]
+      GO
+    </Script>
+  </Updates>
   <CreateScript>
     <DbVersion>
-      <Build>6</Build>
+      <Build>8</Build>
       <Major>1</Major>
       <Minor>0</Minor>
       <Revision>-1</Revision>
@@ -705,6 +928,235 @@
 
       IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankReceiptItem_Meta_FixedPaymentType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankReceiptItem]'))
       ALTER TABLE [Erp_BankReceiptItem] CHECK CONSTRAINT [FK_Erp_BankReceiptItem_Meta_FixedPaymentType]
+      GO
+
+      IF NOT EXISTS(SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME ='Erp_BankReceiptItem' AND COLUMN_NAME='AccessCode')
+      ALTER TABLE [Erp_BankReceiptItem] ADD [AccessCode] [dbo].[UdtSpecial] NULL
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Meta_PosDeductionType]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Meta_PosDeductionType] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[PosDeductionTypeCode] [dbo].[UdtCode] NULL
+      ,[PosDeductionTypeName] [dbo].[UdtExpHuge] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Meta_PosDeductionType] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[Meta_PosDeductionType]') AND name = N'Meta_PosDeductionType_IX0')
+      CREATE UNIQUE INDEX [Meta_PosDeductionType_IX0] ON [Meta_PosDeductionType] ([PosDeductionTypeCode] ASC)
+      GO
+
+      IF NOT EXISTS (SELECT 1 FROM [Meta_PosDeductionType] WHERE [PosDeductionTypeCode] = 'UYEIS')
+      INSERT INTO [Meta_PosDeductionType] ([PosDeductionTypeCode],[PosDeductionTypeName],[InUse],[IsDeleted]) VALUES ('UYEIS', N'Üye İşyeri Ücreti', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_PosDeductionType] WHERE [PosDeductionTypeCode] = 'ODULG')
+      INSERT INTO [Meta_PosDeductionType] ([PosDeductionTypeCode],[PosDeductionTypeName],[InUse],[IsDeleted]) VALUES ('ODULG', N'İşyeri Ödül Gideri', 1, 0)
+      GO
+      IF NOT EXISTS (SELECT 1 FROM [Meta_PosDeductionType] WHERE [PosDeductionTypeCode] = 'SERVK')
+      INSERT INTO [Meta_PosDeductionType] ([PosDeductionTypeCode],[PosDeductionTypeName],[InUse],[IsDeleted]) VALUES ('SERVK', N'Servis Komisyonu', 1, 0)
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosDeductionProfile] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[CompanyId] [dbo].[UdtInt32] NULL
+      ,[BankAccountId] [dbo].[UdtInt32] NULL
+      ,[DeductionTypeId] [dbo].[UdtInt64] NULL
+      ,[RatePercent] [dbo].[UdtAmount] NULL
+      ,[FixedAmount] [dbo].[UdtAmount] NULL
+      ,[CalculationBase] [dbo].[UdtInt8] NULL
+      ,[CardCategory] [dbo].[UdtInt16] NULL
+      ,[InstallmentCount] [dbo].[UdtInt16] NULL
+      ,[BlockDays] [dbo].[UdtInt16] NULL
+      ,[ValidFrom] [dbo].[UdtDate] NULL
+      ,[ValidTo] [dbo].[UdtDate] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosDeductionProfile] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_Company] FOREIGN KEY ([CompanyId])
+      REFERENCES [Erp_Company] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] CHECK CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_Company]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount] FOREIGN KEY ([BankAccountId])
+      REFERENCES [Erp_BankAccount] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] CHECK CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Erp_BankAccount]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType] FOREIGN KEY ([DeductionTypeId])
+      REFERENCES [Meta_PosDeductionType] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]'))
+      ALTER TABLE [Erp_BankAccountPosDeductionProfile] CHECK CONSTRAINT [FK_Erp_BankAccountPosDeductionProfile_Meta_PosDeductionType]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodSummary] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[CompanyId] [dbo].[UdtInt32] NULL
+      ,[BankAccountId] [dbo].[UdtInt32] NULL
+      ,[PeriodYear] [dbo].[UdtInt16] NULL
+      ,[PeriodMonth] [dbo].[UdtInt16] NULL
+      ,[TotalGross] [dbo].[UdtAmount] NULL
+      ,[TotalDeduction] [dbo].[UdtAmount] NULL
+      ,[TotalRefund] [dbo].[UdtAmount] NULL
+      ,[TotalNet] [dbo].[UdtAmount] NULL
+      ,[CurrentMonthSettlementNet] [dbo].[UdtAmount] NULL
+      ,[NextMonthReceivableNet] [dbo].[UdtAmount] NULL
+      ,[FutureReceivableNet] [dbo].[UdtAmount] NULL
+      ,[HasDeductionProfile] [dbo].[UdtBool] NULL
+      ,[WarningMessage] [dbo].[UdtTextLong] NULL
+      ,[CalculatedAt] [dbo].[UdtDateTime] NULL
+      ,[InUse] [dbo].[UdtBool] NULL
+      ,[InsertedAt] [dbo].[UdtDateTime] NULL
+      ,[InsertedBy] [dbo].[UdtInt32] NULL
+      ,[UpdatedAt] [dbo].[UdtDateTime] NULL
+      ,[UpdatedBy] [dbo].[UdtInt32] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,[DeletedAt] [dbo].[UdtDateTime] NULL
+      ,[DeletedBy] [dbo].[UdtInt32] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodSummary] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_Company] FOREIGN KEY ([CompanyId])
+      REFERENCES [Erp_Company] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_Company]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_Company]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount] FOREIGN KEY ([BankAccountId])
+      REFERENCES [Erp_BankAccount] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSummary]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSummary] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodSummary_Erp_BankAccount]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodDaily]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodDaily] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[SummaryId] [dbo].[UdtInt64] NULL
+      ,[Day] [dbo].[UdtDate] NULL
+      ,[CollectionCount] [dbo].[UdtInt32] NULL
+      ,[RefundCount] [dbo].[UdtInt32] NULL
+      ,[GrossAmount] [dbo].[UdtAmount] NULL
+      ,[MerchantFeeAmount] [dbo].[UdtAmount] NULL
+      ,[RewardExpenseAmount] [dbo].[UdtAmount] NULL
+      ,[ServiceCommissionAmount] [dbo].[UdtAmount] NULL
+      ,[RefundAmount] [dbo].[UdtAmount] NULL
+      ,[NetAmount] [dbo].[UdtAmount] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodDaily] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodDaily]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodDaily] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary] FOREIGN KEY ([SummaryId])
+      REFERENCES [Erp_BankAccountPosPeriodSummary] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodDaily]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodDaily] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodDaily_Erp_BankAccountPosPeriodSummary]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSettlement]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodSettlement] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[SummaryId] [dbo].[UdtInt64] NULL
+      ,[SettlementDate] [dbo].[UdtDate] NULL
+      ,[SettlementKind] [dbo].[UdtInt8] NULL
+      ,[GrossAmount] [dbo].[UdtAmount] NULL
+      ,[DeductionAmount] [dbo].[UdtAmount] NULL
+      ,[RefundAmount] [dbo].[UdtAmount] NULL
+      ,[NetAmount] [dbo].[UdtAmount] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodSettlement] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSettlement]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSettlement] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary] FOREIGN KEY ([SummaryId])
+      REFERENCES [Erp_BankAccountPosPeriodSummary] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodSettlement]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodSettlement] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodSettlement_Erp_BankAccountPosPeriodSummary]
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodFutureReceivable]') AND type IN (N'U'))
+      BEGIN
+      CREATE TABLE [Erp_BankAccountPosPeriodFutureReceivable] (
+      [RecId] [dbo].[UdtRecId] IDENTITY (1, 1) NOT NULL
+      ,[SummaryId] [dbo].[UdtInt64] NULL
+      ,[PeriodYear] [dbo].[UdtInt16] NULL
+      ,[PeriodMonth] [dbo].[UdtInt16] NULL
+      ,[GrossAmount] [dbo].[UdtAmount] NULL
+      ,[NetAmount] [dbo].[UdtAmount] NULL
+      ,[IsDeleted] [dbo].[UdtBool] NULL
+      ,CONSTRAINT [PK_Erp_BankAccountPosPeriodFutureReceivable] PRIMARY KEY CLUSTERED ([RecId] ASC)
+      WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+      ) ON [PRIMARY]
+      END
+      GO
+
+      IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodFutureReceivable]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodFutureReceivable] WITH CHECK ADD CONSTRAINT [FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary] FOREIGN KEY ([SummaryId])
+      REFERENCES [Erp_BankAccountPosPeriodSummary] ([RecId])
+      GO
+      IF EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary]') AND parent_object_id = OBJECT_ID(N'[Erp_BankAccountPosPeriodFutureReceivable]'))
+      ALTER TABLE [Erp_BankAccountPosPeriodFutureReceivable] CHECK CONSTRAINT [FK_Erp_BankAccountPosPeriodFutureReceivable_Erp_BankAccountPosPeriodSummary]
+      GO
+
+      IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]') AND type IN (N'U'))
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]') AND name = N'CardCategory')
+          ALTER TABLE [Erp_BankAccountPosDeductionProfile] ADD [CardCategory] [dbo].[UdtInt16] NULL
+        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]') AND name = N'InstallmentCount')
+          ALTER TABLE [Erp_BankAccountPosDeductionProfile] ADD [InstallmentCount] [dbo].[UdtInt16] NULL
+        IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'[Erp_BankAccountPosDeductionProfile]') AND name = N'BlockDays')
+          ALTER TABLE [Erp_BankAccountPosDeductionProfile] ADD [BlockDays] [dbo].[UdtInt16] NULL
+      END
       GO
     </CreateScript>
   </CreateScript>

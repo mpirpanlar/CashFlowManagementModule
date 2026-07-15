@@ -21,7 +21,10 @@
         CollectionOrderLineApproval = 7,
         CollectionOrderHeaderApproval = 8,
         FixedCollectionImport = 9,
-        CurrentAccountCollectionAgingImport = 10
+        CurrentAccountCollectionAgingImport = 10,
+        PosDeductionType = 11,
+        PosStatementAnalysis = 12,
+        PosSettlementCollectionImport = 13
     }
 
     public enum CashFlowManagementModuleSecuritySubItems : short
